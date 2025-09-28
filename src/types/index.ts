@@ -1,0 +1,71 @@
+export interface User {
+  id: string;
+  name: string;
+  avatar?: string;
+  handle: string;
+  city: string;
+  interests: string[];
+  rating?: number;
+  joinedEvents?: number;
+  hostedEvents?: number;
+}
+
+export interface Host {
+  id: string;
+  name: string;
+  avatar?: string;
+  rating: number;
+  verifiedHost?: boolean;
+  description?: string;
+}
+
+export interface Event {
+  id: string;
+  title: string;
+  description: string;
+  host: Host;
+  startTime: string;
+  endTime?: string;
+  location: {
+    name: string;
+    address: string;
+    coordinates?: [number, number];
+  };
+  capacity: number;
+  attendees: number;
+  price: number;
+  originalPrice?: number;
+  genres: string[];
+  tags: string[];
+  images: string[];
+  isPrivate: boolean;
+  isPromoted: boolean;
+  distance: number;
+  rating?: number;
+  reviewCount?: number;
+}
+
+export interface Helper {
+  id: string;
+  name: string;
+  avatar?: string;
+  category: 'delivery' | 'transport' | 'recovery' | 'security';
+  service: string;
+  description: string;
+  rating: number;
+  reviewCount: number;
+  priceRange: string;
+  availability: 'available' | 'busy' | 'offline';
+  estimatedTime?: string;
+}
+
+export interface Notification {
+  id: string;
+  type: 'invite' | 'payment' | 'reminder' | 'update';
+  title: string;
+  message: string;
+  timestamp: string;
+  read: boolean;
+  actionRequired?: boolean;
+  data?: any;
+}
