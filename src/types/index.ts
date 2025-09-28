@@ -24,8 +24,9 @@ export interface Event {
   title: string;
   description: string;
   host: Host;
+  djName?: string;
   startTime: string;
-  endTime?: string;
+  endTime: string;
   location: {
     name: string;
     address: string;
@@ -43,6 +44,9 @@ export interface Event {
   distance: number;
   rating?: number;
   reviewCount?: number;
+  bringOwnDrinks: boolean;
+  allowPlusOnes: boolean;
+  maxPlusOnes?: number;
 }
 
 export interface Helper {
@@ -61,11 +65,23 @@ export interface Helper {
 
 export interface Notification {
   id: string;
-  type: 'invite' | 'payment' | 'reminder' | 'update';
+  type: 'invite' | 'payment' | 'reminder' | 'update' | 'request' | 'approval';
   title: string;
   message: string;
   timestamp: string;
   read: boolean;
   actionRequired?: boolean;
   data?: any;
+}
+
+export interface EventRequest {
+  id: string;
+  eventId: string;
+  userId: string;
+  userName: string;
+  userAvatar?: string;
+  status: 'pending' | 'approved' | 'declined';
+  plusOnes: number;
+  requestedAt: string;
+  message?: string;
 }

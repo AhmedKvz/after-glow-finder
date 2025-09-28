@@ -14,6 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 interface EventForm {
   title: string;
   description: string;
+  djName: string;
   startTime: string;
   endTime: string;
   location: string;
@@ -22,6 +23,9 @@ interface EventForm {
   genres: string[];
   isPrivate: boolean;
   ticketType: 'free' | 'external' | 'stripe';
+  bringOwnDrinks: boolean;
+  allowPlusOnes: boolean;
+  maxPlusOnes: number;
 }
 
 const Host = () => {
@@ -29,6 +33,7 @@ const Host = () => {
   const [form, setForm] = useState<EventForm>({
     title: '',
     description: '',
+    djName: '',
     startTime: '',
     endTime: '',
     location: '',
@@ -37,6 +42,9 @@ const Host = () => {
     genres: [],
     isPrivate: false,
     ticketType: 'free',
+    bringOwnDrinks: false,
+    allowPlusOnes: false,
+    maxPlusOnes: 2,
   });
   
   const { isDemoMode, showDemoSuccess } = useDemoMode();
@@ -77,6 +85,7 @@ const Host = () => {
     setForm({
       title: '',
       description: '',
+      djName: '',
       startTime: '',
       endTime: '',
       location: '',
@@ -85,6 +94,9 @@ const Host = () => {
       genres: [],
       isPrivate: false,
       ticketType: 'free',
+      bringOwnDrinks: false,
+      allowPlusOnes: false,
+      maxPlusOnes: 2,
     });
     setStep(1);
   };
@@ -123,6 +135,17 @@ const Host = () => {
                   className="glass-card border-border/20 mt-2 min-h-[100px]"
                   value={form.description}
                   onChange={(e) => updateForm('description', e.target.value)}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="djName" className="text-sm font-medium">DJ Name (Optional)</Label>
+                <Input
+                  id="djName"
+                  placeholder="Who's playing tonight?"
+                  className="glass-card border-border/20 mt-2"
+                  value={form.djName}
+                  onChange={(e) => updateForm('djName', e.target.value)}
                 />
               </div>
 
@@ -248,6 +271,58 @@ const Host = () => {
                 </div>
               </Card>
 
+              <Card className="glass-card p-4">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <Label className="text-sm font-medium">Allow +1/+2 Requests</Label>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Let guests bring friends
+                    </p>
+                  </div>
+                  <Switch
+                    checked={form.allowPlusOnes}
+                    onCheckedChange={(checked) => updateForm('allowPlusOnes', checked)}
+                  />
+                </div>
+                
+                {form.allowPlusOnes && (
+                  <div>
+                    <Label className="text-sm font-medium">Max +1s per person</Label>
+                    <Select 
+                      value={form.maxPlusOnes.toString()} 
+                      onValueChange={(value) => updateForm('maxPlusOnes', parseInt(value))}
+                    >
+                      <SelectTrigger className="glass-card border-border/20 mt-2">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="glass-card">
+                        <SelectItem value="1">+1 only</SelectItem>
+                        <SelectItem value="2">Up to +2</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+              </Card>
+
+              <Card className="glass-card p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <Label className="text-sm font-medium">Bring Own Drinks</Label>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      BYOB policy for your event
+                    </p>
+                  </div>
+                  <Switch
+                    checked={form.bringOwnDrinks}
+                    onCheckedChange={(checked) => updateForm('bringOwnDrinks', checked)}
+                  />
+                </div>
+              </Card>
+
               {form.isPrivate && (
                 <Card className="glass-card p-4 border-accent/20">
                   <p className="text-sm text-accent-foreground">
@@ -310,10 +385,13 @@ const Host = () => {
                 <h3 className="font-semibold mb-2">Event Preview</h3>
                 <div className="space-y-2 text-sm">
                   <div><strong>Title:</strong> {form.title || 'Untitled Event'}</div>
+                  <div><strong>DJ:</strong> {form.djName || 'TBA'}</div>
                   <div><strong>Location:</strong> {form.location || 'TBA'}</div>
                   <div><strong>Capacity:</strong> {form.capacity || '0'} guests</div>
                   <div><strong>Price:</strong> {form.price === '0' ? 'Free' : `€${form.price}`}</div>
                   <div><strong>Privacy:</strong> {form.isPrivate ? 'Private' : 'Public'}</div>
+                  <div><strong>BYOB:</strong> {form.bringOwnDrinks ? 'Yes' : 'No'}</div>
+                  <div><strong>+1s:</strong> {form.allowPlusOnes ? `Up to +${form.maxPlusOnes}` : 'No'}</div>
                   <div><strong>Genres:</strong> {form.genres.join(', ') || 'None selected'}</div>
                 </div>
               </Card>

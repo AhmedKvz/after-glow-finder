@@ -23,6 +23,7 @@ export const mockEvents: Event[] = [
       rating: 4.9,
       verifiedHost: true,
     },
+    djName: 'Marko Nastić',
     startTime: '2024-09-28T23:00:00Z',
     endTime: '2024-09-29T06:00:00Z',
     location: {
@@ -42,6 +43,9 @@ export const mockEvents: Event[] = [
     distance: 1.2,
     rating: 4.7,
     reviewCount: 34,
+    bringOwnDrinks: true,
+    allowPlusOnes: true,
+    maxPlusOnes: 2,
   },
   {
     id: 'event-2',
@@ -53,6 +57,7 @@ export const mockEvents: Event[] = [
       avatar: '/avatars/ana.jpg',
       rating: 4.8,
     },
+    djName: 'Luna',
     startTime: '2024-09-29T01:00:00Z',
     endTime: '2024-09-29T05:00:00Z',
     location: {
@@ -71,6 +76,9 @@ export const mockEvents: Event[] = [
     distance: 0.8,
     rating: 4.9,
     reviewCount: 12,
+    bringOwnDrinks: false,
+    allowPlusOnes: true,
+    maxPlusOnes: 1,
   },
   {
     id: 'event-3',
@@ -82,6 +90,7 @@ export const mockEvents: Event[] = [
       avatar: '/avatars/milos.jpg',
       rating: 4.6,
     },
+    djName: 'Rebekah',
     startTime: '2024-09-29T22:00:00Z',
     endTime: '2024-09-30T08:00:00Z',
     location: {
@@ -100,6 +109,8 @@ export const mockEvents: Event[] = [
     distance: 3.4,
     rating: 4.5,
     reviewCount: 89,
+    bringOwnDrinks: true,
+    allowPlusOnes: false,
   },
   {
     id: 'event-4',
@@ -129,6 +140,9 @@ export const mockEvents: Event[] = [
     distance: 2.1,
     rating: 4.8,
     reviewCount: 25,
+    bringOwnDrinks: false,
+    allowPlusOnes: true,
+    maxPlusOnes: 1,
   },
 ];
 
@@ -177,15 +191,24 @@ export const mockHelpers: Helper[] = [
 export const mockNotifications: Notification[] = [
   {
     id: 'notif-1',
-    type: 'invite',
-    title: 'Event Invite Approved',
-    message: 'Your invite to "AFTER @ Savamala Loft" has been approved!',
+    type: 'approval',
+    title: "You're in! 🎉",
+    message: 'Your request to join "AFTER @ Savamala Loft" has been approved! See you at Karađorđeva 43, Belgrade',
     timestamp: '2024-09-28T14:30:00Z',
+    read: false,
+    actionRequired: false,
+  },
+  {
+    id: 'notif-2',
+    type: 'request',
+    title: 'New Join Request',
+    message: 'Ana wants to join "Private Rooftop After" (+1 friend). Approve or decline?',
+    timestamp: '2024-09-28T13:15:00Z',
     read: false,
     actionRequired: true,
   },
   {
-    id: 'notif-2',
+    id: 'notif-3',
     type: 'reminder',
     title: 'Event Starting Soon',
     message: 'Your event "Private Rooftop After" starts in 2 hours.',
@@ -193,7 +216,7 @@ export const mockNotifications: Notification[] = [
     read: true,
   },
   {
-    id: 'notif-3',
+    id: 'notif-4',
     type: 'payment',
     title: 'Payment Confirmed',
     message: 'Your ticket payment for €15 has been processed successfully.',

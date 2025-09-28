@@ -18,7 +18,7 @@ export const EventCard: React.FC<EventCardProps> = ({ event, compact = false }) 
   const posterImage = posterImages[event.id.charCodeAt(0) % posterImages.length];
   
   return (
-    <Card className="glass-card interactive overflow-hidden">
+    <Card className="glass-card interactive overflow-hidden cursor-pointer transition-transform hover:scale-[1.02]">
       <div className="flex gap-3 p-3">
         {/* Event poster */}
         <div className="relative">
@@ -93,6 +93,22 @@ export const EventCard: React.FC<EventCardProps> = ({ event, compact = false }) 
               <MapPin size={12} />
               {event.distance}km
             </div>
+          </div>
+
+          {/* Additional event info */}
+          <div className="flex items-center gap-2 text-xs mb-2">
+            {event.djName && (
+              <Badge variant="secondary" className="text-xs px-2 py-0.5">
+                DJ: {event.djName}
+              </Badge>
+            )}
+            <span className="text-lg">{event.bringOwnDrinks ? '🥤' : '🚫'}</span>
+            <span className="text-xs text-muted-foreground">
+              Ends {new Date(event.endTime).toLocaleTimeString([], {
+                hour: '2-digit',
+                minute: '2-digit'
+              })}
+            </span>
           </div>
 
           {/* Tags */}

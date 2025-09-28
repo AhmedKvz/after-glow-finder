@@ -4,18 +4,30 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { EventCard } from '@/components/EventCard';
+import { EventDetails } from '@/components/EventDetails';
 import { mockEvents } from '@/data/mockData';
+import { Event } from '@/types';
 import eventPoster1 from '@/assets/event-poster-1.jpg';
 import eventPoster2 from '@/assets/event-poster-2.jpg';
 import eventPoster3 from '@/assets/event-poster-3.jpg';
 
 const Discover = () => {
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   
   const featuredEvents = mockEvents.slice(0, 3);
   const todayEvents = mockEvents.filter(event => 
     new Date(event.startTime).toDateString() === new Date().toDateString()
   );
+
+  if (selectedEvent) {
+    return (
+      <EventDetails 
+        event={selectedEvent} 
+        onBack={() => setSelectedEvent(null)} 
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -46,7 +58,11 @@ const Discover = () => {
           <h2 className="text-lg font-semibold">Featured Tonight</h2>
           <div className="flex gap-4 overflow-x-auto custom-scrollbar pb-2">
             {featuredEvents.map((event, index) => (
-              <Card key={event.id} className="relative min-w-[280px] h-[200px] overflow-hidden glass-card">
+              <Card 
+                key={event.id} 
+                className="relative min-w-[280px] h-[200px] overflow-hidden glass-card cursor-pointer transition-transform hover:scale-105"
+                onClick={() => setSelectedEvent(event)}
+              >
                 <img
                   src={[eventPoster1, eventPoster2, eventPoster3][index]}
                   alt={event.title}
@@ -113,7 +129,9 @@ const Discover = () => {
 
         <div className="space-y-3">
           {mockEvents.map((event) => (
-            <EventCard key={event.id} event={event} />
+            <div key={event.id} onClick={() => setSelectedEvent(event)}>
+              <EventCard event={event} />
+            </div>
           ))}
         </div>
       </div>
