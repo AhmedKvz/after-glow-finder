@@ -14,7 +14,274 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      circle_swipe_entries: {
+        Row: {
+          created_at: string
+          id: string
+          paid: boolean | null
+          payment_intent_id: string | null
+          session_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          paid?: boolean | null
+          payment_intent_id?: string | null
+          session_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          paid?: boolean | null
+          payment_intent_id?: string | null
+          session_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "circle_swipe_entries_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "circle_swipe_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      circle_swipe_matches: {
+        Row: {
+          chat_id: string | null
+          created_at: string
+          id: string
+          session_id: string
+          user1_id: string
+          user2_id: string
+        }
+        Insert: {
+          chat_id?: string | null
+          created_at?: string
+          id?: string
+          session_id: string
+          user1_id: string
+          user2_id: string
+        }
+        Update: {
+          chat_id?: string | null
+          created_at?: string
+          id?: string
+          session_id?: string
+          user1_id?: string
+          user2_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "circle_swipe_matches_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "circle_swipe_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      circle_swipe_sessions: {
+        Row: {
+          created_at: string
+          ends_at: string
+          entry_price_eur: number
+          event_id: string
+          id: string
+          participant_ids: string[]
+          starts_at: string
+        }
+        Insert: {
+          created_at?: string
+          ends_at: string
+          entry_price_eur?: number
+          event_id: string
+          id?: string
+          participant_ids?: string[]
+          starts_at: string
+        }
+        Update: {
+          created_at?: string
+          ends_at?: string
+          entry_price_eur?: number
+          event_id?: string
+          id?: string
+          participant_ids?: string[]
+          starts_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "circle_swipe_sessions_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      circle_swipe_votes: {
+        Row: {
+          created_at: string
+          id: string
+          session_id: string
+          swiper_id: string
+          target_id: string
+          vote: Database["public"]["Enums"]["vote_type"]
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          session_id: string
+          swiper_id: string
+          target_id: string
+          vote: Database["public"]["Enums"]["vote_type"]
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          session_id?: string
+          swiper_id?: string
+          target_id?: string
+          vote?: Database["public"]["Enums"]["vote_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "circle_swipe_votes_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "circle_swipe_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_orders: {
+        Row: {
+          created_at: string
+          event_id: string
+          id: string
+          plus_guests: number | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          id?: string
+          plus_guests?: number | null
+          status: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          id?: string
+          plus_guests?: number | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_orders_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      events: {
+        Row: {
+          allow_plus_one: boolean | null
+          allow_plus_two: boolean | null
+          bring_own_drinks: boolean | null
+          capacity: number
+          created_at: string
+          date: string
+          description: string | null
+          dj_name: string | null
+          end_time: string
+          exact_address: string | null
+          host_id: string
+          id: string
+          location: string
+          start_time: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          allow_plus_one?: boolean | null
+          allow_plus_two?: boolean | null
+          bring_own_drinks?: boolean | null
+          capacity: number
+          created_at?: string
+          date: string
+          description?: string | null
+          dj_name?: string | null
+          end_time: string
+          exact_address?: string | null
+          host_id: string
+          id?: string
+          location: string
+          start_time: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          allow_plus_one?: boolean | null
+          allow_plus_two?: boolean | null
+          bring_own_drinks?: boolean | null
+          capacity?: number
+          created_at?: string
+          date?: string
+          description?: string | null
+          dj_name?: string | null
+          end_time?: string
+          exact_address?: string | null
+          host_id?: string
+          id?: string
+          location?: string
+          start_time?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          created_at: string
+          display_name: string | null
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +290,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      vote_type: "like" | "pass"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +417,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      vote_type: ["like", "pass"],
+    },
   },
 } as const
