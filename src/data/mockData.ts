@@ -224,3 +224,65 @@ export const mockNotifications: Notification[] = [
     read: true,
   },
 ];
+
+export const mockCircleSwipeSession = {
+  id: 'session-1',
+  eventId: 'event-1',
+  startsAt: '2024-09-29T08:00:00Z',
+  endsAt: '2024-10-01T08:00:00Z',
+  participantCount: 12,
+  entryPrice: 3.0,
+};
+
+export const mockCircleSwipeParticipants = [
+  {
+    id: 'participant-1',
+    name: 'Milica Petković',
+    avatar: '/avatars/milica.jpg',
+    age: 26,
+    city: 'Belgrade',
+    bio: 'Love techno and deep house. Always up for good music and great company!',
+    interests: ['techno', 'deep house', 'minimal'],
+    mutualEvents: ['AFTER @ Savamala Loft', 'Warehouse Rave'],
+  },
+  {
+    id: 'participant-2',
+    name: 'Nikola Jovanović',
+    avatar: '/avatars/nikola.jpg',
+    age: 29,
+    city: 'Belgrade',
+    bio: 'DJ and music producer. Looking to connect with fellow music lovers.',
+    interests: ['house', 'techno', 'progressive'],
+    mutualEvents: ['AFTER @ Savamala Loft'],
+  },
+  {
+    id: 'participant-3',
+    name: 'Sara Milić',
+    avatar: '/avatars/sara.jpg',
+    age: 24,
+    city: 'Novi Sad',
+    bio: 'Party enthusiast from Novi Sad. Love exploring Belgrade nightlife!',
+    interests: ['house', 'disco', 'funk'],
+    mutualEvents: ['AFTER @ Savamala Loft', 'Private Rooftop After'],
+  },
+  {
+    id: 'participant-4',
+    name: 'Marko Nikolić',
+    avatar: '/avatars/marko2.jpg',
+    age: 31,
+    city: 'Belgrade',
+    bio: 'Event photographer and raver. Always capturing the best moments.',
+    interests: ['techno', 'hard techno', 'trance'],
+    mutualEvents: ['Warehouse Rave'],
+  },
+  {
+    id: 'participant-5',
+    name: 'Jovana Stojanović',
+    avatar: '/avatars/jovana.jpg',
+    age: 27,
+    city: 'Belgrade',
+    bio: 'Music journalist and party-goer. Love discovering new sounds and venues.',
+    interests: ['minimal', 'deep house', 'ambient'],
+    mutualEvents: ['AFTER @ Savamala Loft', 'Intimate House Session'],
+  },
+];

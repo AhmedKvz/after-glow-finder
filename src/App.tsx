@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import Discover from "./pages/Discover";
 import Search from "./pages/Search";
 import Host from "./pages/Host";
+import CircleSwipe from "./pages/CircleSwipe";
 import Helpers from "./pages/Helpers";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
@@ -26,6 +27,7 @@ const App = () => (
             <Route path="discover" element={<Discover />} />
             <Route path="search" element={<Search />} />
             <Route path="host" element={<Host />} />
+            <Route path="circle-swipe" element={<CircleSwipe />} />
             <Route path="helpers" element={<Helpers />} />
             <Route path="profile" element={<Profile />} />
             <Route path="*" element={<NotFound />} />

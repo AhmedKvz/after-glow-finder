@@ -4,7 +4,8 @@ import {
   Search, 
   Plus, 
   HandHeart, 
-  User 
+  User,
+  Heart
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -12,6 +13,7 @@ const tabs = [
   { id: 'discover', label: 'Discover', icon: Compass, path: '/discover' },
   { id: 'search', label: 'Search', icon: Search, path: '/search' },
   { id: 'host', label: 'Host', icon: Plus, path: '/host' },
+  { id: 'circle', label: 'Circle', icon: Heart, path: '/circle-swipe' },
   { id: 'helpers', label: 'Helpers', icon: HandHeart, path: '/helpers' },
   { id: 'profile', label: 'Profile', icon: User, path: '/profile' },
 ];
