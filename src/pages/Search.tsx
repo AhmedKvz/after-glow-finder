@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
 import { BuyTicketModal } from '@/components/BuyTicketModal';
+import { RequestToJoinModal } from '@/components/RequestToJoinModal';
 import eventPoster1 from '@/assets/event-poster-1.jpg';
 import eventPoster2 from '@/assets/event-poster-2.jpg';
 import eventPoster3 from '@/assets/event-poster-3.jpg';
@@ -19,6 +20,7 @@ const Search = () => {
   const [events, setEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedEventForTicket, setSelectedEventForTicket] = useState<any | null>(null);
+  const [selectedEventForRequest, setSelectedEventForRequest] = useState<any | null>(null);
 
   useEffect(() => {
     loadEvents();
@@ -222,11 +224,27 @@ const Search = () => {
                       </div>
                       
                       <div className="flex-1">
+                        {/* Event Type Badge */}
+                        <div className="flex gap-2 mb-1">
+                          {event.event_type === 'club' && (
+                            <Badge className="text-[11px] bg-emerald-600/20 text-emerald-400">
+                              🏛️ CLUB
+                            </Badge>
+                          )}
+                          {event.event_type === 'private_host' && (
+                            <Badge className="text-[11px] bg-yellow-600/20 text-yellow-400">
+                              🗝️ PRIVATE
+                            </Badge>
+                          )}
+                        </div>
+                        
                         <h3 className="font-semibold text-base sm:text-lg md:text-xl leading-snug break-words whitespace-normal mb-1">{event.title}</h3>
                         
                         <div className="flex items-center gap-2 text-[13px] sm:text-sm text-muted-foreground mt-1">
                           <MapPin size={14} />
-                          <span className="break-words whitespace-normal">{event.location}</span>
+                          <span className="break-words whitespace-normal">
+                            {event.is_location_hidden ? 'Hidden' : event.location}
+                          </span>
                         </div>
                         
                         <div className="flex items-center gap-2 text-[13px] sm:text-sm text-muted-foreground mt-1">
@@ -251,13 +269,23 @@ const Search = () => {
                         <Badge variant="secondary" className="whitespace-nowrap text-[13px] sm:text-sm">
                           {event.capacity} cap
                         </Badge>
-                        <Button
-                          size="sm"
-                          className="gradient-primary whitespace-nowrap text-[13px] sm:text-sm h-9"
-                          onClick={() => setSelectedEventForTicket(event)}
-                        >
-                          Get Ticket
-                        </Button>
+                        {event.event_type === 'private_host' ? (
+                          <Button
+                            size="sm"
+                            className="bg-yellow-600/20 text-yellow-400 border border-yellow-600/30 whitespace-nowrap text-[13px] sm:text-sm h-9"
+                            onClick={() => setSelectedEventForRequest(event)}
+                          >
+                            Request to Join
+                          </Button>
+                        ) : (
+                          <Button
+                            size="sm"
+                            className="gradient-primary whitespace-nowrap text-[13px] sm:text-sm h-9"
+                            onClick={() => setSelectedEventForTicket(event)}
+                          >
+                            Get Ticket
+                          </Button>
+                        )}
                       </div>
                     </div>
                   </Card>
@@ -274,6 +302,14 @@ const Search = () => {
           onOpenChange={(open) => !open && setSelectedEventForTicket(null)}
           event={selectedEventForTicket}
           onSuccess={loadEvents}
+        />
+      )}
+
+      {selectedEventForRequest && (
+        <RequestToJoinModal
+          open={!!selectedEventForRequest}
+          onOpenChange={(open) => !open && setSelectedEventForRequest(null)}
+          event={selectedEventForRequest}
         />
       )}
     </div>

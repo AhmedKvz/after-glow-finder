@@ -47,7 +47,7 @@ export const Layout = () => {
     <DemoModeProvider>
       <div className="min-h-screen bg-background text-foreground overflow-hidden">
         {/* Main content area with responsive container */}
-        <main className={`flex-1 ${showTabBar ? 'pb-20 safe-bottom' : ''}`}>
+        <main className={`flex-1 ${showTabBar ? 'pb-28 safe-bottom' : ''}`}>
           <div className="max-w-screen-xl mx-auto">
             <Outlet />
           </div>
