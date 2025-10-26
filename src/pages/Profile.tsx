@@ -1,37 +1,76 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   User, 
   Settings, 
   Star, 
   Calendar, 
-  Users, 
   Bell, 
   Moon, 
   Shield, 
   HelpCircle,
   LogOut,
   Crown,
-  Sparkles
+  Sparkles,
+  Edit
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { mockUser } from '@/data/mockData';
 import { useDemoMode } from '@/contexts/DemoModeContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { EditProfileModal } from '@/components/EditProfileModal';
+import { supabase } from '@/integrations/supabase/client';
+import { Loader2 } from 'lucide-react';
+
+interface ProfileData {
+  display_name: string;
+  bio?: string;
+  city?: string;
+  music_tags?: string[];
+  avatar_url?: string;
+}
 
 const Profile = () => {
   const [darkMode, setDarkMode] = useState(true);
   const [notifications, setNotifications] = useState(true);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [profileData, setProfileData] = useState<ProfileData | null>(null);
+  const [loading, setLoading] = useState(true);
   const { isDemoMode, toggleDemoMode } = useDemoMode();
+  const { user, signOut } = useAuth();
+
+  useEffect(() => {
+    if (user) {
+      loadProfile();
+    }
+  }, [user]);
+
+  const loadProfile = async () => {
+    if (!user) return;
+    
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('user_id', user.id)
+      .single();
+
+    if (data) {
+      setProfileData(data);
+    }
+    setLoading(false);
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
+  };
 
   const menuSections = [
     {
       title: 'Account',
       items: [
-        { icon: User, label: 'Edit Profile', action: () => {} },
+        { icon: User, label: 'Edit Profile', action: () => setShowEditModal(true) },
         { icon: Star, label: 'My Reviews', action: () => {} },
         { icon: Calendar, label: 'Event History', action: () => {} },
         { icon: Crown, label: 'Upgrade to Pro', action: () => {}, badge: 'Premium' },
@@ -72,10 +111,18 @@ const Profile = () => {
     {
       title: 'Account',
       items: [
-        { icon: LogOut, label: 'Sign Out', action: () => {}, destructive: true },
+        { icon: LogOut, label: 'Sign Out', action: handleSignOut, destructive: true },
       ]
     }
   ];
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background safe-top flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background safe-top">
@@ -89,49 +136,48 @@ const Profile = () => {
         <Card className="glass-card p-6 mb-6">
           <div className="flex items-center gap-4 mb-4">
             <Avatar className="w-20 h-20">
-              <AvatarImage src="/avatars/user.jpg" />
+              <AvatarImage src={profileData?.avatar_url} />
               <AvatarFallback className="text-xl font-semibold gradient-primary text-white">
-                {mockUser.name.split(' ').map(n => n[0]).join('')}
+                {profileData?.display_name?.split(' ').map(n => n[0]).join('') || 'U'}
               </AvatarFallback>
             </Avatar>
             
             <div className="flex-1">
-              <h2 className="text-xl font-bold">{mockUser.name}</h2>
-              <p className="text-muted-foreground">{mockUser.handle}</p>
-              <p className="text-sm text-muted-foreground">{mockUser.city}</p>
+              <h2 className="text-xl font-bold">{profileData?.display_name || 'User'}</h2>
+              <p className="text-muted-foreground">@{user?.email?.split('@')[0]}</p>
+              {profileData?.city && (
+                <p className="text-sm text-muted-foreground">{profileData.city}</p>
+              )}
             </div>
+
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setShowEditModal(true)}
+              className="glass-card"
+            >
+              <Edit className="w-4 h-4" />
+            </Button>
           </div>
 
-          {/* Stats */}
-          <div className="grid grid-cols-3 gap-4 mb-4">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-primary">{mockUser.joinedEvents}</div>
-              <div className="text-xs text-muted-foreground">Events Joined</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-primary">{mockUser.hostedEvents}</div>
-              <div className="text-xs text-muted-foreground">Events Hosted</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-primary flex items-center justify-center gap-1">
-                <Star className="w-5 h-5 fill-accent text-accent" />
-                {mockUser.rating}
-              </div>
-              <div className="text-xs text-muted-foreground">Rating</div>
-            </div>
-          </div>
+          {/* Bio */}
+          {profileData?.bio && (
+            <p className="text-sm text-muted-foreground mb-4">{profileData.bio}</p>
+          )}
 
           {/* Interests */}
-          <div className="mb-4">
-            <div className="text-sm font-medium mb-2">Music Interests</div>
-            <div className="flex gap-2 flex-wrap">
-              {mockUser.interests.map((interest) => (
-                <Badge key={interest} variant="secondary" className="glass-card">
-                  {interest}
-                </Badge>
-              ))}
+          {profileData?.music_tags && profileData.music_tags.length > 0 && (
+            <div className="mb-4">
+              <div className="text-sm font-medium mb-2">Music Interests</div>
+              <div className="flex gap-2 flex-wrap">
+                {profileData.music_tags.map((tag) => (
+                  <Badge key={tag} variant="secondary" className="glass-card">
+                    {tag}
+                  </Badge>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Demo mode indicator */}
           {isDemoMode && (
@@ -195,6 +241,14 @@ const Profile = () => {
           ))}
         </div>
       </div>
+
+      <EditProfileModal 
+        open={showEditModal} 
+        onOpenChange={(open) => {
+          setShowEditModal(open);
+          if (!open) loadProfile(); // Reload profile after edit
+        }} 
+      />
     </div>
   );
 };

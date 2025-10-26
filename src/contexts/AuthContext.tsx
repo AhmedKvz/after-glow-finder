@@ -3,6 +3,18 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 
+interface ProfileUpdate {
+  display_name?: string;
+  bio?: string;
+  music_tags?: string[];
+  city?: string;
+  avatar_url?: string;
+  gender?: 'male' | 'female' | 'other' | 'hidden';
+  birthdate?: string;
+  lat?: number;
+  lng?: number;
+}
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
@@ -10,6 +22,7 @@ interface AuthContextType {
   signUp: (email: string, password: string, displayName: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
+  updateProfile: (updates: ProfileUpdate) => Promise<{ error: any }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -83,8 +96,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     navigate('/auth');
   };
 
+  const updateProfile = async (updates: ProfileUpdate) => {
+    if (!user) return { error: new Error('No user logged in') };
+
+    const { error } = await supabase
+      .from('profiles')
+      .update(updates)
+      .eq('user_id', user.id);
+
+    return { error };
+  };
+
   return (
-    <AuthContext.Provider value={{ user, session, loading, signUp, signIn, signOut }}>
+    <AuthContext.Provider value={{ user, session, loading, signUp, signIn, signOut, updateProfile }}>
       {children}
     </AuthContext.Provider>
   );
