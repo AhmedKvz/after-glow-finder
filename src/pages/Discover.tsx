@@ -1,38 +1,19 @@
 import { useState, useEffect } from 'react';
-import { MapPin, Users, Clock, Star, Eye, Map, Plus } from 'lucide-react';
+import { MapPin, Clock, Users, Loader2, Music, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
-import { EventCard } from '@/components/EventCard';
-import { EventDetails } from '@/components/EventDetails';
+import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2 } from 'lucide-react';
 import eventPoster1 from '@/assets/event-poster-1.jpg';
 import eventPoster2 from '@/assets/event-poster-2.jpg';
 import eventPoster3 from '@/assets/event-poster-3.jpg';
 
-interface DBEvent {
-  id: string;
-  title: string;
-  description: string | null;
-  location: string;
-  date: string;
-  start_time: string;
-  end_time: string;
-  capacity: number;
-  dj_name: string | null;
-  music_tags: string[];
-  bring_own_drinks: boolean;
-  allow_plus_one: boolean;
-  allow_plus_two: boolean;
-}
-
 const Discover = () => {
-  const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
-  const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
-  const [events, setEvents] = useState<DBEvent[]>([]);
+  const [events, setEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  
+  const [searchQuery, setSearchQuery] = useState('');
+
   useEffect(() => {
     loadEvents();
   }, []);
@@ -41,8 +22,9 @@ const Discover = () => {
     const { data, error } = await supabase
       .from('events')
       .select('*')
+      .gte('date', new Date().toISOString().split('T')[0])
       .order('date', { ascending: true })
-      .order('start_time', { ascending: true });
+      .limit(20);
 
     if (data) {
       setEvents(data);
@@ -50,33 +32,12 @@ const Discover = () => {
     setLoading(false);
   };
 
-  const formatEventTime = (date: string, time: string) => {
-    const dateObj = new Date(`${date}T${time}`);
-    return dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  };
+  const filteredEvents = events.filter(event =>
+    event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    event.location.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
-  const formatEventDate = (date: string) => {
-    const dateObj = new Date(date);
-    return dateObj.toLocaleDateString('en-US', { 
-      month: 'short', 
-      day: 'numeric',
-      weekday: 'short'
-    });
-  };
-
-  if (selectedEventId) {
-    // Will implement EventDetails view later with real data
-    return (
-      <div className="min-h-screen bg-background safe-top p-4">
-        <Button onClick={() => setSelectedEventId(null)} variant="outline" className="mb-4">
-          ← Back
-        </Button>
-        <Card className="glass-card p-6">
-          <p>Event details for {selectedEventId}</p>
-        </Card>
-      </div>
-    );
-  }
+  const featuredEvents = filteredEvents.slice(0, 3);
 
   if (loading) {
     return (
@@ -86,42 +47,39 @@ const Discover = () => {
     );
   }
 
-  const featuredEvents = events.slice(0, 3);
-
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
       <div className="safe-top px-4 pt-6 pb-4">
-        <div className="flex-between mb-6">
-          <div>
-            <h1 className="text-2xl font-bold text-gradient-primary">
-              Tonight Near You
-            </h1>
-            <p className="text-muted-foreground mt-1">
-              Belgrade • {events.length} events happening
-            </p>
-          </div>
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => setViewMode(viewMode === 'list' ? 'map' : 'list')}
-            className="gap-2"
-          >
-            {viewMode === 'list' ? <Map size={16} /> : <Eye size={16} />}
-            {viewMode === 'list' ? 'Map' : 'List'}
-          </Button>
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-gradient-primary">
+            Discover Events
+          </h1>
+          <p className="text-muted-foreground mt-1">
+            Belgrade • {events.length} events upcoming
+          </p>
         </div>
 
-        {/* Featured carousel */}
+        {/* Search */}
+        <div className="relative mb-6">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            placeholder="Search events, genres, venues..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10 glass-card"
+          />
+        </div>
+
+        {/* Featured Events */}
         {featuredEvents.length > 0 && (
-          <div className="space-y-4 mb-6">
+          <div className="space-y-4 mb-8">
             <h2 className="text-lg font-semibold">Featured Tonight</h2>
             <div className="flex gap-4 overflow-x-auto custom-scrollbar pb-2">
               {featuredEvents.map((event, index) => (
                 <Card 
                   key={event.id} 
                   className="relative min-w-[280px] h-[200px] overflow-hidden glass-card cursor-pointer transition-transform hover:scale-105"
-                  onClick={() => setSelectedEventId(event.id)}
                 >
                   <img
                     src={[eventPoster1, eventPoster2, eventPoster3][index % 3]}
@@ -130,106 +88,104 @@ const Discover = () => {
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                   
+                  {/* Event info overlay */}
                   <div className="absolute bottom-4 left-4 right-4">
-                    <div className="flex items-start justify-between mb-2">
-                      <div className="flex-1">
-                        <h3 className="text-white font-semibold text-lg mb-1 line-clamp-2">
-                          {event.title}
-                        </h3>
-                        <div className="flex items-center gap-4 text-white/80 text-sm">
-                          <div className="flex items-center gap-1">
-                            <Clock size={14} />
-                            {formatEventTime(event.date, event.start_time)}
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Users size={14} />
-                            {event.capacity}
-                          </div>
-                        </div>
+                    <h3 className="text-white font-semibold text-lg mb-2 line-clamp-2">
+                      {event.title}
+                    </h3>
+                    <div className="flex items-center gap-4 text-white/80 text-sm mb-2">
+                      <div className="flex items-center gap-1">
+                        <Clock size={14} />
+                        {event.start_time}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Users size={14} />
+                        {event.capacity}
                       </div>
                     </div>
                     
-                    <div className="flex items-center justify-between">
-                      {event.music_tags && event.music_tags.length > 0 && (
-                        <Badge variant="secondary" className="bg-white/20 text-white border-0">
-                          {event.music_tags[0]}
-                        </Badge>
-                      )}
-                      <div className="text-white text-sm">
-                        {formatEventDate(event.date)}
-                      </div>
-                    </div>
+                    {event.music_tags && event.music_tags.length > 0 && (
+                      <Badge variant="secondary" className="bg-white/20 text-white border-0">
+                        {event.music_tags[0]}
+                      </Badge>
+                    )}
                   </div>
                 </Card>
               ))}
             </div>
           </div>
         )}
-      </div>
 
-      {/* Events list */}
-      <div className="px-4 pb-24">
-        <div className="flex-between mb-4">
+        {/* All Events */}
+        <div className="space-y-4">
           <h2 className="text-lg font-semibold">All Events</h2>
-        </div>
-
-        {events.length === 0 ? (
-          <Card className="glass-card p-8 text-center">
-            <p className="text-muted-foreground mb-4">No events found</p>
-            <p className="text-sm text-muted-foreground">
-              Be the first to host an after in your city!
-            </p>
-          </Card>
-        ) : (
-          <div className="space-y-3">
-            {events.map((event) => (
-              <Card 
-                key={event.id}
-                className="glass-card p-4 cursor-pointer hover:bg-surface-hover transition-colors"
-                onClick={() => setSelectedEventId(event.id)}
-              >
-                <div className="flex gap-4">
-                  <div className="flex-1">
-                    <h3 className="font-semibold mb-1">{event.title}</h3>
-                    {event.dj_name && (
-                      <p className="text-sm text-muted-foreground mb-2">
-                        DJ: {event.dj_name}
-                      </p>
-                    )}
-                    <div className="flex items-center gap-3 text-sm text-muted-foreground mb-2">
-                      <div className="flex items-center gap-1">
+          
+          {filteredEvents.length === 0 ? (
+            <Card className="glass-card p-8 text-center">
+              <Music className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="font-semibold mb-2">No events found</h3>
+              <p className="text-sm text-muted-foreground">
+                {searchQuery 
+                  ? `No events match "${searchQuery}"`
+                  : "No upcoming events at the moment"
+                }
+              </p>
+            </Card>
+          ) : (
+            <div className="space-y-3">
+              {filteredEvents.map((event) => (
+                <Card key={event.id} className="glass-card p-4 cursor-pointer hover:bg-surface-hover transition-colors">
+                  <div className="flex gap-4">
+                    <div className="w-20 h-20 rounded-lg overflow-hidden bg-primary/10 flex-shrink-0">
+                      <img
+                        src={[eventPoster1, eventPoster2, eventPoster3][Math.floor(Math.random() * 3)]}
+                        alt={event.title}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-lg truncate">{event.title}</h3>
+                      
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
                         <MapPin size={14} />
-                        {event.location}
+                        <span className="truncate">{event.location}</span>
                       </div>
-                      <div className="flex items-center gap-1">
+                      
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
                         <Clock size={14} />
-                        {formatEventTime(event.date, event.start_time)}
+                        <span>
+                          {new Date(event.date).toLocaleDateString()} • {event.start_time}
+                        </span>
                       </div>
+
+                      {event.music_tags && event.music_tags.length > 0 && (
+                        <div className="flex gap-2 mt-2 flex-wrap">
+                          {event.music_tags.slice(0, 3).map((tag: string) => (
+                            <Badge key={tag} variant="secondary" className="text-xs">
+                              {tag}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                    {event.music_tags && event.music_tags.length > 0 && (
-                      <div className="flex gap-2 flex-wrap">
-                        {event.music_tags.map((tag) => (
-                          <Badge key={tag} variant="secondary" className="text-xs">
-                            {tag}
-                          </Badge>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex flex-col items-end justify-between">
-                    <Badge variant="outline">
-                      {formatEventDate(event.date)}
-                    </Badge>
-                    <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                      <Users size={14} />
-                      {event.capacity}
+
+                    <div className="flex flex-col items-end justify-between">
+                      <Badge variant="secondary" className="whitespace-nowrap">
+                        {event.capacity} cap
+                      </Badge>
+                      {event.dj_name && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          DJ: {event.dj_name}
+                        </p>
+                      )}
                     </div>
                   </div>
-                </div>
-              </Card>
-            ))}
-          </div>
-        )}
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
