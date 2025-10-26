@@ -257,7 +257,7 @@ const CircleSwipe = () => {
 
       {/* Swipe Area */}
       <div className="px-4 py-6 relative">
-        <div className="relative h-[500px]">
+        <div className="relative min-h-[600px]">
           {currentProfileToShow ? (
             <CircleSwipeCard
               key={currentProfileToShow.user_id}

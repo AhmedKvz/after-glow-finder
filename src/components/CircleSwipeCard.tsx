@@ -98,28 +98,34 @@ export const CircleSwipeCard = ({ profile, onVote }: CircleSwipeCardProps) => {
               </div>
             </div>
           )}
-
-          {/* Action Buttons */}
-          <div className="flex gap-4 justify-center pt-4">
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              onClick={() => handleButtonVote('no')}
-              className="w-16 h-16 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center shadow-lg"
-            >
-              <X className="w-8 h-8 text-white" />
-            </motion.button>
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              onClick={() => handleButtonVote('yes')}
-              className="w-16 h-16 rounded-full bg-green-500 hover:bg-green-600 flex items-center justify-center shadow-lg"
-            >
-              <Heart className="w-8 h-8 text-white" />
-            </motion.button>
-          </div>
         </div>
       </Card>
+
+      {/* Action Buttons - Outside card, always visible */}
+      <div className="flex gap-6 justify-center mt-6 relative z-10">
+        <motion.button
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleButtonVote('no');
+          }}
+          className="w-20 h-20 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center shadow-xl border-4 border-white"
+        >
+          <X className="w-10 h-10 text-white" strokeWidth={3} />
+        </motion.button>
+        <motion.button
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleButtonVote('yes');
+          }}
+          className="w-20 h-20 rounded-full bg-green-500 hover:bg-green-600 flex items-center justify-center shadow-xl border-4 border-white"
+        >
+          <Heart className="w-10 h-10 text-white fill-white" strokeWidth={3} />
+        </motion.button>
+      </div>
     </motion.div>
   );
 };
