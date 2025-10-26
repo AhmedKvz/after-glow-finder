@@ -3,12 +3,14 @@ import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { CreateEventModal } from '@/components/CreateEventModal';
+import { EventManageModal } from '@/components/EventManageModal';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
 
 const Host = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<any | null>(null);
   const [myEvents, setMyEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
@@ -107,7 +109,11 @@ const Host = () => {
                         Capacity: {event.capacity} • {event.start_time} - {event.end_time}
                       </p>
                     </div>
-                    <Button variant="outline" size="sm">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => setSelectedEvent(event)}
+                    >
                       Manage
                     </Button>
                   </div>
@@ -140,6 +146,15 @@ const Host = () => {
         onOpenChange={setShowCreateModal}
         onSuccess={loadMyEvents}
       />
+
+      {selectedEvent && (
+        <EventManageModal
+          open={!!selectedEvent}
+          onOpenChange={(open) => !open && setSelectedEvent(null)}
+          event={selectedEvent}
+          onSuccess={loadMyEvents}
+        />
+      )}
     </div>
   );
 };
