@@ -17,8 +17,10 @@ export const CircleSwipeCard = ({ profile, onVote }: CircleSwipeCardProps) => {
 
   const handleDragEnd = (_: any, info: any) => {
     if (Math.abs(info.offset.x) > 100) {
-      setExitX(info.offset.x > 0 ? 200 : -200);
-      onVote(info.offset.x > 0 ? 'yes' : 'no');
+      setExitX(info.offset.x > 0 ? 300 : -300);
+      setTimeout(() => {
+        onVote(info.offset.x > 0 ? 'yes' : 'no');
+      }, 200);
     }
   };
 
@@ -27,10 +29,11 @@ export const CircleSwipeCard = ({ profile, onVote }: CircleSwipeCardProps) => {
       style={{ x, rotate, opacity }}
       drag="x"
       dragConstraints={{ left: 0, right: 0 }}
+      dragElastic={0.7}
       onDragEnd={handleDragEnd}
-      animate={exitX !== 0 ? { x: exitX * 2 } : {}}
+      animate={exitX !== 0 ? { x: exitX * 2, opacity: 0 } : {}}
       transition={{ duration: 0.3 }}
-      className="absolute w-full"
+      className="absolute w-full cursor-grab active:cursor-grabbing"
     >
       <Card className="glass-card overflow-hidden">
         {/* Profile Image/Avatar */}
@@ -46,16 +49,14 @@ export const CircleSwipeCard = ({ profile, onVote }: CircleSwipeCardProps) => {
           {/* Swipe indicators */}
           <div className="absolute inset-0 pointer-events-none">
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: x.get() > 50 ? 1 : 0 }}
-              className="absolute top-8 left-8 bg-green-500 text-white px-4 py-2 rounded-lg font-bold text-xl rotate-[-15deg]"
+              style={{ opacity: useTransform(x, [0, 100], [0, 1]) }}
+              className="absolute top-8 left-8 bg-green-500 text-white px-6 py-3 rounded-lg font-bold text-2xl rotate-[-15deg] border-4 border-white shadow-lg"
             >
               LIKE
             </motion.div>
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: x.get() < -50 ? 1 : 0 }}
-              className="absolute top-8 right-8 bg-red-500 text-white px-4 py-2 rounded-lg font-bold text-xl rotate-[15deg]"
+              style={{ opacity: useTransform(x, [-100, 0], [1, 0]) }}
+              className="absolute top-8 right-8 bg-red-500 text-white px-6 py-3 rounded-lg font-bold text-2xl rotate-[15deg] border-4 border-white shadow-lg"
             >
               NOPE
             </motion.div>
