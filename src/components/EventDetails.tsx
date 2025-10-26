@@ -1,14 +1,16 @@
 import { useState } from 'react';
-import { ArrowLeft, MapPin, Users, Clock, Star, Check, X, Calendar, Music } from 'lucide-react';
+import { ArrowLeft, MapPin, Users, Clock, Star, Check, X, Calendar, Music, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Event, EventRequest } from '@/types';
 import { useDemoMode } from '@/contexts/DemoModeContext';
 import { useToast } from '@/hooks/use-toast';
+import { ReviewsList } from '@/components/ReviewsList';
 import eventPoster1 from '@/assets/event-poster-1.jpg';
 import eventPoster2 from '@/assets/event-poster-2.jpg';
 import eventPoster3 from '@/assets/event-poster-3.jpg';
@@ -300,6 +302,15 @@ export const EventDetails: React.FC<EventDetailsProps> = ({ event, onBack }) => 
         {/* Action Button */}
         <div className="pt-4">
           {getStatusButton()}
+        </div>
+
+        {/* Reviews Section */}
+        <div>
+          <h3 className="font-semibold mb-4 flex items-center gap-2">
+            <MessageSquare className="w-5 h-5" />
+            Reviews
+          </h3>
+          <ReviewsList eventId={event.id} />
         </div>
       </div>
       

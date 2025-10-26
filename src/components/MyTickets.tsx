@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Ticket, QrCode, Calendar, MapPin, Clock, Check } from 'lucide-react';
+import { Ticket, QrCode, Calendar, MapPin, Clock, Check, Star } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -8,12 +8,15 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { QRCodeSVG } from 'qrcode.react';
 import { Loader2 } from 'lucide-react';
+import { ReviewEventModal } from '@/components/ReviewEventModal';
 
 export const MyTickets = () => {
   const { user } = useAuth();
   const [tickets, setTickets] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedTicket, setSelectedTicket] = useState<any | null>(null);
+  const [selectedEventForReview, setSelectedEventForReview] = useState<any | null>(null);
+  const [reviews, setReviews] = useState<Record<string, any>>({});
 
   useEffect(() => {
     if (user) {
@@ -35,6 +38,22 @@ export const MyTickets = () => {
 
     if (ticketsData) {
       setTickets(ticketsData);
+      
+      // Load reviews for these events
+      const eventIds = ticketsData.map(t => t.event_id);
+      const { data: reviewsData } = await supabase
+        .from('event_reviews')
+        .select('*')
+        .in('event_id', eventIds)
+        .eq('user_id', user.id);
+      
+      if (reviewsData) {
+        const reviewsMap = reviewsData.reduce((acc, review) => {
+          acc[review.event_id] = review;
+          return acc;
+        }, {} as Record<string, any>);
+        setReviews(reviewsMap);
+      }
     }
     setLoading(false);
   };
@@ -74,6 +93,7 @@ export const MyTickets = () => {
       {tickets.map((ticket) => {
         const event = ticket.events;
         const isPast = new Date(event?.date) < new Date();
+        const hasReview = reviews[event?.id];
         
         return (
           <Card key={ticket.id} className="glass-card p-4">
@@ -107,20 +127,34 @@ export const MyTickets = () => {
                   </div>
                 </div>
 
-                <div className="mt-3 pt-3 border-t border-border/20 flex items-center justify-between">
-                  <div>
-                    <p className="text-xs text-muted-foreground">Ticket Code</p>
-                    <p className="font-mono font-semibold">{ticket.ticket_code}</p>
+                <div className="mt-3 pt-3 border-t border-border/20">
+                  <div className="flex items-center justify-between mb-3">
+                    <div>
+                      <p className="text-xs text-muted-foreground">Ticket Code</p>
+                      <p className="font-mono font-semibold">{ticket.ticket_code}</p>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setSelectedTicket(ticket)}
+                      className="glass-card"
+                    >
+                      <QrCode className="w-4 h-4 mr-2" />
+                      Show QR
+                    </Button>
                   </div>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => setSelectedTicket(ticket)}
-                    className="glass-card"
-                  >
-                    <QrCode className="w-4 h-4 mr-2" />
-                    Show QR
-                  </Button>
+                  
+                  {isPast && (
+                    <Button
+                      size="sm"
+                      variant={hasReview ? "outline" : "default"}
+                      onClick={() => setSelectedEventForReview(event)}
+                      className={hasReview ? "w-full glass-card" : "w-full gradient-primary"}
+                    >
+                      <Star className="w-4 h-4 mr-2" />
+                      {hasReview ? 'Edit Review' : 'Leave Review'}
+                    </Button>
+                  )}
                 </div>
               </div>
             </div>
@@ -191,6 +225,20 @@ export const MyTickets = () => {
             </div>
           </DialogContent>
         </Dialog>
+      )}
+
+      {/* Review Modal */}
+      {selectedEventForReview && (
+        <ReviewEventModal
+          open={!!selectedEventForReview}
+          onOpenChange={(open) => !open && setSelectedEventForReview(null)}
+          event={selectedEventForReview}
+          existingReview={reviews[selectedEventForReview.id]}
+          onSuccess={() => {
+            loadTickets();
+            setSelectedEventForReview(null);
+          }}
+        />
       )}
     </div>
   );
