@@ -25,6 +25,7 @@ const Host = () => {
     const { data, error } = await supabase
       .from('events')
       .select('*')
+      .eq('host_id', user.id)  // FIXED: Filter only user's events
       .order('date', { ascending: true });
 
     if (data) {
