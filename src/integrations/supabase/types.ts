@@ -14,6 +14,38 @@ export type Database = {
   }
   public: {
     Tables: {
+      checkins: {
+        Row: {
+          checked_in_at: string
+          created_at: string
+          event_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          checked_in_at?: string
+          created_at?: string
+          event_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          checked_in_at?: string
+          created_at?: string
+          event_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "checkins_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       circle_swipe_entries: {
         Row: {
           created_at: string
@@ -210,9 +242,11 @@ export type Database = {
           host_id: string
           id: string
           location: string
+          music_tags: string[] | null
           start_time: string
           title: string
           updated_at: string
+          venue_id: string | null
         }
         Insert: {
           allow_plus_one?: boolean | null
@@ -228,9 +262,11 @@ export type Database = {
           host_id: string
           id?: string
           location: string
+          music_tags?: string[] | null
           start_time: string
           title: string
           updated_at?: string
+          venue_id?: string | null
         }
         Update: {
           allow_plus_one?: boolean | null
@@ -246,39 +282,100 @@ export type Database = {
           host_id?: string
           id?: string
           location?: string
+          music_tags?: string[] | null
           start_time?: string
           title?: string
           updated_at?: string
+          venue_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "events_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
           avatar_url: string | null
           bio: string | null
+          birthdate: string | null
+          city: string | null
           created_at: string
           display_name: string | null
+          gender: Database["public"]["Enums"]["gender_type"] | null
           id: string
+          lat: number | null
+          lng: number | null
+          music_tags: string[] | null
           updated_at: string
           user_id: string
         }
         Insert: {
           avatar_url?: string | null
           bio?: string | null
+          birthdate?: string | null
+          city?: string | null
           created_at?: string
           display_name?: string | null
+          gender?: Database["public"]["Enums"]["gender_type"] | null
           id?: string
+          lat?: number | null
+          lng?: number | null
+          music_tags?: string[] | null
           updated_at?: string
           user_id: string
         }
         Update: {
           avatar_url?: string | null
           bio?: string | null
+          birthdate?: string | null
+          city?: string | null
           created_at?: string
           display_name?: string | null
+          gender?: Database["public"]["Enums"]["gender_type"] | null
           id?: string
+          lat?: number | null
+          lng?: number | null
+          music_tags?: string[] | null
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      venues: {
+        Row: {
+          address: string
+          city: string
+          created_at: string
+          id: string
+          lat: number | null
+          lng: number | null
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          address: string
+          city: string
+          created_at?: string
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          address?: string
+          city?: string
+          created_at?: string
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          name?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -290,6 +387,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
+      gender_type: "male" | "female" | "other" | "hidden"
       vote_type: "like" | "pass"
     }
     CompositeTypes: {
@@ -418,6 +516,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      gender_type: ["male", "female", "other", "hidden"],
       vote_type: ["like", "pass"],
     },
   },
