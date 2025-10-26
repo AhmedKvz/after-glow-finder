@@ -13,22 +13,51 @@ const Host = () => {
   const [selectedEvent, setSelectedEvent] = useState<any | null>(null);
   const [myEvents, setMyEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
 
   useEffect(() => {
-    if (user) {
+    console.log('[Host] User changed:', user?.id, 'Auth loading:', authLoading);
+    if (!authLoading && user) {
+      console.log('[Host] Auth ready, loading events');
       loadMyEvents();
     }
-  }, [user]);
+  }, [user, authLoading]);
+
+  useEffect(() => {
+    console.log('[Host] myEvents updated:', myEvents.length, myEvents);
+  }, [myEvents]);
 
   const loadMyEvents = async () => {
-    if (!user) return;
+    if (!user) {
+      console.log('[Host] No user, skipping load');
+      return;
+    }
+    
+    console.log('[Host] Loading events for user:', user.id);
     
     const { data, error } = await supabase
       .from('events')
       .select('*')
-      .eq('host_id', user.id)  // FIXED: Filter only user's events
+      .eq('host_id', user.id)
       .order('date', { ascending: true });
+
+    console.log('[Host] Query result:', { 
+      dataCount: data?.length, 
+      error,
+      rawData: data 
+    });
+
+    if (error) {
+      console.error('[Host] Error loading events:', error);
+    }
+
+    // Debug: Try loading all events without filter
+    const { data: allEvents, error: allError } = await supabase
+      .from('events')
+      .select('*')
+      .limit(5);
+    
+    console.log('[Host] All events (no filter):', allEvents?.length, allEvents);
 
     if (data) {
       setMyEvents(data);
@@ -63,7 +92,7 @@ const Host = () => {
         <div className="space-y-4">
           <h2 className="text-lg font-semibold">My Events</h2>
           
-          {loading ? (
+          {(loading || authLoading) ? (
             <Card className="glass-card p-8 text-center">
               <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto" />
             </Card>
