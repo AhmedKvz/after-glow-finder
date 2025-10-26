@@ -21,25 +21,49 @@ export const RequestToJoinModal = ({ open, onOpenChange, event }: RequestToJoinM
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async () => {
-    if (!user) return;
+    if (!user) {
+      toast({
+        variant: "destructive",
+        title: "Not logged in",
+        description: "Please log in to request access"
+      });
+      return;
+    }
 
     setLoading(true);
 
     try {
       const { error } = await supabase
-        .from('event_orders')
+        .from('event_access')
         .insert({
           event_id: event.id,
           user_id: user.id,
-          status: 'pending',
-          plus_guests: 0,
+          status: 'requested',
+          message: message.trim() || null
         });
 
-      if (error) throw error;
+      if (error) {
+        // If already exists (unique constraint), update instead
+        if (error.code === '23505') {
+          const { error: updateError } = await supabase
+            .from('event_access')
+            .update({ 
+              status: 'requested',
+              message: message.trim() || null,
+              updated_at: new Date().toISOString()
+            })
+            .eq('event_id', event.id)
+            .eq('user_id', user.id);
+
+          if (updateError) throw updateError;
+        } else {
+          throw error;
+        }
+      }
 
       toast({
-        title: 'Request Sent!',
-        description: 'Your request to join has been sent to the host. You\'ll be notified when they respond.',
+        title: 'Request sent!',
+        description: 'The host will review your request soon.',
       });
 
       onOpenChange(false);

@@ -47,6 +47,10 @@ export interface Event {
   bringOwnDrinks: boolean;
   allowPlusOnes: boolean;
   maxPlusOnes?: number;
+  eventType?: 'club' | 'private_host';
+  isLocationHidden?: boolean;
+  ticketingEnabled?: boolean;
+  joinRequestRequired?: boolean;
 }
 
 export interface Helper {
@@ -84,4 +88,14 @@ export interface EventRequest {
   plusOnes: number;
   requestedAt: string;
   message?: string;
+}
+
+export interface EventAccess {
+  id: string;
+  event_id: string;
+  user_id: string;
+  status: 'requested' | 'approved' | 'rejected' | 'blocked';
+  message?: string;
+  created_at: string;
+  updated_at: string;
 }

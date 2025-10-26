@@ -5,8 +5,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
+import { Card } from '@/components/ui/card';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { X, Plus, Trash2, Users, Ticket } from 'lucide-react';
+import { X, Plus, Trash2, Users, Ticket, Check } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { z } from 'zod';
@@ -46,6 +48,7 @@ export const EventManageModal = ({ open, onOpenChange, event, onSuccess }: Event
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [tickets, setTickets] = useState<any[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
+  const [accessRequests, setAccessRequests] = useState<any[]>([]);
   
   const [formData, setFormData] = useState({
     title: event?.title || '',
@@ -100,6 +103,20 @@ export const EventManageModal = ({ open, onOpenChange, event, onSuccess }: Event
       .eq('event_id', event.id);
     
     if (orderData) setOrders(orderData);
+
+    // Load access requests for private events
+    if (event.event_type === 'private_host') {
+      const { data: requestData } = await supabase
+        .from('event_access')
+        .select(`
+          *,
+          profiles:user_id (display_name, avatar_url)
+        `)
+        .eq('event_id', event.id)
+        .order('created_at', { ascending: false });
+      
+      if (requestData) setAccessRequests(requestData);
+    }
   };
 
   const handleUpdate = async (e: React.FormEvent) => {
@@ -193,6 +210,31 @@ export const EventManageModal = ({ open, onOpenChange, event, onSuccess }: Event
     });
   };
 
+  const handleUpdateRequest = async (requestId: string, newStatus: 'approved' | 'rejected' | 'blocked') => {
+    const { error } = await supabase
+      .from('event_access')
+      .update({ status: newStatus, updated_at: new Date().toISOString() })
+      .eq('id', requestId);
+
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Failed to update request",
+        description: error.message
+      });
+      return;
+    }
+
+    toast({
+      title: newStatus === 'approved' ? "Request approved!" : "Request rejected",
+      description: newStatus === 'approved' 
+        ? "User can now see the event location" 
+        : "User has been notified"
+    });
+
+    loadEventData(); // Refresh
+  };
+
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
@@ -202,7 +244,7 @@ export const EventManageModal = ({ open, onOpenChange, event, onSuccess }: Event
           </DialogHeader>
 
           <Tabs defaultValue="edit" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className={`grid w-full ${event?.event_type === 'private_host' ? 'grid-cols-4' : 'grid-cols-3'}`}>
               <TabsTrigger value="edit">Edit</TabsTrigger>
               <TabsTrigger value="tickets">
                 <Ticket className="w-4 h-4 mr-2" />
@@ -212,6 +254,12 @@ export const EventManageModal = ({ open, onOpenChange, event, onSuccess }: Event
                 <Users className="w-4 h-4 mr-2" />
                 Orders ({orders.length})
               </TabsTrigger>
+              {event?.event_type === 'private_host' && (
+                <TabsTrigger value="requests">
+                  <Users className="w-4 h-4 mr-2" />
+                  Requests ({accessRequests.length})
+                </TabsTrigger>
+              )}
             </TabsList>
 
             <TabsContent value="edit" className="space-y-4">
@@ -317,6 +365,66 @@ export const EventManageModal = ({ open, onOpenChange, event, onSuccess }: Event
                 </div>
               )}
             </TabsContent>
+
+            {event?.event_type === 'private_host' && (
+              <TabsContent value="requests">
+                {accessRequests.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">No requests yet</div>
+                ) : (
+                  <div className="space-y-3">
+                    {accessRequests.map((request) => (
+                      <Card key={request.id} className="glass-card p-4">
+                        <div className="flex items-start gap-3">
+                          <Avatar className="w-10 h-10">
+                            <AvatarImage src={request.profiles?.avatar_url} />
+                            <AvatarFallback>
+                              {request.profiles?.display_name?.[0] || '?'}
+                            </AvatarFallback>
+                          </Avatar>
+                          
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium break-words">{request.profiles?.display_name || 'Anonymous'}</p>
+                            {request.message && (
+                              <p className="text-sm text-muted-foreground mt-1 break-words whitespace-normal">{request.message}</p>
+                            )}
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {new Date(request.created_at).toLocaleString()}
+                            </p>
+                          </div>
+
+                          <div className="flex gap-2 flex-shrink-0">
+                            {request.status === 'requested' ? (
+                              <>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="bg-emerald-600/20 text-emerald-300 border-emerald-600/40 hover:bg-emerald-600/30"
+                                  onClick={() => handleUpdateRequest(request.id, 'approved')}
+                                >
+                                  <Check className="w-4 h-4" />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="bg-red-600/20 text-red-300 border-red-600/40 hover:bg-red-600/30"
+                                  onClick={() => handleUpdateRequest(request.id, 'rejected')}
+                                >
+                                  <X className="w-4 h-4" />
+                                </Button>
+                              </>
+                            ) : (
+                              <Badge variant={request.status === 'approved' ? 'default' : 'destructive'}>
+                                {request.status}
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
+            )}
           </Tabs>
         </DialogContent>
       </Dialog>

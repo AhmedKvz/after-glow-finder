@@ -31,6 +31,16 @@ export const BuyTicketModal = ({ open, onOpenChange, event, onSuccess }: BuyTick
 
   const handlePurchase = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Guard for event type
+    if (event.event_type !== 'club' || !event.ticketing_enabled) {
+      toast({
+        variant: "destructive",
+        title: "Tickets not available",
+        description: "This event doesn't support ticket purchases"
+      });
+      return;
+    }
     
     if (!user) {
       toast({

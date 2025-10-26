@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { X, Plus } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -49,7 +50,8 @@ export const CreateEventModal = ({ open, onOpenChange, onSuccess }: CreateEventM
     music_tags: [] as string[],
     bring_own_drinks: false,
     allow_plus_one: false,
-    allow_plus_two: false
+    allow_plus_two: false,
+    event_type: 'club' as 'club' | 'private_host'
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -87,7 +89,8 @@ export const CreateEventModal = ({ open, onOpenChange, onSuccess }: CreateEventM
           music_tags: formData.music_tags,
           bring_own_drinks: formData.bring_own_drinks,
           allow_plus_one: formData.allow_plus_one,
-          allow_plus_two: formData.allow_plus_two
+          allow_plus_two: formData.allow_plus_two,
+          event_type: formData.event_type
         });
 
       if (error) throw error;
@@ -111,7 +114,8 @@ export const CreateEventModal = ({ open, onOpenChange, onSuccess }: CreateEventM
         music_tags: [],
         bring_own_drinks: false,
         allow_plus_one: false,
-        allow_plus_two: false
+        allow_plus_two: false,
+        event_type: 'club'
       });
 
       onOpenChange(false);
@@ -169,6 +173,38 @@ export const CreateEventModal = ({ open, onOpenChange, onSuccess }: CreateEventM
               className={errors.title ? 'border-destructive' : ''}
             />
             {errors.title && <p className="text-sm text-destructive">{errors.title}</p>}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="event_type">Event Type *</Label>
+            <Select
+              value={formData.event_type}
+              onValueChange={(value) => setFormData({ ...formData, event_type: value as 'club' | 'private_host' })}
+            >
+              <SelectTrigger id="event_type" className="glass-card">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="glass-card">
+                <SelectItem value="club">
+                  <div className="flex items-center gap-2 py-1">
+                    <span>🏛️</span>
+                    <div>
+                      <p className="font-medium">Club Event</p>
+                      <p className="text-xs text-muted-foreground">Public location, ticket sales</p>
+                    </div>
+                  </div>
+                </SelectItem>
+                <SelectItem value="private_host">
+                  <div className="flex items-center gap-2 py-1">
+                    <span>🗝️</span>
+                    <div>
+                      <p className="font-medium">Private Host</p>
+                      <p className="text-xs text-muted-foreground">Hidden location, request to join</p>
+                    </div>
+                  </div>
+                </SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">

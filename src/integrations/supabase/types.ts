@@ -189,6 +189,44 @@ export type Database = {
           },
         ]
       }
+      event_access: {
+        Row: {
+          created_at: string
+          event_id: string
+          id: string
+          message: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          id?: string
+          message?: string | null
+          status: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          id?: string
+          message?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_access_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_orders: {
         Row: {
           created_at: string
@@ -276,14 +314,18 @@ export type Database = {
           description: string | null
           dj_name: string | null
           end_time: string
+          event_type: Database["public"]["Enums"]["event_type"]
           exact_address: string | null
           host_id: string
           id: string
+          is_location_hidden: boolean
           is_private: boolean | null
+          join_request_required: boolean
           location: string
           music_tags: string[] | null
           requires_approval: boolean | null
           start_time: string
+          ticketing_enabled: boolean
           title: string
           updated_at: string
           venue_id: string | null
@@ -298,14 +340,18 @@ export type Database = {
           description?: string | null
           dj_name?: string | null
           end_time: string
+          event_type?: Database["public"]["Enums"]["event_type"]
           exact_address?: string | null
           host_id: string
           id?: string
+          is_location_hidden?: boolean
           is_private?: boolean | null
+          join_request_required?: boolean
           location: string
           music_tags?: string[] | null
           requires_approval?: boolean | null
           start_time: string
+          ticketing_enabled?: boolean
           title: string
           updated_at?: string
           venue_id?: string | null
@@ -320,14 +366,18 @@ export type Database = {
           description?: string | null
           dj_name?: string | null
           end_time?: string
+          event_type?: Database["public"]["Enums"]["event_type"]
           exact_address?: string | null
           host_id?: string
           id?: string
+          is_location_hidden?: boolean
           is_private?: boolean | null
+          join_request_required?: boolean
           location?: string
           music_tags?: string[] | null
           requires_approval?: boolean | null
           start_time?: string
+          ticketing_enabled?: boolean
           title?: string
           updated_at?: string
           venue_id?: string | null
@@ -522,6 +572,7 @@ export type Database = {
       generate_ticket_code: { Args: never; Returns: string }
     }
     Enums: {
+      event_type: "club" | "private_host"
       gender_type: "male" | "female" | "other" | "hidden"
       vote_type: "like" | "pass"
     }
@@ -651,6 +702,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      event_type: ["club", "private_host"],
       gender_type: ["male", "female", "other", "hidden"],
       vote_type: ["like", "pass"],
     },

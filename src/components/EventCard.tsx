@@ -27,9 +27,14 @@ export const EventCard: React.FC<EventCardProps> = ({ event, compact = false }) 
             alt={event.title}
             className="w-20 h-20 sm:w-24 sm:h-24 rounded-lg object-cover"
           />
-          {event.isPrivate && (
-            <Badge className="absolute -top-1 -right-1 text-[10px] sm:text-xs bg-accent text-accent-foreground px-1 py-0">
-              Private
+          {event.eventType === 'club' && (
+            <Badge className="absolute top-1 left-1 text-[10px] sm:text-[11px] bg-emerald-600/20 text-emerald-300 backdrop-blur-sm px-1.5 py-0.5">
+              🏛️ CLUB
+            </Badge>
+          )}
+          {event.eventType === 'private_host' && (
+            <Badge className="absolute top-1 left-1 text-[10px] sm:text-[11px] bg-yellow-600/20 text-yellow-300 backdrop-blur-sm px-1.5 py-0.5">
+              🗝️ PRIVATE
             </Badge>
           )}
           {event.isPromoted && (
@@ -77,7 +82,7 @@ export const EventCard: React.FC<EventCardProps> = ({ event, compact = false }) 
           </div>
 
           {/* Event details */}
-          <div className="flex items-center gap-3 sm:gap-4 text-[13px] sm:text-sm text-muted-foreground mb-2">
+          <div className="flex items-center gap-3 sm:gap-4 text-[13px] sm:text-sm text-muted-foreground mb-2 flex-wrap">
             <div className="flex items-center gap-1 flex-shrink-0">
               <Clock size={14} className="sm:w-4 sm:h-4" />
               <span className="whitespace-nowrap">
@@ -91,10 +96,18 @@ export const EventCard: React.FC<EventCardProps> = ({ event, compact = false }) 
               <Users size={14} className="sm:w-4 sm:h-4" />
               <span className="whitespace-nowrap">{event.attendees}/{event.capacity}</span>
             </div>
-            <div className="flex items-center gap-1 flex-shrink-0">
-              <MapPin size={14} className="sm:w-4 sm:h-4" />
-              <span className="whitespace-nowrap">{event.distance}km</span>
-            </div>
+            {!event.isLocationHidden && (
+              <div className="flex items-center gap-1 flex-shrink-0">
+                <MapPin size={14} className="sm:w-4 sm:h-4" />
+                <span className="break-words whitespace-normal">{event.location.name}</span>
+              </div>
+            )}
+            {event.isLocationHidden && (
+              <div className="flex items-center gap-1 flex-shrink-0 text-muted-foreground/60">
+                <MapPin size={14} className="sm:w-4 sm:h-4" />
+                <span className="whitespace-nowrap">Hidden</span>
+              </div>
+            )}
           </div>
 
           {/* Additional event info */}

@@ -27,7 +27,7 @@ const Search = () => {
   const loadEvents = async () => {
     const { data, error } = await supabase
       .from('events')
-      .select('*')
+      .select('*, profiles:host_id(display_name, avatar_url)')
       .gte('date', new Date().toISOString().split('T')[0])
       .order('date', { ascending: true });
 

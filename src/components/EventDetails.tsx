@@ -28,6 +28,7 @@ const posterImages = [eventPoster1, eventPoster2, eventPoster3];
 
 export const EventDetails: React.FC<EventDetailsProps> = ({ event, onBack }) => {
   const [requestStatus, setRequestStatus] = useState<'none' | 'pending' | 'approved' | 'declined'>('none');
+  const [accessStatus, setAccessStatus] = useState<'none' | 'requested' | 'approved' | 'rejected' | 'blocked'>('none');
   const [selectedPlusOnes, setSelectedPlusOnes] = useState('0');
   const [showRequestDialog, setShowRequestDialog] = useState(false);
   const [showTicketDialog, setShowTicketDialog] = useState(false);
@@ -38,38 +39,89 @@ export const EventDetails: React.FC<EventDetailsProps> = ({ event, onBack }) => 
   
   const posterImage = posterImages[event.id.charCodeAt(0) % posterImages.length];
   
-  // Check if user already has an order for this event
+  // Check if user already has an order/access for this event
   useEffect(() => {
     if (!user) return;
     
-    const checkExistingOrder = async () => {
-      const { data } = await supabase
-        .from('event_orders')
-        .select('status')
-        .eq('event_id', event.id)
-        .eq('user_id', user.id)
-        .maybeSingle();
-      
-      if (data && data.status) {
-        const status = data.status as 'pending' | 'approved' | 'declined';
-        setRequestStatus(status);
+    const checkExistingStatus = async () => {
+      // For private host events, check event_access
+      if (event.eventType === 'private_host') {
+        const { data } = await supabase
+          .from('event_access')
+          .select('status')
+          .eq('event_id', event.id)
+          .eq('user_id', user.id)
+          .maybeSingle();
+        
+        if (data) {
+          setAccessStatus(data.status as 'requested' | 'approved' | 'rejected' | 'blocked');
+        }
+      } else {
+        // For club events, check event_orders (legacy)
+        const { data } = await supabase
+          .from('event_orders')
+          .select('status')
+          .eq('event_id', event.id)
+          .eq('user_id', user.id)
+          .maybeSingle();
+        
+        if (data && data.status) {
+          const status = data.status as 'pending' | 'approved' | 'declined';
+          setRequestStatus(status);
+        }
       }
     };
     
-    checkExistingOrder();
-  }, [user, event.id]);
+    checkExistingStatus();
+  }, [user, event.id, event.eventType]);
   
   const handleJoinRequest = () => {
-    if (!event.isPrivate) {
-      // Show ticket purchase for public events
+    if (event.eventType === 'club') {
+      // Show ticket purchase for club events
       setShowTicketDialog(true);
     } else {
-      // Show request dialog for private events
+      // Show request dialog for private host events
       setShowRequestDialog(true);
     }
   };
   
   const getStatusButton = () => {
+    // Handle private host events
+    if (event.eventType === 'private_host') {
+      switch (accessStatus) {
+        case 'requested':
+          return (
+            <Button disabled className="w-full glass-card">
+              <Clock className="w-4 h-4 mr-2" />
+              Pending Approval
+            </Button>
+          );
+        case 'approved':
+          return (
+            <Button disabled className="w-full gradient-primary text-white">
+              <Check className="w-4 h-4 mr-2" />
+              You're In!
+            </Button>
+          );
+        case 'rejected':
+        case 'blocked':
+          return (
+            <Button disabled variant="destructive" className="w-full">
+              <X className="w-4 h-4 mr-2" />
+              Access Denied
+            </Button>
+          );
+        default:
+          return (
+            <Button onClick={handleJoinRequest} className="w-full bg-[#8C52FF] hover:bg-[#7840DD] text-white">
+              <Users className="w-4 h-4 mr-2" />
+              Request to Join
+            </Button>
+          );
+      }
+    }
+    
+    // Handle club events
     switch (requestStatus) {
       case 'pending':
         return (
@@ -95,23 +147,15 @@ export const EventDetails: React.FC<EventDetailsProps> = ({ event, onBack }) => 
       default:
         return (
           <Button onClick={handleJoinRequest} className="w-full gradient-primary text-white shadow-primary">
-            {event.isPrivate ? (
-              <>
-                <Users className="w-4 h-4 mr-2" />
-                Request to Join
-              </>
-            ) : (
-              <>
-                <Ticket className="w-4 h-4 mr-2" />
-                Get Ticket
-              </>
-            )}
+            <Ticket className="w-4 h-4 mr-2" />
+            Buy Ticket
           </Button>
         );
     }
   };
   
-  const isLocationVisible = !event.isPrivate || requestStatus === 'approved';
+  const isLocationVisible = (event.eventType === 'club' && !event.isLocationHidden) || 
+                            (event.eventType === 'private_host' && accessStatus === 'approved');
   
   return (
     <div className="min-h-screen bg-background">
@@ -134,10 +178,15 @@ export const EventDetails: React.FC<EventDetailsProps> = ({ event, onBack }) => 
           <ArrowLeft size={16} />
         </Button>
         
-        {/* Private badge */}
-        {event.isPrivate && (
-          <Badge className="absolute top-4 right-4 safe-top bg-accent text-accent-foreground">
-            Private
+        {/* Event Type badges */}
+        {event.eventType === 'club' && (
+          <Badge className="absolute top-4 right-4 safe-top bg-emerald-600/20 text-emerald-300 backdrop-blur-sm">
+            🏛️ CLUB
+          </Badge>
+        )}
+        {event.eventType === 'private_host' && (
+          <Badge className="absolute top-4 right-4 safe-top bg-yellow-600/20 text-yellow-300 backdrop-blur-sm">
+            🗝️ PRIVATE
           </Badge>
         )}
         
@@ -227,27 +276,31 @@ export const EventDetails: React.FC<EventDetailsProps> = ({ event, onBack }) => 
         {/* Location */}
         <Card className="glass-card p-4">
           <div className="flex items-start gap-3">
-            <MapPin className="w-5 h-5 text-primary mt-0.5" />
-            <div className="flex-1">
-              <h3 className="font-medium mb-1">Location</h3>
-              <div className="text-sm text-muted-foreground">
-                {isLocationVisible ? (
-                  <>
+            {isLocationVisible ? (
+              <>
+                <MapPin className="w-5 h-5 text-primary mt-0.5" />
+                <div className="flex-1">
+                  <h3 className="font-medium mb-1">Location</h3>
+                  <div className="text-sm text-muted-foreground">
                     <div>{event.location.name}</div>
                     <div>{event.location.address}</div>
-                  </>
-                ) : (
-                  <div className="blur-sm select-none">
-                    Hidden until approved
                   </div>
-                )}
-              </div>
-              {!isLocationVisible && (
-                <Badge variant="secondary" className="mt-2 text-xs">
-                  Address revealed after approval
-                </Badge>
-              )}
-            </div>
+                </div>
+              </>
+            ) : (
+              <>
+                <MapPin className="w-5 h-5 text-muted-foreground/40 mt-0.5" />
+                <div className="flex-1">
+                  <h3 className="font-medium text-muted-foreground">Location Hidden</h3>
+                  <div className="text-sm text-muted-foreground/60">
+                    You'll see the address after approval
+                  </div>
+                  <Badge variant="secondary" className="mt-2 text-xs">
+                    Address revealed after approval
+                  </Badge>
+                </div>
+              </>
+            )}
           </div>
         </Card>
         
