@@ -81,7 +81,7 @@ const Discover = () => {
               {featuredEvents.map((event, index) => (
                 <Card 
                   key={event.id} 
-                  className="relative min-w-[280px] h-[200px] overflow-hidden glass-card cursor-pointer transition-transform hover:scale-105"
+                  className="relative min-w-[300px] sm:min-w-[320px] h-[220px] overflow-hidden glass-card cursor-pointer transition-transform hover:scale-105"
                 >
                   <img
                     src={[eventPoster1, eventPoster2, eventPoster3][index % 3]}
@@ -92,10 +92,10 @@ const Discover = () => {
                   
                   {/* Event info overlay */}
                   <div className="absolute bottom-4 left-4 right-4">
-                    <h3 className="text-white font-semibold text-lg mb-2 line-clamp-2">
+                    <h3 className="text-white font-semibold text-base sm:text-lg md:text-xl mb-2 leading-snug break-words whitespace-normal">
                       {event.title}
                     </h3>
-                    <div className="flex items-center gap-4 text-white/80 text-sm mb-2">
+                    <div className="flex items-center gap-4 text-white/80 text-[13px] sm:text-sm mb-2">
                       <div className="flex items-center gap-1">
                         <Clock size={14} />
                         {event.start_time}
@@ -107,9 +107,13 @@ const Discover = () => {
                     </div>
                     
                     {event.music_tags && event.music_tags.length > 0 && (
-                      <Badge variant="secondary" className="bg-white/20 text-white border-0">
-                        {event.music_tags[0]}
-                      </Badge>
+                      <div className="flex gap-2 flex-wrap">
+                        {event.music_tags.map((tag: string) => (
+                          <Badge key={tag} variant="secondary" className="bg-white/20 text-white border-0 text-[13px] sm:text-sm">
+                            {tag}
+                          </Badge>
+                        ))}
+                      </div>
                     )}
                   </div>
                 </Card>
@@ -136,9 +140,9 @@ const Discover = () => {
           ) : (
             <div className="space-y-3">
               {filteredEvents.map((event) => (
-                <Card key={event.id} className="glass-card p-4">
+                <Card key={event.id} className="glass-card p-4 sm:p-5 min-h-fit">
                   <div className="flex gap-4">
-                    <div className="w-20 h-20 rounded-lg overflow-hidden bg-primary/10 flex-shrink-0">
+                    <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-lg overflow-hidden bg-primary/10 flex-shrink-0">
                       <img
                         src={[eventPoster1, eventPoster2, eventPoster3][Math.floor(Math.random() * 3)]}
                         alt={event.title}
@@ -146,15 +150,15 @@ const Discover = () => {
                       />
                     </div>
                     
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-lg truncate">{event.title}</h3>
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-base sm:text-lg md:text-xl leading-snug break-words whitespace-normal mb-1">{event.title}</h3>
                       
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+                      <div className="flex items-center gap-2 text-[13px] sm:text-sm text-muted-foreground mt-1">
                         <MapPin size={14} />
-                        <span className="truncate">{event.location}</span>
+                        <span className="break-words whitespace-normal">{event.location}</span>
                       </div>
                       
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+                      <div className="flex items-center gap-2 text-[13px] sm:text-sm text-muted-foreground mt-1">
                         <Clock size={14} />
                         <span>
                           {new Date(event.date).toLocaleDateString()} • {event.start_time}
@@ -163,8 +167,8 @@ const Discover = () => {
 
                       {event.music_tags && event.music_tags.length > 0 && (
                         <div className="flex gap-2 mt-2 flex-wrap">
-                          {event.music_tags.slice(0, 3).map((tag: string) => (
-                            <Badge key={tag} variant="secondary" className="text-xs">
+                          {event.music_tags.map((tag: string) => (
+                            <Badge key={tag} variant="secondary" className="text-[13px] sm:text-sm">
                               {tag}
                             </Badge>
                           ))}
@@ -172,13 +176,13 @@ const Discover = () => {
                       )}
                     </div>
 
-                    <div className="flex flex-col items-end justify-between gap-2">
-                      <Badge variant="secondary" className="whitespace-nowrap">
+                    <div className="flex flex-col items-end justify-between gap-2 flex-shrink-0">
+                      <Badge variant="secondary" className="whitespace-nowrap text-[13px] sm:text-sm">
                         {event.capacity} cap
                       </Badge>
                       <Button
                         size="sm"
-                        className="gradient-primary whitespace-nowrap"
+                        className="gradient-primary whitespace-nowrap text-[13px] sm:text-sm h-9"
                         onClick={() => setSelectedEventForTicket(event)}
                       >
                         <Ticket className="w-3 h-3 mr-1" />

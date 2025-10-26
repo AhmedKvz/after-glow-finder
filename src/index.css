@@ -254,4 +254,17 @@ All colors MUST be HSL for proper theming.
   .safe-bottom {
     padding-bottom: max(1rem, env(safe-area-inset-bottom));
   }
+
+  /* Mobile-first text utilities */
+  .mobile-text {
+    @apply text-[15px] leading-snug break-words whitespace-normal;
+  }
+  
+  .mobile-meta {
+    @apply text-[13px] leading-relaxed break-words whitespace-normal;
+  }
+  
+  .card-mobile {
+    @apply p-3 sm:p-4 min-h-fit;
+  }
 }

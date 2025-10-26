@@ -177,9 +177,9 @@ const Search = () => {
             ) : (
               <div className="space-y-3">
                 {filteredEvents.map((event, index) => (
-                  <Card key={event.id} className="glass-card p-4">
+                  <Card key={event.id} className="glass-card p-4 sm:p-5 min-h-fit">
                     <div className="flex gap-4">
-                      <div className="w-20 h-20 rounded-lg overflow-hidden bg-primary/10 flex-shrink-0">
+                      <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-lg overflow-hidden bg-primary/10 flex-shrink-0">
                         <img
                           src={[eventPoster1, eventPoster2, eventPoster3][index % 3]}
                           alt={event.title}
@@ -187,15 +187,15 @@ const Search = () => {
                         />
                       </div>
                       
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-lg truncate">{event.title}</h3>
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-base sm:text-lg md:text-xl leading-snug break-words whitespace-normal mb-1">{event.title}</h3>
                         
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+                        <div className="flex items-center gap-2 text-[13px] sm:text-sm text-muted-foreground mt-1">
                           <MapPin size={14} />
-                          <span className="truncate">{event.location}</span>
+                          <span className="break-words whitespace-normal">{event.location}</span>
                         </div>
                         
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+                        <div className="flex items-center gap-2 text-[13px] sm:text-sm text-muted-foreground mt-1">
                           <Clock size={14} />
                           <span>
                             {new Date(event.date).toLocaleDateString()} • {event.start_time}
@@ -204,8 +204,8 @@ const Search = () => {
 
                         {event.music_tags && event.music_tags.length > 0 && (
                           <div className="flex gap-2 mt-2 flex-wrap">
-                            {event.music_tags.slice(0, 3).map((tag: string) => (
-                              <Badge key={tag} variant="secondary" className="text-xs">
+                            {event.music_tags.map((tag: string) => (
+                              <Badge key={tag} variant="secondary" className="text-[13px] sm:text-sm">
                                 {tag}
                               </Badge>
                             ))}
@@ -213,13 +213,13 @@ const Search = () => {
                         )}
                       </div>
 
-                      <div className="flex flex-col items-end justify-between gap-2">
-                        <Badge variant="secondary" className="whitespace-nowrap">
+                      <div className="flex flex-col items-end justify-between gap-2 flex-shrink-0">
+                        <Badge variant="secondary" className="whitespace-nowrap text-[13px] sm:text-sm">
                           {event.capacity} cap
                         </Badge>
                         <Button
                           size="sm"
-                          className="gradient-primary whitespace-nowrap"
+                          className="gradient-primary whitespace-nowrap text-[13px] sm:text-sm h-9"
                           onClick={() => setSelectedEventForTicket(event)}
                         >
                           Get Ticket
