@@ -226,10 +226,10 @@ const CircleSwipe = () => {
   return (
     <div className="min-h-screen bg-background safe-top pb-28">
       {/* Header */}
-      <div className="px-4 pt-6 pb-4 flex items-center justify-between">
+      <div className="px-4 sm:px-6 lg:px-8 pt-6 pb-4 flex items-center justify-between max-w-2xl mx-auto">
         <div>
-          <h1 className="text-2xl font-bold text-gradient-primary">Circle Swipe</h1>
-          <p className="text-sm text-muted-foreground">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gradient-primary">Circle Swipe</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">
             {selectedSession.events?.title}
           </p>
         </div>
@@ -249,15 +249,15 @@ const CircleSwipe = () => {
       </div>
 
       <div className="text-center mb-4">
-        <Badge variant="secondary" className="glass-card">
-          <Clock className="w-4 h-4 mr-1" />
+        <Badge variant="secondary" className="glass-card text-sm sm:text-base">
+          <Clock className="w-4 h-4 sm:w-5 sm:h-5 mr-1" />
           {timeLeft()} hours left
         </Badge>
       </div>
 
       {/* Swipe Area */}
-      <div className="px-4 py-6 relative">
-        <div className="relative min-h-[600px]">
+      <div className="px-4 sm:px-6 lg:px-8 py-6 relative max-w-2xl mx-auto">
+        <div className="relative min-h-[600px] sm:min-h-[650px]">
           {currentProfileToShow ? (
             <CircleSwipeCard
               key={currentProfileToShow.user_id}
@@ -281,7 +281,7 @@ const CircleSwipe = () => {
 
         {/* Progress */}
         {profiles.length > 0 && (
-          <div className="mt-6 text-center text-sm text-muted-foreground">
+          <div className="mt-6 text-center text-sm sm:text-base text-muted-foreground font-medium">
             {Object.keys(myVotes).length} / {profiles.length} voted
           </div>
         )}
