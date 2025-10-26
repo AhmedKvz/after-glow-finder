@@ -101,8 +101,8 @@ export const CircleSwipeCard = ({ profile, onVote }: CircleSwipeCardProps) => {
         </div>
       </Card>
 
-      {/* Action Buttons - Outside card, always visible */}
-      <div className="flex gap-6 justify-center mt-6 relative z-10">
+      {/* Action Buttons - Outside card, always visible, above TabBar */}
+      <div className="flex gap-6 justify-center mt-6 mb-8 relative z-10">
         <motion.button
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}

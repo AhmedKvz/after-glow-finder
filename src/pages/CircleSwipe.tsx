@@ -224,7 +224,7 @@ const CircleSwipe = () => {
   const currentProfileToShow = unvotedProfiles[0];
 
   return (
-    <div className="min-h-screen bg-background safe-top">
+    <div className="min-h-screen bg-background safe-top pb-28">
       {/* Header */}
       <div className="px-4 pt-6 pb-4 flex items-center justify-between">
         <div>
