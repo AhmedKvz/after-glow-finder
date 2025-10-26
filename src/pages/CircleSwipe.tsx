@@ -1,175 +1,279 @@
 import { useState, useEffect } from 'react';
-import { Heart, X, Users, Clock, Sparkles } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Heart, X, Sparkles, Users, Loader2, PartyPopper, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { mockCircleSwipeSession, mockCircleSwipeParticipants } from '@/data/mockData';
-import { SwipeCard } from '@/components/SwipeCard';
+import { CircleSwipeCard } from '@/components/CircleSwipeCard';
 import { MatchesModal } from '@/components/MatchesModal';
-import { useDemoMode } from '@/contexts/DemoModeContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 const CircleSwipe = () => {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [matches, setMatches] = useState<string[]>([]);
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [sessions, setSessions] = useState<any[]>([]);
+  const [selectedSession, setSelectedSession] = useState<any | null>(null);
+  const [profiles, setProfiles] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [showMatches, setShowMatches] = useState(false);
-  const [hasJoined, setHasJoined] = useState(false);
-  const { isDemoMode } = useDemoMode();
-  
-  const session = mockCircleSwipeSession;
-  const participants = mockCircleSwipeParticipants;
-  
-  const handleSwipe = (direction: 'left' | 'right') => {
-    if (direction === 'right') {
-      // Add to matches in demo mode
-      const currentParticipant = participants[currentIndex];
-      setMatches(prev => [...prev, currentParticipant.id]);
+  const [matches, setMatches] = useState<any[]>([]);
+  const [myVotes, setMyVotes] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    if (user) {
+      loadSessions();
     }
-    
-    if (currentIndex < participants.length - 1) {
-      setCurrentIndex(prev => prev + 1);
-    } else {
-      // Finished swiping, show matches
-      setShowMatches(true);
+  }, [user]);
+
+  useEffect(() => {
+    if (selectedSession) {
+      loadSessionData();
+    }
+  }, [selectedSession]);
+
+  const loadSessions = async () => {
+    if (!user) return;
+
+    const { data, error } = await supabase
+      .from('circle_swipe_sessions')
+      .select('*, events(*)')
+      .contains('participant_ids', [user.id])
+      .gte('ends_at', new Date().toISOString())
+      .order('starts_at', { ascending: false });
+
+    if (data && data.length > 0) {
+      setSessions(data);
+      setSelectedSession(data[0]);
+    }
+    setLoading(false);
+  };
+
+  const loadSessionData = async () => {
+    if (!selectedSession || !user) return;
+
+    // Load other participants' profiles
+    const otherParticipants = selectedSession.participant_ids.filter(
+      (id: string) => id !== user.id
+    );
+
+    const { data: profilesData } = await supabase
+      .from('profiles')
+      .select('*')
+      .in('user_id', otherParticipants);
+
+    if (profilesData) {
+      setProfiles(profilesData);
+    }
+
+    // Load my votes
+    const { data: votesData } = await supabase
+      .from('circle_swipe_votes')
+      .select('*')
+      .eq('session_id', selectedSession.id)
+      .eq('swiper_id', user.id);
+
+    if (votesData) {
+      const votesMap = votesData.reduce((acc, vote) => {
+        acc[vote.target_id] = vote.vote;
+        return acc;
+      }, {} as Record<string, string>);
+      setMyVotes(votesMap);
+    }
+
+    // Load matches
+    const { data: matchesData } = await supabase
+      .from('circle_swipe_matches')
+      .select('*')
+      .eq('session_id', selectedSession.id)
+      .or(`user1_id.eq.${user.id},user2_id.eq.${user.id}`);
+
+    if (matchesData) {
+      // Load profiles for matched users
+      const matchedUserIds = matchesData.map(m => 
+        m.user1_id === user.id ? m.user2_id : m.user1_id
+      );
+      
+      const { data: matchedProfiles } = await supabase
+        .from('profiles')
+        .select('*')
+        .in('user_id', matchedUserIds);
+
+      if (matchedProfiles) {
+        setMatches(matchedProfiles);
+      }
     }
   };
 
-  const handleJoinSession = () => {
-    setHasJoined(true);
+  const handleVote = async (vote: 'yes' | 'no') => {
+    if (!user || !selectedSession) return;
+
+    const unvotedProfiles = profiles.filter(p => !myVotes[p.user_id]);
+    const currentProfile = unvotedProfiles[0];
+    
+    if (!currentProfile) return;
+
+    // Save vote
+    const { error } = await supabase
+      .from('circle_swipe_votes')
+      .insert({
+        session_id: selectedSession.id,
+        swiper_id: user.id,
+        target_id: currentProfile.user_id,
+        vote: vote === 'yes' ? 'like' : 'pass'
+      });
+
+    if (error) {
+      console.error('Vote error:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Failed to save vote',
+        description: error.message
+      });
+      return;
+    }
+
+    // Update local votes
+    setMyVotes(prev => ({ ...prev, [currentProfile.user_id]: vote }));
+
+    // Check for match if vote is yes
+    if (vote === 'yes') {
+      const { data: theirVote } = await supabase
+        .from('circle_swipe_votes')
+        .select('*')
+        .eq('session_id', selectedSession.id)
+        .eq('swiper_id', currentProfile.user_id)
+        .eq('target_id', user.id)
+        .eq('vote', 'like')
+        .maybeSingle();
+
+      if (theirVote) {
+        // It's a match!
+        toast({
+          title: "It's a Match! 🎉",
+          description: `You and ${currentProfile.display_name} liked each other!`
+        });
+        
+        // Create match record
+        await supabase
+          .from('circle_swipe_matches')
+          .insert({
+            session_id: selectedSession.id,
+            user1_id: user.id,
+            user2_id: currentProfile.user_id
+          });
+
+        loadSessionData();
+      }
+    }
   };
 
   const timeLeft = () => {
+    if (!selectedSession) return 0;
     const now = new Date();
-    const endTime = new Date(session.endsAt);
+    const endTime = new Date(selectedSession.ends_at);
     const diff = endTime.getTime() - now.getTime();
     const hours = Math.floor(diff / (1000 * 60 * 60));
     return Math.max(0, hours);
   };
 
-  if (!hasJoined) {
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background safe-top flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!selectedSession) {
     return (
       <div className="min-h-screen bg-background safe-top">
         <div className="px-4 pt-6">
-          <h1 className="text-2xl font-bold text-gradient-primary mb-6">
-            Circle Swipe
-          </h1>
-          
-          <Card className="glass-card p-6 mb-6">
-            <div className="text-center">
-              <div className="w-16 h-16 rounded-full gradient-primary flex items-center justify-center mx-auto mb-4">
-                <Heart className="w-8 h-8 text-white" />
-              </div>
-              
-              <h2 className="text-xl font-bold mb-2">Join Circle Swipe</h2>
-              <p className="text-muted-foreground mb-4">
-                Connect with other attendees from recent events through our matching system
-              </p>
-              
-              <div className="bg-accent/10 rounded-lg p-4 mb-4">
-                <div className="flex items-center justify-center gap-2 text-accent mb-2">
-                  <Users className="w-5 h-5" />
-                  <span className="font-medium">{session.participantCount} participants</span>
-                </div>
-                <div className="flex items-center justify-center gap-2 text-accent">
-                  <Clock className="w-5 h-5" />
-                  <span className="font-medium">{timeLeft()} hours left</span>
-                </div>
-              </div>
-              
-              <div className="text-sm text-muted-foreground mb-6">
-                Entry fee: <span className="font-bold text-accent">€3.00</span>
-                <br />
-                <span className="text-xs">Payment disabled in MVP</span>
-              </div>
-              
-              <Button 
-                onClick={handleJoinSession}
-                className="w-full gradient-primary"
-                size="lg"
-              >
-                Join Session (Demo)
-              </Button>
-            </div>
-          </Card>
-          
-          <Card className="glass-card p-4">
-            <h3 className="font-semibold mb-3">How it works</h3>
-            <div className="space-y-3 text-sm text-muted-foreground">
-              <div className="flex gap-3">
-                <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
-                  <span className="text-xs font-bold text-primary">1</span>
-                </div>
-                <p>Swipe through other participants from recent events</p>
-              </div>
-              <div className="flex gap-3">
-                <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
-                  <span className="text-xs font-bold text-primary">2</span>
-                </div>
-                <p>Like profiles you're interested in connecting with</p>
-              </div>
-              <div className="flex gap-3">
-                <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
-                  <span className="text-xs font-bold text-primary">3</span>
-                </div>
-                <p>Get matched when both parties like each other</p>
-              </div>
-            </div>
+          <h1 className="text-2xl font-bold text-gradient-primary mb-2">Circle Swipe</h1>
+          <Card className="glass-card p-8 text-center mt-8">
+            <PartyPopper className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-xl font-semibold mb-2">No Active Sessions</h3>
+            <p className="text-muted-foreground">
+              Circle Swipe sessions are created automatically after events end. Attend an event to unlock matching!
+            </p>
           </Card>
         </div>
       </div>
     );
   }
 
+  // Filter out already voted profiles
+  const unvotedProfiles = profiles.filter(p => !myVotes[p.user_id]);
+  const currentProfileToShow = unvotedProfiles[0];
+
   return (
     <div className="min-h-screen bg-background safe-top">
-      <div className="px-4 pt-6">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold text-gradient-primary">
-            Circle Swipe
-          </h1>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowMatches(true)}
-            className="glass-card"
-          >
-            <Heart className="w-4 h-4 mr-2" />
-            {matches.length} Matches
-          </Button>
+      {/* Header */}
+      <div className="px-4 pt-6 pb-4 flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gradient-primary">Circle Swipe</h1>
+          <p className="text-sm text-muted-foreground">
+            {selectedSession.events?.title}
+          </p>
         </div>
-        
-        <div className="text-center mb-6">
-          <Badge variant="secondary" className="glass-card">
-            <Clock className="w-4 h-4 mr-1" />
-            {timeLeft()} hours left
-          </Badge>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setShowMatches(true)}
+          className="relative"
+        >
+          <Users className="w-5 h-5" />
+          {matches.length > 0 && (
+            <span className="absolute -top-1 -right-1 w-5 h-5 bg-accent text-accent-foreground text-xs rounded-full flex items-center justify-center">
+              {matches.length}
+            </span>
+          )}
+        </Button>
+      </div>
+
+      <div className="text-center mb-4">
+        <Badge variant="secondary" className="glass-card">
+          <Clock className="w-4 h-4 mr-1" />
+          {timeLeft()} hours left
+        </Badge>
+      </div>
+
+      {/* Swipe Area */}
+      <div className="px-4 py-6 relative">
+        <div className="relative h-[500px]">
+          {currentProfileToShow ? (
+            <CircleSwipeCard
+              profile={currentProfileToShow}
+              onVote={handleVote}
+            />
+          ) : (
+            <Card className="glass-card p-8 text-center h-full flex flex-col items-center justify-center">
+              <Sparkles className="w-16 h-16 text-primary mb-4" />
+              <h3 className="text-xl font-semibold mb-2">All Done!</h3>
+              <p className="text-muted-foreground mb-4">
+                You've voted on everyone in this session. Check your matches!
+              </p>
+              <Button onClick={() => setShowMatches(true)} className="gradient-primary">
+                <Users className="w-4 h-4 mr-2" />
+                View Matches ({matches.length})
+              </Button>
+            </Card>
+          )}
         </div>
 
-        {currentIndex < participants.length ? (
-          <SwipeCard
-            participant={participants[currentIndex]}
-            onSwipe={handleSwipe}
-            progress={((currentIndex + 1) / participants.length) * 100}
-          />
-        ) : (
-          <Card className="glass-card p-8 text-center">
-            <Sparkles className="w-16 h-16 text-accent mx-auto mb-4" />
-            <h2 className="text-xl font-bold mb-2">All done!</h2>
-            <p className="text-muted-foreground mb-4">
-              You've swiped through all participants. Check your matches!
-            </p>
-            <Button onClick={() => setShowMatches(true)} className="gradient-primary">
-              View {matches.length} Matches
-            </Button>
-          </Card>
+        {/* Progress */}
+        {profiles.length > 0 && (
+          <div className="mt-6 text-center text-sm text-muted-foreground">
+            {Object.keys(myVotes).length} / {profiles.length} voted
+          </div>
         )}
       </div>
-      
+
+      {/* Matches Modal */}
       <MatchesModal
         open={showMatches}
         onOpenChange={setShowMatches}
         matches={matches}
-        participants={participants}
       />
     </div>
   );

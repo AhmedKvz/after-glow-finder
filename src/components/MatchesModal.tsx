@@ -12,22 +12,17 @@ import { Card, CardContent } from '@/components/ui/card';
 interface MatchesModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  matches: string[];
-  participants: Array<{
-    id: string;
-    name: string;
-    avatar?: string;
-    age: number;
-    city: string;
-    bio: string;
-    interests: string[];
-    mutualEvents: string[];
+  matches: Array<{
+    user_id: string;
+    display_name?: string;
+    avatar_url?: string;
+    city?: string;
+    bio?: string;
+    music_tags?: string[];
   }>;
 }
 
-export const MatchesModal = ({ open, onOpenChange, matches, participants }: MatchesModalProps) => {
-  const matchedParticipants = participants.filter(p => matches.includes(p.id));
-
+export const MatchesModal = ({ open, onOpenChange, matches }: MatchesModalProps) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="glass-card max-w-md">
@@ -39,7 +34,7 @@ export const MatchesModal = ({ open, onOpenChange, matches, participants }: Matc
         </DialogHeader>
         
         <div className="space-y-4">
-          {matchedParticipants.length === 0 ? (
+          {matches.length === 0 ? (
             <div className="text-center py-8">
               <Heart className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
               <p className="text-muted-foreground">No matches yet!</p>
@@ -48,22 +43,27 @@ export const MatchesModal = ({ open, onOpenChange, matches, participants }: Matc
               </p>
             </div>
           ) : (
-            matchedParticipants.map((participant) => (
-              <Card key={participant.id} className="glass-card">
+            matches.map((profile) => (
+              <Card key={profile.user_id} className="glass-card">
                 <CardContent className="p-4">
                   <div className="flex items-center gap-3">
                     <Avatar className="w-12 h-12">
-                      <AvatarImage src={participant.avatar} />
+                      <AvatarImage src={profile.avatar_url} />
                       <AvatarFallback className="gradient-primary text-white">
-                        {participant.name.split(' ').map(n => n[0]).join('')}
+                        {profile.display_name?.[0]?.toUpperCase() || '?'}
                       </AvatarFallback>
                     </Avatar>
                     
                     <div className="flex-1">
-                      <h3 className="font-semibold">{participant.name}</h3>
+                      <h3 className="font-semibold">{profile.display_name || 'Anonymous'}</h3>
                       <p className="text-sm text-muted-foreground">
-                        {participant.age} • {participant.city}
+                        {profile.city || 'Belgrade'}
                       </p>
+                      {profile.bio && (
+                        <p className="text-xs text-muted-foreground mt-1 line-clamp-1">
+                          {profile.bio}
+                        </p>
+                      )}
                     </div>
                     
                     <Button
@@ -71,7 +71,7 @@ export const MatchesModal = ({ open, onOpenChange, matches, participants }: Matc
                       className="gradient-primary"
                       onClick={() => {
                         // In real implementation, this would open chat
-                        console.log('Start chat with', participant.name);
+                        console.log('Start chat with', profile.display_name);
                       }}
                     >
                       <MessageCircle className="w-4 h-4 mr-1" />
