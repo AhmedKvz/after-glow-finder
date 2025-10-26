@@ -279,8 +279,10 @@ export type Database = {
           exact_address: string | null
           host_id: string
           id: string
+          is_private: boolean | null
           location: string
           music_tags: string[] | null
+          requires_approval: boolean | null
           start_time: string
           title: string
           updated_at: string
@@ -299,8 +301,10 @@ export type Database = {
           exact_address?: string | null
           host_id: string
           id?: string
+          is_private?: boolean | null
           location: string
           music_tags?: string[] | null
+          requires_approval?: boolean | null
           start_time: string
           title: string
           updated_at?: string
@@ -319,8 +323,10 @@ export type Database = {
           exact_address?: string | null
           host_id?: string
           id?: string
+          is_private?: boolean | null
           location?: string
           music_tags?: string[] | null
+          requires_approval?: boolean | null
           start_time?: string
           title?: string
           updated_at?: string

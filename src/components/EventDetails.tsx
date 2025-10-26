@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { ArrowLeft, MapPin, Users, Clock, Star, Check, X, Calendar, Music, MessageSquare } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { ArrowLeft, MapPin, Users, Clock, Star, Check, X, Calendar, Music, MessageSquare, Ticket } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
@@ -11,6 +11,10 @@ import { Event, EventRequest } from '@/types';
 import { useDemoMode } from '@/contexts/DemoModeContext';
 import { useToast } from '@/hooks/use-toast';
 import { ReviewsList } from '@/components/ReviewsList';
+import { RequestToJoinModal } from '@/components/RequestToJoinModal';
+import { BuyTicketModal } from '@/components/BuyTicketModal';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import eventPoster1 from '@/assets/event-poster-1.jpg';
 import eventPoster2 from '@/assets/event-poster-2.jpg';
 import eventPoster3 from '@/assets/event-poster-3.jpg';
@@ -26,49 +30,42 @@ export const EventDetails: React.FC<EventDetailsProps> = ({ event, onBack }) => 
   const [requestStatus, setRequestStatus] = useState<'none' | 'pending' | 'approved' | 'declined'>('none');
   const [selectedPlusOnes, setSelectedPlusOnes] = useState('0');
   const [showRequestDialog, setShowRequestDialog] = useState(false);
+  const [showTicketDialog, setShowTicketDialog] = useState(false);
   
+  const { user } = useAuth();
   const { isDemoMode, showDemoSuccess } = useDemoMode();
   const { toast } = useToast();
   
   const posterImage = posterImages[event.id.charCodeAt(0) % posterImages.length];
   
+  // Check if user already has an order for this event
+  useEffect(() => {
+    if (!user) return;
+    
+    const checkExistingOrder = async () => {
+      const { data } = await supabase
+        .from('event_orders')
+        .select('status')
+        .eq('event_id', event.id)
+        .eq('user_id', user.id)
+        .maybeSingle();
+      
+      if (data && data.status) {
+        const status = data.status as 'pending' | 'approved' | 'declined';
+        setRequestStatus(status);
+      }
+    };
+    
+    checkExistingOrder();
+  }, [user, event.id]);
+  
   const handleJoinRequest = () => {
     if (!event.isPrivate) {
-      // Direct join for public events
-      if (isDemoMode) {
-        toast({
-          title: "Successfully Joined! 🎉",
-          description: `You're in! Get ready for ${event.title}`,
-        });
-        showDemoSuccess("Joined event successfully");
-        setRequestStatus('approved');
-      }
-      return;
-    }
-    
-    // Show request dialog for private events
-    setShowRequestDialog(true);
-  };
-  
-  const submitRequest = () => {
-    setRequestStatus('pending');
-    setShowRequestDialog(false);
-    
-    if (isDemoMode) {
-      toast({
-        title: "Request Sent! ⏳",
-        description: "Host will review your request. You'll get notified soon!",
-      });
-      
-      // Simulate approval after 3 seconds in demo mode
-      setTimeout(() => {
-        setRequestStatus('approved');
-        toast({
-          title: "You're in! 🎉",
-          description: `See you at ${event.location.address}`,
-        });
-        showDemoSuccess("Request approved - event joined");
-      }, 3000);
+      // Show ticket purchase for public events
+      setShowTicketDialog(true);
+    } else {
+      // Show request dialog for private events
+      setShowRequestDialog(true);
     }
   };
   
@@ -98,7 +95,17 @@ export const EventDetails: React.FC<EventDetailsProps> = ({ event, onBack }) => 
       default:
         return (
           <Button onClick={handleJoinRequest} className="w-full gradient-primary text-white shadow-primary">
-            {event.isPrivate ? 'Request Invite' : 'Join Event'}
+            {event.isPrivate ? (
+              <>
+                <Users className="w-4 h-4 mr-2" />
+                Request to Join
+              </>
+            ) : (
+              <>
+                <Ticket className="w-4 h-4 mr-2" />
+                Get Ticket
+              </>
+            )}
           </Button>
         );
     }
@@ -314,48 +321,19 @@ export const EventDetails: React.FC<EventDetailsProps> = ({ event, onBack }) => 
         </div>
       </div>
       
-      {/* Request Dialog */}
-      <Dialog open={showRequestDialog} onOpenChange={setShowRequestDialog}>
-        <DialogContent className="glass-card mx-4">
-          <DialogHeader>
-            <DialogTitle>Request to Join</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <p className="text-sm text-muted-foreground">
-              This is a private event. Send a request to the host for approval.
-            </p>
-            
-            {event.allowPlusOnes && (
-              <div>
-                <label className="text-sm font-medium mb-2 block">
-                  How many friends? (optional)
-                </label>
-                <Select value={selectedPlusOnes} onValueChange={setSelectedPlusOnes}>
-                  <SelectTrigger className="glass-card">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="glass-card">
-                    <SelectItem value="0">Just me</SelectItem>
-                    <SelectItem value="1">+1 friend</SelectItem>
-                    {(event.maxPlusOnes || 2) >= 2 && (
-                      <SelectItem value="2">+2 friends</SelectItem>
-                    )}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-            
-            <div className="flex gap-3">
-              <Button variant="outline" onClick={() => setShowRequestDialog(false)} className="flex-1">
-                Cancel
-              </Button>
-              <Button onClick={submitRequest} className="flex-1 gradient-primary text-white">
-                Send Request
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* Request to Join Modal for Private Events */}
+      <RequestToJoinModal
+        open={showRequestDialog}
+        onOpenChange={setShowRequestDialog}
+        event={event}
+      />
+      
+      {/* Ticket Purchase Modal for Public Events */}
+      <BuyTicketModal
+        open={showTicketDialog}
+        onOpenChange={setShowTicketDialog}
+        event={event}
+      />
     </div>
   );
 };
