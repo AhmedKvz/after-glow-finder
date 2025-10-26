@@ -1,17 +1,41 @@
-import { useState } from 'react';
-import { Search as SearchIcon, Filter, MapPin, Clock, DollarSign } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Search as SearchIcon, Filter, MapPin, Clock, DollarSign, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { EventCard } from '@/components/EventCard';
-import { mockEvents } from '@/data/mockData';
+import { Card } from '@/components/ui/card';
+import { supabase } from '@/integrations/supabase/client';
+import { BuyTicketModal } from '@/components/BuyTicketModal';
+import eventPoster1 from '@/assets/event-poster-1.jpg';
+import eventPoster2 from '@/assets/event-poster-2.jpg';
+import eventPoster3 from '@/assets/event-poster-3.jpg';
 
 const Search = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
-  const [sortBy, setSortBy] = useState('closest');
+  const [sortBy, setSortBy] = useState('date');
   const [showFilters, setShowFilters] = useState(false);
+  const [events, setEvents] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedEventForTicket, setSelectedEventForTicket] = useState<any | null>(null);
+
+  useEffect(() => {
+    loadEvents();
+  }, []);
+
+  const loadEvents = async () => {
+    const { data, error } = await supabase
+      .from('events')
+      .select('*')
+      .gte('date', new Date().toISOString().split('T')[0])
+      .order('date', { ascending: true });
+
+    if (data) {
+      setEvents(data);
+    }
+    setLoading(false);
+  };
 
   const filterChips = [
     { id: 'techno', label: 'Techno', type: 'genre' },
@@ -31,16 +55,19 @@ const Search = () => {
     );
   };
 
-  const filteredEvents = mockEvents.filter(event => {
-    if (searchQuery && !event.title.toLowerCase().includes(searchQuery.toLowerCase())) {
-      return false;
+  const filteredEvents = events.filter(event => {
+    // Text search
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      const matchTitle = event.title?.toLowerCase().includes(query);
+      const matchLocation = event.location?.toLowerCase().includes(query);
+      const matchDj = event.dj_name?.toLowerCase().includes(query);
+      if (!matchTitle && !matchLocation && !matchDj) return false;
     }
     
-    if (selectedFilters.includes('free') && event.price > 0) return false;
-    if (selectedFilters.includes('private') && !event.isPrivate) return false;
-    if (selectedFilters.includes('techno') && !event.genres.some(g => g.toLowerCase().includes('techno'))) return false;
-    if (selectedFilters.includes('house') && !event.genres.some(g => g.toLowerCase().includes('house'))) return false;
-    if (selectedFilters.includes('nearby') && event.distance > 2) return false;
+    // Genre filters
+    if (selectedFilters.includes('techno') && !event.music_tags?.some((g: string) => g.toLowerCase().includes('techno'))) return false;
+    if (selectedFilters.includes('house') && !event.music_tags?.some((g: string) => g.toLowerCase().includes('house'))) return false;
     
     return true;
   });
@@ -109,46 +136,112 @@ const Search = () => {
 
       {/* Results */}
       <div className="px-4 py-4">
-        <div className="flex-between mb-4">
-          <h2 className="text-lg font-semibold">
-            {filteredEvents.length} events found
-          </h2>
-          {selectedFilters.length > 0 && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setSelectedFilters([])}
-              className="text-primary"
-            >
-              Clear filters
-            </Button>
-          )}
-        </div>
-
-        {filteredEvents.length === 0 ? (
-          <div className="flex-center py-12">
-            <div className="text-center">
-              <SearchIcon className="mx-auto mb-4 text-muted-foreground" size={48} />
-              <h3 className="text-lg font-semibold mb-2">No events found</h3>
-              <p className="text-muted-foreground mb-4">
-                Try adjusting your search or filters
-              </p>
-              <Button variant="outline" onClick={() => {
-                setSearchQuery('');
-                setSelectedFilters([]);
-              }}>
-                Reset Search
-              </Button>
-            </div>
+        {loading ? (
+          <div className="flex justify-center py-12">
+            <Loader2 className="w-8 h-8 animate-spin text-primary" />
           </div>
         ) : (
-          <div className="space-y-3">
-            {filteredEvents.map((event) => (
-              <EventCard key={event.id} event={event} />
-            ))}
-          </div>
+          <>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold">
+                {filteredEvents.length} events found
+              </h2>
+              {selectedFilters.length > 0 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSelectedFilters([])}
+                  className="text-primary"
+                >
+                  Clear filters
+                </Button>
+              )}
+            </div>
+
+            {filteredEvents.length === 0 ? (
+              <div className="flex justify-center py-12">
+                <div className="text-center">
+                  <SearchIcon className="mx-auto mb-4 text-muted-foreground" size={48} />
+                  <h3 className="text-lg font-semibold mb-2">No events found</h3>
+                  <p className="text-muted-foreground mb-4">
+                    Try adjusting your search or filters
+                  </p>
+                  <Button variant="outline" onClick={() => {
+                    setSearchQuery('');
+                    setSelectedFilters([]);
+                  }}>
+                    Reset Search
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {filteredEvents.map((event, index) => (
+                  <Card key={event.id} className="glass-card p-4">
+                    <div className="flex gap-4">
+                      <div className="w-20 h-20 rounded-lg overflow-hidden bg-primary/10 flex-shrink-0">
+                        <img
+                          src={[eventPoster1, eventPoster2, eventPoster3][index % 3]}
+                          alt={event.title}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-lg truncate">{event.title}</h3>
+                        
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+                          <MapPin size={14} />
+                          <span className="truncate">{event.location}</span>
+                        </div>
+                        
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+                          <Clock size={14} />
+                          <span>
+                            {new Date(event.date).toLocaleDateString()} • {event.start_time}
+                          </span>
+                        </div>
+
+                        {event.music_tags && event.music_tags.length > 0 && (
+                          <div className="flex gap-2 mt-2 flex-wrap">
+                            {event.music_tags.slice(0, 3).map((tag: string) => (
+                              <Badge key={tag} variant="secondary" className="text-xs">
+                                {tag}
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="flex flex-col items-end justify-between gap-2">
+                        <Badge variant="secondary" className="whitespace-nowrap">
+                          {event.capacity} cap
+                        </Badge>
+                        <Button
+                          size="sm"
+                          className="gradient-primary whitespace-nowrap"
+                          onClick={() => setSelectedEventForTicket(event)}
+                        >
+                          Get Ticket
+                        </Button>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </>
         )}
       </div>
+
+      {selectedEventForTicket && (
+        <BuyTicketModal
+          open={!!selectedEventForTicket}
+          onOpenChange={(open) => !open && setSelectedEventForTicket(null)}
+          event={selectedEventForTicket}
+          onSuccess={loadEvents}
+        />
+      )}
     </div>
   );
 };
