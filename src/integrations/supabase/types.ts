@@ -346,6 +346,56 @@ export type Database = {
         }
         Relationships: []
       }
+      tickets: {
+        Row: {
+          created_at: string
+          event_id: string
+          id: string
+          payment_intent_id: string | null
+          price_paid: number
+          purchase_date: string
+          qr_code_data: string | null
+          status: string
+          ticket_code: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          id?: string
+          payment_intent_id?: string | null
+          price_paid?: number
+          purchase_date?: string
+          qr_code_data?: string | null
+          status?: string
+          ticket_code: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          id?: string
+          payment_intent_id?: string | null
+          price_paid?: number
+          purchase_date?: string
+          qr_code_data?: string | null
+          status?: string
+          ticket_code?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tickets_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       venues: {
         Row: {
           address: string
@@ -384,7 +434,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      generate_ticket_code: { Args: never; Returns: string }
     }
     Enums: {
       gender_type: "male" | "female" | "other" | "hidden"
