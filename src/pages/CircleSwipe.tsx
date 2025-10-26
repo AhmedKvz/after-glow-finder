@@ -226,9 +226,9 @@ const CircleSwipe = () => {
   return (
     <div className="min-h-screen bg-background safe-top pb-28">
       {/* Header */}
-      <div className="px-4 sm:px-6 lg:px-8 pt-6 pb-4 flex items-center justify-between max-w-2xl mx-auto">
+      <div className="px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 pb-3 sm:pb-4 flex items-center justify-between max-w-2xl mx-auto">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gradient-primary">Circle Swipe</h1>
+          <h1 className="text-2xl sm:text-2xl md:text-3xl font-bold text-gradient-primary">Circle Swipe</h1>
           <p className="text-sm sm:text-base text-muted-foreground">
             {selectedSession.events?.title}
           </p>
@@ -256,8 +256,8 @@ const CircleSwipe = () => {
       </div>
 
       {/* Swipe Area */}
-      <div className="px-4 sm:px-6 lg:px-8 py-6 relative max-w-2xl mx-auto">
-        <div className="relative min-h-[600px] sm:min-h-[650px]">
+      <div className="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 relative max-w-2xl mx-auto">
+        <div className="relative min-h-[550px] sm:min-h-[600px] md:min-h-[650px]">
           {currentProfileToShow ? (
             <CircleSwipeCard
               key={currentProfileToShow.user_id}
