@@ -5,6 +5,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { CircleSwipeCard } from '@/components/CircleSwipeCard';
 import { MatchesModal } from '@/components/MatchesModal';
+import { MatchNotificationModal } from '@/components/MatchNotificationModal';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -19,6 +20,8 @@ const CircleSwipe = () => {
   const [showMatches, setShowMatches] = useState(false);
   const [matches, setMatches] = useState<any[]>([]);
   const [myVotes, setMyVotes] = useState<Record<string, string>>({});
+  const [showMatchNotification, setShowMatchNotification] = useState(false);
+  const [currentMatch, setCurrentMatch] = useState<any>(null);
 
   useEffect(() => {
     if (user) {
@@ -149,11 +152,6 @@ const CircleSwipe = () => {
 
       if (theirVote) {
         // It's a match!
-        toast({
-          title: "It's a Match! 🎉",
-          description: `You and ${currentProfile.display_name} liked each other!`
-        });
-        
         // Create match record
         await supabase
           .from('circle_swipe_matches')
@@ -163,6 +161,10 @@ const CircleSwipe = () => {
             user2_id: currentProfile.user_id
           });
 
+        // Show instant match notification
+        setCurrentMatch(currentProfile);
+        setShowMatchNotification(true);
+        
         loadSessionData();
       }
     }
@@ -268,6 +270,13 @@ const CircleSwipe = () => {
           </div>
         )}
       </div>
+
+      {/* Match Notification */}
+      <MatchNotificationModal
+        open={showMatchNotification}
+        onOpenChange={setShowMatchNotification}
+        matchedProfile={currentMatch}
+      />
 
       {/* Matches Modal */}
       <MatchesModal
