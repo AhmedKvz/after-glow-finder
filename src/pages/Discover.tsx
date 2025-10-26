@@ -21,16 +21,50 @@ const Discover = () => {
   }, []);
 
   const loadEvents = async () => {
-    const { data, error } = await supabase
+    // 1. Load all events without JOIN
+    const { data: eventsData, error: eventsError } = await supabase
       .from('events')
-      .select('*, profiles:host_id(display_name, avatar_url)')
+      .select('*')
       .gte('date', new Date().toISOString().split('T')[0])
       .order('date', { ascending: true })
       .limit(20);
 
-    if (data) {
-      setEvents(data);
+    if (eventsError) {
+      console.error('[Discover] Error loading events:', eventsError);
+      setLoading(false);
+      return;
     }
+
+    if (!eventsData || eventsData.length === 0) {
+      setEvents([]);
+      setLoading(false);
+      return;
+    }
+
+    // 2. Collect unique host_ids
+    const hostIds = [...new Set(eventsData.map(e => e.host_id))];
+
+    // 3. Load profiles for all hosts
+    const { data: profilesData, error: profilesError } = await supabase
+      .from('profiles')
+      .select('user_id, display_name, avatar_url')
+      .in('user_id', hostIds);
+
+    if (profilesError) {
+      console.error('[Discover] Error loading profiles:', profilesError);
+    }
+
+    // 4. Merge data: add host object to each event
+    const eventsWithHosts = eventsData.map(event => ({
+      ...event,
+      host: profilesData?.find(p => p.user_id === event.host_id) || {
+        user_id: event.host_id,
+        display_name: 'Unknown Host',
+        avatar_url: null
+      }
+    }));
+
+    setEvents(eventsWithHosts);
     setLoading(false);
   };
 
