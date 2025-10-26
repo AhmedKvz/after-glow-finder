@@ -55,15 +55,30 @@ const CircleSwipe = () => {
   const loadSessionData = async () => {
     if (!selectedSession || !user) return;
 
+    // Get current user's profile to filter by opposite gender
+    const { data: myProfile } = await supabase
+      .from('profiles')
+      .select('gender')
+      .eq('user_id', user.id)
+      .single();
+
     // Load other participants' profiles
     const otherParticipants = selectedSession.participant_ids.filter(
       (id: string) => id !== user.id
     );
 
-    const { data: profilesData } = await supabase
+    let query = supabase
       .from('profiles')
       .select('*')
       .in('user_id', otherParticipants);
+
+    // Filter by opposite gender if user has gender set
+    if (myProfile?.gender) {
+      const oppositeGender = myProfile.gender === 'male' ? 'female' : 'male';
+      query = query.eq('gender', oppositeGender);
+    }
+
+    const { data: profilesData } = await query;
 
     if (profilesData) {
       setProfiles(profilesData);
@@ -245,6 +260,7 @@ const CircleSwipe = () => {
         <div className="relative h-[500px]">
           {currentProfileToShow ? (
             <CircleSwipeCard
+              key={currentProfileToShow.user_id}
               profile={currentProfileToShow}
               onVote={handleVote}
             />

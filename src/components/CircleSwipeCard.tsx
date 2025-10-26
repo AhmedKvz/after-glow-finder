@@ -20,8 +20,17 @@ export const CircleSwipeCard = ({ profile, onVote }: CircleSwipeCardProps) => {
       setExitX(info.offset.x > 0 ? 300 : -300);
       setTimeout(() => {
         onVote(info.offset.x > 0 ? 'yes' : 'no');
-      }, 200);
+        setExitX(0);
+      }, 300);
     }
+  };
+
+  const handleButtonVote = (vote: 'yes' | 'no') => {
+    setExitX(vote === 'yes' ? 300 : -300);
+    setTimeout(() => {
+      onVote(vote);
+      setExitX(0);
+    }, 300);
   };
 
   return (
@@ -89,6 +98,26 @@ export const CircleSwipeCard = ({ profile, onVote }: CircleSwipeCardProps) => {
               </div>
             </div>
           )}
+
+          {/* Action Buttons */}
+          <div className="flex gap-4 justify-center pt-4">
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={() => handleButtonVote('no')}
+              className="w-16 h-16 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center shadow-lg"
+            >
+              <X className="w-8 h-8 text-white" />
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={() => handleButtonVote('yes')}
+              className="w-16 h-16 rounded-full bg-green-500 hover:bg-green-600 flex items-center justify-center shadow-lg"
+            >
+              <Heart className="w-8 h-8 text-white" />
+            </motion.button>
+          </div>
         </div>
       </Card>
     </motion.div>
