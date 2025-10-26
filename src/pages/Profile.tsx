@@ -11,16 +11,19 @@ import {
   LogOut,
   Crown,
   Sparkles,
-  Edit
+  Edit,
+  Ticket
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useDemoMode } from '@/contexts/DemoModeContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { EditProfileModal } from '@/components/EditProfileModal';
+import { MyTickets } from '@/components/MyTickets';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
 
@@ -132,7 +135,14 @@ const Profile = () => {
           Profile
         </h1>
 
-        {/* User info card */}
+        <Tabs defaultValue="profile" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 mb-6">
+            <TabsTrigger value="profile">Profile</TabsTrigger>
+            <TabsTrigger value="tickets">My Tickets</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="profile" className="space-y-6">
+            {/* User info card */}
         <Card className="glass-card p-6 mb-6">
           <div className="flex items-center gap-4 mb-4">
             <Avatar className="w-20 h-20">
@@ -240,6 +250,12 @@ const Profile = () => {
             </div>
           ))}
         </div>
+          </TabsContent>
+
+          <TabsContent value="tickets">
+            <MyTickets />
+          </TabsContent>
+        </Tabs>
       </div>
 
       <EditProfileModal 

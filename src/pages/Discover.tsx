@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { MapPin, Clock, Users, Loader2, Music, Search } from 'lucide-react';
+import { MapPin, Clock, Users, Loader2, Music, Search, Ticket } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
+import { BuyTicketModal } from '@/components/BuyTicketModal';
 import eventPoster1 from '@/assets/event-poster-1.jpg';
 import eventPoster2 from '@/assets/event-poster-2.jpg';
 import eventPoster3 from '@/assets/event-poster-3.jpg';
@@ -13,6 +14,7 @@ const Discover = () => {
   const [events, setEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedEventForTicket, setSelectedEventForTicket] = useState<any | null>(null);
 
   useEffect(() => {
     loadEvents();
@@ -134,7 +136,7 @@ const Discover = () => {
           ) : (
             <div className="space-y-3">
               {filteredEvents.map((event) => (
-                <Card key={event.id} className="glass-card p-4 cursor-pointer hover:bg-surface-hover transition-colors">
+                <Card key={event.id} className="glass-card p-4">
                   <div className="flex gap-4">
                     <div className="w-20 h-20 rounded-lg overflow-hidden bg-primary/10 flex-shrink-0">
                       <img
@@ -170,15 +172,18 @@ const Discover = () => {
                       )}
                     </div>
 
-                    <div className="flex flex-col items-end justify-between">
+                    <div className="flex flex-col items-end justify-between gap-2">
                       <Badge variant="secondary" className="whitespace-nowrap">
                         {event.capacity} cap
                       </Badge>
-                      {event.dj_name && (
-                        <p className="text-xs text-muted-foreground mt-1">
-                          DJ: {event.dj_name}
-                        </p>
-                      )}
+                      <Button
+                        size="sm"
+                        className="gradient-primary whitespace-nowrap"
+                        onClick={() => setSelectedEventForTicket(event)}
+                      >
+                        <Ticket className="w-3 h-3 mr-1" />
+                        Get Ticket
+                      </Button>
                     </div>
                   </div>
                 </Card>
@@ -187,6 +192,15 @@ const Discover = () => {
           )}
         </div>
       </div>
+
+      {selectedEventForTicket && (
+        <BuyTicketModal
+          open={!!selectedEventForTicket}
+          onOpenChange={(open) => !open && setSelectedEventForTicket(null)}
+          event={selectedEventForTicket}
+          onSuccess={loadEvents}
+        />
+      )}
     </div>
   );
 };
