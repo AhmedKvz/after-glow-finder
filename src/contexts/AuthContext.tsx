@@ -85,7 +85,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     });
 
     if (!error) {
-      navigate('/');
+      navigate('/discover');
     }
 
     return { error };
