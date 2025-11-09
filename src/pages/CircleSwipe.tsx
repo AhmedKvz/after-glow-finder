@@ -114,8 +114,13 @@ const CircleSwipe = () => {
     // Reset votes for demo mode - start fresh each time
     setMyVotes({});
 
-    // Reset matches for demo mode
-    setMatches([]);
+    // Auto-create 4 matches for demo mode
+    if (profilesData && profilesData.length >= 4) {
+      const demoMatches = profilesData.slice(0, 4);
+      setMatches(demoMatches);
+    } else if (profilesData) {
+      setMatches(profilesData);
+    }
   };
 
   const handleVote = async (vote: 'yes' | 'no') => {
@@ -129,14 +134,10 @@ const CircleSwipe = () => {
     // Update local votes (demo mode - no database save)
     setMyVotes(prev => ({ ...prev, [currentProfile.user_id]: vote }));
 
-    // Simulate random matches for demo (20% chance on "yes" vote)
-    if (vote === 'yes' && Math.random() > 0.8) {
-      // Show instant match notification
+    // Show match notification for first 4 "yes" votes if not already in matches
+    if (vote === 'yes' && !matches.find(m => m.user_id === currentProfile.user_id)) {
       setCurrentMatch(currentProfile);
       setShowMatchNotification(true);
-      
-      // Add to matches
-      setMatches(prev => [...prev, currentProfile]);
     }
   };
 
