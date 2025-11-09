@@ -1,34 +1,32 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Truck, Car, Heart, Shield, Star, Clock } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Package, Car, HeartPulse, Music, Crown, Star } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { mockHelpers } from '@/data/mockData';
 import { Helper } from '@/types';
-import { useDemoMode } from '@/contexts/DemoModeContext';
-import { useToast } from '@/hooks/use-toast';
+import { Clock } from 'lucide-react';
 
 const categoryIcons = {
-  delivery: Truck,
+  wellness: HeartPulse,
   transport: Car,
-  recovery: Heart,
-  security: Shield,
+  logistics: Package,
+  rentals: Music,
+  concierge: Crown,
 };
 
 const categoryLabels = {
-  delivery: 'Delivery',
-  transport: 'Safe Drive',
-  recovery: 'Recovery',
-  security: 'Security',
+  wellness: 'Wellness',
+  transport: 'Transport',
+  logistics: 'Logistics',
+  rentals: 'Rentals',
+  concierge: 'Concierge',
 };
 
 const Helpers = () => {
   const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const { isDemoMode, showDemoSuccess } = useDemoMode();
-  const { toast } = useToast();
 
   const categories = ['all', ...Object.keys(categoryIcons)] as const;
 

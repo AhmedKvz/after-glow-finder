@@ -57,7 +57,7 @@ export interface Helper {
   id: string;
   name: string;
   avatar?: string;
-  category: 'delivery' | 'transport' | 'recovery' | 'security';
+  category: 'wellness' | 'transport' | 'logistics' | 'rentals' | 'concierge';
   service: string;
   description: string;
   rating: number;
@@ -65,6 +65,24 @@ export interface Helper {
   priceRange: string;
   availability: 'available' | 'busy' | 'offline';
   estimatedTime?: string;
+  // Category-specific fields
+  certifications?: string[];
+  medicalStaff?: string[];
+  serviceLocation?: 'home_visit' | 'studio' | 'clinic' | 'venue';
+  duration?: string;
+  equipmentList?: string[];
+  vehicleType?: string;
+  vehicleCapacity?: number;
+  insuranceCovered?: boolean;
+  languages?: string[];
+  coverageArea?: string;
+  comboOffers?: { name: string; price: string; description: string }[];
+  inventoryItems?: { name: string; pricePerDay: string; quantity: number }[];
+  minimumRental?: string;
+  deliveryFee?: string;
+  conciergeServices?: string[];
+  vipAccess?: boolean;
+  personalShopper?: boolean;
 }
 
 export interface Notification {

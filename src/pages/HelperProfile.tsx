@@ -13,6 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Slider } from '@/components/ui/slider';
 import { StarRating } from '@/components/StarRating';
+import { HelperCategorySection } from '@/components/HelperCategorySection';
 import { mockHelpers } from '@/data/mockData';
 import { useDemoMode } from '@/contexts/DemoModeContext';
 import { useToast } from '@/hooks/use-toast';
@@ -40,10 +41,10 @@ const HelperProfile = () => {
   const helperProfile = {
     ...helper,
     tagline: getTaglineForCategory(helper.category),
-    coverageArea: 'Belgrade, Novi Sad, Niš',
-    duration: '30-90 min',
-    languages: ['Serbian', 'English'],
-    certifications: helper.category === 'recovery' ? ['Medical License', 'IV Therapy Certified'] : undefined,
+    coverageArea: helper.coverageArea || 'Belgrade, Novi Sad, Niš',
+    duration: helper.duration || '30-90 min',
+    languages: helper.languages || ['Serbian', 'English'],
+    certifications: helper.certifications,
     gallery: [
       '/placeholder.svg',
       '/placeholder.svg',
@@ -58,10 +59,11 @@ const HelperProfile = () => {
 
   function getTaglineForCategory(category: string) {
     const taglines = {
-      delivery: 'Your party essentials, delivered fast',
+      wellness: 'Detox your body after a wild night',
       transport: 'Safe rides when you need them most',
-      recovery: 'Detox your body after a wild night',
-      security: 'Professional protection for peace of mind',
+      logistics: 'Your party essentials, delivered fast',
+      rentals: 'Everything you need for unforgettable events',
+      concierge: 'Exclusive VIP experiences, curated for you',
     };
     return taglines[category as keyof typeof taglines] || 'Here to help';
   }
@@ -70,16 +72,24 @@ const HelperProfile = () => {
     const badges = [];
     if (helper.rating >= 4.8) badges.push({ icon: Award, label: 'Top Rated Helper', color: 'text-yellow-500' });
     if (helper.availability === 'available') badges.push({ icon: Zap, label: 'Fast Responder', color: 'text-blue-500' });
-    if (helper.category === 'recovery') badges.push({ icon: Shield, label: 'After Recovery Expert', color: 'text-green-500' });
+    
+    // Category-specific badges
+    if (helper.category === 'wellness') badges.push({ icon: Shield, label: 'Recovery Expert', color: 'text-teal-500' });
+    if (helper.category === 'transport' && helper.insuranceCovered) badges.push({ icon: Shield, label: 'Insured & Licensed', color: 'text-blue-500' });
+    if (helper.category === 'logistics' && helper.reviewCount > 200) badges.push({ icon: Zap, label: 'Lightning Fast', color: 'text-orange-500' });
+    if (helper.category === 'rentals') badges.push({ icon: CheckCircle, label: 'Pro Equipment', color: 'text-purple-500' });
+    if (helper.category === 'concierge' && helper.vipAccess) badges.push({ icon: Award, label: 'VIP Elite', color: 'text-amber-500' });
+    
     return badges;
   }
 
   function getAboutTextForCategory(category: string) {
     const about = {
-      delivery: 'Fast and reliable delivery service specializing in party essentials. Whether you need snacks, drinks, or last-minute supplies, we\'ve got you covered 24/7.\n\nOur drivers know Belgrade inside out and can reach most locations within 15-30 minutes. We work with local shops to ensure quality products at reasonable prices.\n\nWith years of experience serving the nightlife community, we understand the importance of timely delivery and discretion.',
+      wellness: 'Medical-grade recovery services to help you bounce back after intense nights out. Our team includes licensed medical professionals specializing in IV therapy and wellness.\n\nWe use hospital-grade equipment and follow strict hygiene protocols. Each session is customized based on your needs and symptoms.\n\nWhether it\'s dehydration, fatigue, or general recovery, we provide safe and effective treatments in the comfort of your home or at our clinic.',
       transport: 'Professional transportation service dedicated to getting party-goers home safely. Our drivers are experienced, vetted, and committed to your safety.\n\nAll vehicles are regularly maintained, clean, and comfortable. We track rides in real-time and provide direct support throughout your journey.\n\nAvailable 24/7 across Belgrade and surrounding areas. Because getting home safely should never be a concern.',
-      recovery: 'Medical-grade recovery services to help you bounce back after intense nights out. Our team includes licensed medical professionals specializing in IV therapy and wellness.\n\nWe use hospital-grade equipment and follow strict hygiene protocols. Each session is customized based on your needs and symptoms.\n\nWhether it\'s dehydration, fatigue, or general recovery, we provide safe and effective treatments in the comfort of your home.',
-      security: 'Professional security services for events and personal protection. Our team consists of trained security personnel with years of experience.\n\nWe provide discreet yet effective protection, ensuring your events run smoothly and safely. From crowd management to personal security details.\n\nLicensed, insured, and committed to maintaining the highest standards of professionalism.',
+      logistics: 'Fast and reliable delivery service specializing in party essentials. Whether you need snacks, drinks, or last-minute supplies, we\'ve got you covered 24/7.\n\nOur runners know Belgrade inside out and can reach most locations within 15-30 minutes. We work with local shops to ensure quality products at reasonable prices.\n\nWith years of experience serving the nightlife community, we understand the importance of timely delivery and discretion.',
+      rentals: 'Professional event equipment and prop rental service. From DJ gear to lighting systems, we provide everything you need for unforgettable parties.\n\nAll equipment is professionally maintained, tested before delivery, and comes with setup support. We work with both private hosts and professional event organizers.\n\nFlexible rental periods, competitive pricing, and same-day delivery available. Make your event truly special with the right equipment.',
+      concierge: 'Elite concierge service providing exclusive access to Belgrade\'s premium nightlife and personalized event experiences. Our team specializes in VIP arrangements and bespoke party planning.\n\nFrom securing impossible reservations to coordinating every detail of your night, we handle it all with discretion and professionalism.\n\nWith insider connections across the city\'s top venues and service providers, we turn your vision into reality. Experience the difference of true VIP treatment.',
     };
     return about[category as keyof typeof about] || 'Professional service provider.';
   }
@@ -204,37 +214,45 @@ const HelperProfile = () => {
           </p>
 
           <div className="grid grid-cols-2 gap-3 mt-4 pt-4 border-t border-border/20">
-            <div>
-              <div className="text-xs text-muted-foreground mb-1">Coverage Area</div>
-              <div className="text-sm font-medium flex items-center gap-1">
-                <MapPin size={14} className="text-primary" />
-                {helperProfile.coverageArea}
-              </div>
-            </div>
-            <div>
-              <div className="text-xs text-muted-foreground mb-1">Duration</div>
-              <div className="text-sm font-medium flex items-center gap-1">
-                <Clock size={14} className="text-primary" />
-                {helperProfile.duration}
-              </div>
-            </div>
-            <div>
-              <div className="text-xs text-muted-foreground mb-1">Languages</div>
-              <div className="text-sm font-medium">
-                {helperProfile.languages.join(', ')}
-              </div>
-            </div>
-            {helperProfile.certifications && (
+            {helper.coverageArea && (
               <div>
-                <div className="text-xs text-muted-foreground mb-1">Certified</div>
+                <div className="text-xs text-muted-foreground mb-1">Coverage Area</div>
                 <div className="text-sm font-medium flex items-center gap-1">
-                  <Shield size={14} className="text-success" />
-                  {helperProfile.certifications.length} licenses
+                  <MapPin size={14} className="text-primary" />
+                  {helper.coverageArea}
+                </div>
+              </div>
+            )}
+            {helper.duration && (
+              <div>
+                <div className="text-xs text-muted-foreground mb-1">Duration</div>
+                <div className="text-sm font-medium flex items-center gap-1">
+                  <Clock size={14} className="text-primary" />
+                  {helper.duration}
+                </div>
+              </div>
+            )}
+            {helper.languages && (
+              <div>
+                <div className="text-xs text-muted-foreground mb-1">Languages</div>
+                <div className="text-sm font-medium">
+                  {helper.languages.join(', ')}
+                </div>
+              </div>
+            )}
+            {helper.serviceLocation && (
+              <div>
+                <div className="text-xs text-muted-foreground mb-1">Service Type</div>
+                <div className="text-sm font-medium capitalize">
+                  {helper.serviceLocation.replace('_', ' ')}
                 </div>
               </div>
             )}
           </div>
         </Card>
+
+        {/* Category-Specific Sections */}
+        <HelperCategorySection helper={helper} />
 
         {/* Gallery Section */}
         <Card className="glass-card p-5">
