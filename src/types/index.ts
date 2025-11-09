@@ -57,7 +57,7 @@ export interface Helper {
   id: string;
   name: string;
   avatar?: string;
-  category: 'wellness' | 'transport' | 'logistics' | 'rentals' | 'concierge';
+  category: 'wellness' | 'transport' | 'logistics' | 'rentals' | 'guide';
   service: string;
   description: string;
   rating: number;
@@ -80,9 +80,13 @@ export interface Helper {
   inventoryItems?: { name: string; pricePerDay: string; quantity: number }[];
   minimumRental?: string;
   deliveryFee?: string;
-  conciergeServices?: string[];
-  vipAccess?: boolean;
-  personalShopper?: boolean;
+  // Nightlife Guide fields
+  nightlifeStyle?: string[];
+  preferredZones?: string[];
+  canHostAfters?: boolean;
+  maxGroupSize?: number;
+  tourTypes?: string[];
+  totalTours?: number;
 }
 
 export interface Notification {

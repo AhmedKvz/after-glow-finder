@@ -17,7 +17,8 @@ export type MarketplaceRole =
   | 'dj_musician'
   | 'event_staff'
   | 'vendor_store'
-  | 'props_rental';
+  | 'props_rental'
+  | 'nightlife_guide';
 
 export interface OnboardingData {
   roleType: MarketplaceRole | null;
@@ -137,7 +138,7 @@ const HelperOnboarding = () => {
         website: formData.website || null,
         role_data: formData.roleData,
         gallery_urls: formData.galleryUrls,
-      });
+      } as any);
 
       if (error) throw error;
 

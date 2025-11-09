@@ -1,7 +1,6 @@
-import React from 'react';
 import { 
   Heart, Pill, Droplet, Wind, Car, Shield, Users, Package, 
-  Zap, Lightbulb, Music, Sparkles, Crown, Gift, Star, CheckCircle
+  Zap, Lightbulb, Music, Sparkles, MapPin, Gift, Star, CheckCircle, Globe
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -42,12 +41,12 @@ export const HelperCategorySection: React.FC<HelperCategorySectionProps> = ({ he
         label: 'Props & Rentals',
         icon: Music,
       },
-      concierge: {
-        color: 'text-amber-400',
-        bgColor: 'bg-amber-500/10',
-        borderColor: 'border-amber-500/20',
-        label: 'Concierge / Premium',
-        icon: Crown,
+      guide: {
+        color: 'text-cyan-400',
+        bgColor: 'bg-cyan-500/10',
+        borderColor: 'border-cyan-500/20',
+        label: 'Be My Guide',
+        icon: MapPin,
       },
     };
     return configs[category];
@@ -300,56 +299,89 @@ export const HelperCategorySection: React.FC<HelperCategorySectionProps> = ({ he
     </>
   );
 
-  const renderConciergeSection = () => (
+  const renderGuideSection = () => (
     <>
-      {/* VIP Services */}
-      {helper.conciergeServices && helper.conciergeServices.length > 0 && (
+      {/* Nightlife Style Tags */}
+      {helper.nightlifeStyle && helper.nightlifeStyle.length > 0 && (
         <Card className={`glass-card p-5 border ${config.borderColor}`}>
           <h3 className="font-semibold mb-3 flex items-center gap-2">
-            <Crown size={18} className={config.color} />
-            Premium Services
+            <Music size={18} className={config.color} />
+            Nightlife Style
+          </h3>
+          <div className="flex flex-wrap gap-2">
+            {helper.nightlifeStyle.map((style, idx) => (
+              <Badge key={idx} className={`${config.bgColor} ${config.color} border-0`}>
+                {style}
+              </Badge>
+            ))}
+          </div>
+        </Card>
+      )}
+
+      {/* Preferred Zones */}
+      {helper.preferredZones && helper.preferredZones.length > 0 && (
+        <Card className={`glass-card p-5 border ${config.borderColor}`}>
+          <h3 className="font-semibold mb-3 flex items-center gap-2">
+            <MapPin size={18} className={config.color} />
+            Coverage Areas
+          </h3>
+          <div className="flex flex-wrap gap-2">
+            {helper.preferredZones.map((zone, idx) => (
+              <Badge key={idx} variant="secondary">
+                {zone}
+              </Badge>
+            ))}
+          </div>
+        </Card>
+      )}
+
+      {/* Tour Types & Services */}
+      {helper.tourTypes && helper.tourTypes.length > 0 && (
+        <Card className={`glass-card p-5 border ${config.borderColor}`}>
+          <h3 className="font-semibold mb-3 flex items-center gap-2">
+            <Star size={18} className={config.color} />
+            Experience Types
           </h3>
           <div className="space-y-2">
-            {helper.conciergeServices.map((service, idx) => (
+            {helper.tourTypes.map((type, idx) => (
               <div key={idx} className="flex items-start gap-2">
-                <Star size={16} className={`${config.color} mt-0.5 flex-shrink-0`} />
-                <span className="text-sm">{service}</span>
+                <CheckCircle size={16} className={`${config.color} mt-0.5 flex-shrink-0`} />
+                <span className="text-sm">{type}</span>
               </div>
             ))}
           </div>
         </Card>
       )}
 
-      {/* VIP Access Badge */}
-      {helper.vipAccess && (
-        <Card className={`glass-card p-5 border ${config.borderColor} bg-gradient-to-br from-amber-500/5 to-amber-600/5`}>
-          <div className="flex items-center gap-3 mb-3">
-            <div className={`p-3 rounded-full ${config.bgColor}`}>
-              <Crown size={24} className={config.color} />
-            </div>
+      {/* Guide Stats */}
+      <Card className={`glass-card p-5 border ${config.borderColor} bg-gradient-to-br from-cyan-500/5 to-cyan-600/5`}>
+        <h3 className="font-semibold mb-4 flex items-center gap-2">
+          <Globe size={18} className={config.color} />
+          Guide Experience
+        </h3>
+        <div className="grid grid-cols-2 gap-4">
+          {helper.maxGroupSize && (
             <div>
-              <h3 className="font-bold">VIP Access Included</h3>
-              <p className="text-xs text-muted-foreground">Exclusive access to premium venues</p>
+              <div className="text-2xl font-bold text-primary">{helper.maxGroupSize}</div>
+              <div className="text-xs text-muted-foreground">Max Group Size</div>
             </div>
-          </div>
-          <div className="space-y-2 mt-4">
-            <div className="flex items-center gap-2">
-              <Sparkles size={14} className={config.color} />
-              <span className="text-sm">Skip all lines</span>
+          )}
+          {helper.totalTours && (
+            <div>
+              <div className="text-2xl font-bold text-primary">{helper.totalTours}</div>
+              <div className="text-xs text-muted-foreground">Tours Completed</div>
             </div>
-            <div className="flex items-center gap-2">
-              <Sparkles size={14} className={config.color} />
-              <span className="text-sm">Private table reservations</span>
-            </div>
-            {helper.personalShopper && (
-              <div className="flex items-center gap-2">
-                <Gift size={14} className={config.color} />
-                <span className="text-sm">Personal shopping service</span>
+          )}
+          {helper.canHostAfters && (
+            <div className="col-span-2">
+              <div className="flex items-center gap-2 p-3 rounded bg-success/10">
+                <CheckCircle size={16} className="text-success" />
+                <span className="text-sm font-medium">Can Host Private Afters</span>
               </div>
-            )}
-          </div>
-        </Card>
-      )}
+            </div>
+          )}
+        </div>
+      </Card>
     </>
   );
 
@@ -364,8 +396,8 @@ export const HelperCategorySection: React.FC<HelperCategorySectionProps> = ({ he
         return renderLogisticsSection();
       case 'rentals':
         return renderRentalsSection();
-      case 'concierge':
-        return renderConciergeSection();
+      case 'guide':
+        return renderGuideSection();
       default:
         return null;
     }

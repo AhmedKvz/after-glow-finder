@@ -13,7 +13,7 @@ const categoryIcons = {
   transport: Car,
   logistics: Package,
   rentals: Music,
-  concierge: Crown,
+  guide: Crown,
 };
 
 const categoryLabels = {
@@ -21,7 +21,7 @@ const categoryLabels = {
   transport: 'Transport',
   logistics: 'Logistics',
   rentals: 'Rentals',
-  concierge: 'Concierge',
+  guide: 'Be My Guide',
 };
 
 const Helpers = () => {

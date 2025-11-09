@@ -1,4 +1,4 @@
-import { Music, Users, Package, Shield, Briefcase } from 'lucide-react';
+import { Music, Users, Package, Shield, Briefcase, MapPin } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
@@ -312,6 +312,92 @@ export const RoleSpecificFields = ({ roleType, roleData, updateRoleData }: RoleS
             onChange={(e) => updateField('minimumRental', e.target.value)}
             className="mt-2"
           />
+        </div>
+      </Card>
+    );
+  }
+
+  // Nightlife Guide Fields
+  if (roleType === 'nightlife_guide') {
+    return (
+      <Card className="glass-card p-5 space-y-4">
+        <div className="flex items-center gap-2 mb-4">
+          <div className="p-2 rounded-full bg-cyan-500/10">
+            <MapPin size={18} className="text-cyan-400" />
+          </div>
+          <Label className="text-lg font-semibold">Nightlife Guide Details</Label>
+        </div>
+
+        <div>
+          <Label htmlFor="nightlifeStyle">Nightlife Style / Music Preferences</Label>
+          <Input
+            id="nightlifeStyle"
+            placeholder="e.g., Techno, House, Underground, Local Afters"
+            value={roleData.nightlifeStyle || ''}
+            onChange={(e) => updateField('nightlifeStyle', e.target.value)}
+            className="mt-2"
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="preferredZones">Areas You Cover</Label>
+          <Input
+            id="preferredZones"
+            placeholder="e.g., Savamala, Dorćol, Novi Sad"
+            value={roleData.preferredZones || ''}
+            onChange={(e) => updateField('preferredZones', e.target.value)}
+            className="mt-2"
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="tourTypes">Tour Types / Services</Label>
+          <Textarea
+            id="tourTypes"
+            placeholder="e.g., Club tours, After party hosting, Safety companion, Cultural guide..."
+            value={roleData.tourTypes || ''}
+            onChange={(e) => updateField('tourTypes', e.target.value)}
+            className="mt-2"
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="maxGroupSize">Max Group Size</Label>
+          <Input
+            id="maxGroupSize"
+            type="number"
+            placeholder="4"
+            value={roleData.maxGroupSize || ''}
+            onChange={(e) => updateField('maxGroupSize', e.target.value)}
+            className="mt-2"
+          />
+        </div>
+
+        <div className="flex items-center justify-between">
+          <Label htmlFor="canHostAfters">Can Host Private Afters</Label>
+          <Switch
+            id="canHostAfters"
+            checked={roleData.canHostAfters || false}
+            onCheckedChange={(checked) => updateField('canHostAfters', checked)}
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="totalTours">Total Tours Completed (if any)</Label>
+          <Input
+            id="totalTours"
+            type="number"
+            placeholder="0"
+            value={roleData.totalTours || ''}
+            onChange={(e) => updateField('totalTours', e.target.value)}
+            className="mt-2"
+          />
+        </div>
+
+        <div className="p-3 bg-muted/50 rounded">
+          <p className="text-xs text-muted-foreground italic">
+            🌍 As a guide, you'll help visitors discover authentic nightlife experiences and connect with the local scene.
+          </p>
         </div>
       </Card>
     );

@@ -1,4 +1,4 @@
-import { Package, Heart, Music, Users, Store, Lightbulb } from 'lucide-react';
+import { Package, Heart, Music, Users, Store, Lightbulb, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -84,6 +84,19 @@ export const RoleSelection = ({ selectedRole, onRoleSelect, onNext }: RoleSelect
       description: 'Rent out event equipment and decorations',
       examples: 'DJ equipment, lighting, sound systems, decorations',
       priceExample: '€20-200/day',
+    },
+    {
+      id: 'nightlife_guide' as MarketplaceRole,
+      icon: MapPin,
+      color: 'text-cyan-400',
+      bgColor: 'bg-cyan-500/10',
+      borderColor: 'border-cyan-500/20',
+      title: 'Be My Guide',
+      subtitle: 'Nightlife & Local Experience',
+      description: 'Show visitors the underground scene and local culture',
+      examples: 'Club tours, after party host, safety companion, cultural guide',
+      priceExample: '€50-200/night',
+      note: 'Perfect for locals who know the scene and want to guide foreigners',
     },
   ];
 
