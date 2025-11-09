@@ -39,17 +39,20 @@ const CircleSwipe = () => {
   const loadSessions = async () => {
     if (!user) return;
 
-    const { data, error } = await supabase
-      .from('circle_swipe_sessions')
-      .select('*, events(*)')
-      .contains('participant_ids', [user.id])
-      .gte('ends_at', new Date().toISOString())
-      .order('starts_at', { ascending: false });
+    // Create a demo session for Circle Swipe functionality
+    const demoSession = {
+      id: 'demo-session',
+      event_id: '599fc2ae-22d1-4123-98b8-fbc9f80dc544',
+      starts_at: new Date().toISOString(),
+      ends_at: new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString(),
+      participant_ids: [],
+      events: {
+        title: 'Belgrade Underground Techno Night'
+      }
+    };
 
-    if (data && data.length > 0) {
-      setSessions(data);
-      setSelectedSession(data[0]);
-    }
+    setSessions([demoSession]);
+    setSelectedSession(demoSession);
     setLoading(false);
   };
 
@@ -61,17 +64,15 @@ const CircleSwipe = () => {
       .from('profiles')
       .select('gender')
       .eq('user_id', user.id)
-      .single();
+      .maybeSingle();
 
-    // Load other participants' profiles
-    const otherParticipants = selectedSession.participant_ids.filter(
-      (id: string) => id !== user.id
-    );
-
+    // Load profiles from all users (excluding current user)
     let query = supabase
       .from('profiles')
       .select('*')
-      .in('user_id', otherParticipants);
+      .neq('user_id', user.id)
+      .not('gender', 'is', null)
+      .limit(10);
 
     // Filter by opposite gender if user has gender set
     if (myProfile?.gender) {
@@ -110,43 +111,11 @@ const CircleSwipe = () => {
       }
     }
 
-    // Load my votes
-    const { data: votesData } = await supabase
-      .from('circle_swipe_votes')
-      .select('*')
-      .eq('session_id', selectedSession.id)
-      .eq('swiper_id', user.id);
+    // Reset votes for demo mode - start fresh each time
+    setMyVotes({});
 
-    if (votesData) {
-      const votesMap = votesData.reduce((acc, vote) => {
-        acc[vote.target_id] = vote.vote;
-        return acc;
-      }, {} as Record<string, string>);
-      setMyVotes(votesMap);
-    }
-
-    // Load matches
-    const { data: matchesData } = await supabase
-      .from('circle_swipe_matches')
-      .select('*')
-      .eq('session_id', selectedSession.id)
-      .or(`user1_id.eq.${user.id},user2_id.eq.${user.id}`);
-
-    if (matchesData) {
-      // Load profiles for matched users
-      const matchedUserIds = matchesData.map(m => 
-        m.user1_id === user.id ? m.user2_id : m.user1_id
-      );
-      
-      const { data: matchedProfiles } = await supabase
-        .from('profiles')
-        .select('*')
-        .in('user_id', matchedUserIds);
-
-      if (matchedProfiles) {
-        setMatches(matchedProfiles);
-      }
-    }
+    // Reset matches for demo mode
+    setMatches([]);
   };
 
   const handleVote = async (vote: 'yes' | 'no') => {
@@ -157,57 +126,17 @@ const CircleSwipe = () => {
     
     if (!currentProfile) return;
 
-    // Save vote
-    const { error } = await supabase
-      .from('circle_swipe_votes')
-      .insert({
-        session_id: selectedSession.id,
-        swiper_id: user.id,
-        target_id: currentProfile.user_id,
-        vote: vote === 'yes' ? 'like' : 'pass'
-      });
-
-    if (error) {
-      console.error('Vote error:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Failed to save vote',
-        description: error.message
-      });
-      return;
-    }
-
-    // Update local votes
+    // Update local votes (demo mode - no database save)
     setMyVotes(prev => ({ ...prev, [currentProfile.user_id]: vote }));
 
-    // Check for match if vote is yes
-    if (vote === 'yes') {
-      const { data: theirVote } = await supabase
-        .from('circle_swipe_votes')
-        .select('*')
-        .eq('session_id', selectedSession.id)
-        .eq('swiper_id', currentProfile.user_id)
-        .eq('target_id', user.id)
-        .eq('vote', 'like')
-        .maybeSingle();
-
-      if (theirVote) {
-        // It's a match!
-        // Create match record
-        await supabase
-          .from('circle_swipe_matches')
-          .insert({
-            session_id: selectedSession.id,
-            user1_id: user.id,
-            user2_id: currentProfile.user_id
-          });
-
-        // Show instant match notification
-        setCurrentMatch(currentProfile);
-        setShowMatchNotification(true);
-        
-        loadSessionData();
-      }
+    // Simulate random matches for demo (20% chance on "yes" vote)
+    if (vote === 'yes' && Math.random() > 0.8) {
+      // Show instant match notification
+      setCurrentMatch(currentProfile);
+      setShowMatchNotification(true);
+      
+      // Add to matches
+      setMatches(prev => [...prev, currentProfile]);
     }
   };
 
