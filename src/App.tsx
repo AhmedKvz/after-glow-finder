@@ -12,6 +12,7 @@ import Search from "./pages/Search";
 import Host from "./pages/Host";
 import CircleSwipe from "./pages/CircleSwipe";
 import Helpers from "./pages/Helpers";
+import HelperProfile from "./pages/HelperProfile";
 import Profile from "./pages/Profile";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
@@ -35,6 +36,7 @@ const App = () => (
                 <Route path="host" element={<Host />} />
                 <Route path="circle-swipe" element={<CircleSwipe />} />
                 <Route path="helpers" element={<Helpers />} />
+                <Route path="helpers/:helperId" element={<HelperProfile />} />
                 <Route path="profile" element={<Profile />} />
                 <Route path="*" element={<NotFound />} />
               </Route>

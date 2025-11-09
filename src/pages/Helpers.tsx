@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Truck, Car, Heart, Shield, Star, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -24,8 +25,8 @@ const categoryLabels = {
 };
 
 const Helpers = () => {
+  const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [selectedHelper, setSelectedHelper] = useState<Helper | null>(null);
   const { isDemoMode, showDemoSuccess } = useDemoMode();
   const { toast } = useToast();
 
@@ -34,17 +35,6 @@ const Helpers = () => {
   const filteredHelpers = selectedCategory === 'all' 
     ? mockHelpers 
     : mockHelpers.filter(helper => helper.category === selectedCategory);
-
-  const handleRequestService = (helper: Helper) => {
-    if (isDemoMode) {
-      toast({
-        title: "Service Requested! 🚀",
-        description: `${helper.name} has been notified and will contact you shortly.`,
-      });
-      showDemoSuccess(`Requested ${helper.service}`);
-    }
-    setSelectedHelper(null);
-  };
 
   return (
     <div className="min-h-screen bg-background safe-top">
@@ -91,7 +81,7 @@ const Helpers = () => {
             <Card 
               key={helper.id} 
               className="glass-card interactive overflow-hidden"
-              onClick={() => setSelectedHelper(helper)}
+              onClick={() => navigate(`/helpers/${helper.id}`)}
             >
               <div className="p-4">
                 <div className="flex items-start gap-3 mb-3">
@@ -156,90 +146,6 @@ const Helpers = () => {
           );
         })}
       </div>
-
-      {/* Helper detail modal */}
-      {selectedHelper && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end">
-          <div className="w-full bg-background rounded-t-xl max-h-[80vh] overflow-y-auto">
-            <div className="p-4 border-b border-border/20">
-              <div className="flex items-center gap-3 mb-4">
-                <Avatar className="w-16 h-16">
-                  <AvatarImage src={selectedHelper.avatar} />
-                  <AvatarFallback>
-                    {React.createElement(categoryIcons[selectedHelper.category], { size: 24 })}
-                  </AvatarFallback>
-                </Avatar>
-                
-                <div className="flex-1">
-                  <h2 className="text-xl font-bold">{selectedHelper.name}</h2>
-                  <p className="text-primary font-medium">{selectedHelper.service}</p>
-                  
-                  <div className="flex items-center gap-4 mt-2">
-                    <div className="flex items-center gap-1">
-                      <Star className="w-4 h-4 fill-accent text-accent" />
-                      <span className="font-medium">{selectedHelper.rating}</span>
-                      <span className="text-muted-foreground text-sm">
-                        ({selectedHelper.reviewCount} reviews)
-                      </span>
-                    </div>
-                    
-                    <Badge 
-                      variant="secondary"
-                      className={`${
-                        selectedHelper.availability === 'available' 
-                          ? 'bg-success/20 text-success border-success/20' 
-                          : 'bg-warning/20 text-warning border-warning/20'
-                      }`}
-                    >
-                      {selectedHelper.availability}
-                    </Badge>
-                  </div>
-                </div>
-              </div>
-              
-              <p className="text-muted-foreground mb-4">
-                {selectedHelper.description}
-              </p>
-              
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                <div className="glass-card p-3 rounded-lg">
-                  <div className="text-xs text-muted-foreground mb-1">Price Range</div>
-                  <div className="font-semibold">{selectedHelper.priceRange}</div>
-                </div>
-                
-                {selectedHelper.estimatedTime && (
-                  <div className="glass-card p-3 rounded-lg">
-                    <div className="text-xs text-muted-foreground mb-1">Estimated Time</div>
-                    <div className="font-semibold">{selectedHelper.estimatedTime}</div>
-                  </div>
-                )}
-              </div>
-            </div>
-            
-            <div className="p-4">
-              <div className="flex gap-3">
-                <Button
-                  variant="outline"
-                  className="flex-1"
-                  onClick={() => setSelectedHelper(null)}
-                >
-                  Close
-                </Button>
-                <Button
-                  className="flex-1 gradient-primary text-white shadow-primary"
-                  onClick={() => handleRequestService(selectedHelper)}
-                  disabled={selectedHelper.availability !== 'available'}
-                >
-                  {selectedHelper.availability === 'available' 
-                    ? 'Request Now' 
-                    : 'Currently Unavailable'
-                  }
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
