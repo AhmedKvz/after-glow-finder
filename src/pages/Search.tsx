@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search as SearchIcon, Filter, MapPin, Clock, DollarSign, Loader2 } from 'lucide-react';
+import { Search as SearchIcon, Filter, MapPin, Clock, DollarSign, Loader2, Map } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -27,7 +27,7 @@ const Search = () => {
   }, []);
 
   const loadEvents = async () => {
-    // 1. Load club events (from admin users)
+    // 1. Load club events
     const { data: clubEvents, error: clubError } = await supabase
       .from('events')
       .select('*')
@@ -39,7 +39,19 @@ const Search = () => {
       console.error('[Search] Error loading club events:', clubError);
     }
 
-    // 2. Load private events (from regular users, non-admins)
+    // 2. Load cafe events
+    const { data: cafeEvents, error: cafeError } = await supabase
+      .from('events')
+      .select('*')
+      .eq('event_type', 'cafe')
+      .gte('date', new Date().toISOString().split('T')[0])
+      .order('date', { ascending: true });
+
+    if (cafeError) {
+      console.error('[Search] Error loading cafe events:', cafeError);
+    }
+
+    // 3. Load private events
     const { data: privateEvents, error: privateError } = await supabase
       .from('events')
       .select('*')
@@ -51,8 +63,8 @@ const Search = () => {
       console.error('[Search] Error loading private events:', privateError);
     }
 
-    // 3. Combine all events
-    const allEvents = [...(clubEvents || []), ...(privateEvents || [])];
+    // 4. Combine all events (clubs first, cafes second, private third)
+    const allEvents = [...(clubEvents || []), ...(cafeEvents || []), ...(privateEvents || [])];
 
     if (allEvents.length === 0) {
       setEvents([]);
@@ -248,6 +260,11 @@ const Search = () => {
                               🏛️ CLUB
                             </Badge>
                           )}
+                          {event.event_type === 'cafe' && (
+                            <Badge className="text-[11px] bg-blue-600/20 text-blue-400">
+                              ☕ CAFE • FREE ENTRY
+                            </Badge>
+                          )}
                           {event.event_type === 'private_host' && (
                             <Badge className="text-[11px] bg-yellow-600/20 text-yellow-400">
                               🗝️ PRIVATE
@@ -286,7 +303,19 @@ const Search = () => {
                         <Badge variant="secondary" className="whitespace-nowrap text-[13px] sm:text-sm">
                           {event.capacity} cap
                         </Badge>
-                        {event.event_type === 'private_host' ? (
+                        {event.event_type === 'cafe' ? (
+                          <Button
+                            size="sm"
+                            className="bg-blue-600/20 text-blue-400 border border-blue-600/30 whitespace-nowrap text-[13px] sm:text-sm h-9"
+                            onClick={() => {
+                              const address = encodeURIComponent(event.exact_address || event.location);
+                              window.open(`https://www.google.com/maps/search/?api=1&query=${address}`, '_blank');
+                            }}
+                          >
+                            <Map className="w-3 h-3 mr-1" />
+                            See on Map
+                          </Button>
+                        ) : event.event_type === 'private_host' ? (
                           <Button
                             size="sm"
                             className="bg-yellow-600/20 text-yellow-400 border border-yellow-600/30 whitespace-nowrap text-[13px] sm:text-sm h-9"

@@ -855,7 +855,7 @@ export type Database = {
     Enums: {
       app_role: "admin" | "user"
       application_status: "draft" | "pending" | "approved" | "rejected"
-      event_type: "club" | "private_host"
+      event_type: "club" | "private_host" | "cafe"
       gender_type: "male" | "female" | "other" | "hidden"
       marketplace_role:
         | "general_helper"
@@ -995,7 +995,7 @@ export const Constants = {
     Enums: {
       app_role: ["admin", "user"],
       application_status: ["draft", "pending", "approved", "rejected"],
-      event_type: ["club", "private_host"],
+      event_type: ["club", "private_host", "cafe"],
       gender_type: ["male", "female", "other", "hidden"],
       marketplace_role: [
         "general_helper",
