@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Package, Car, HeartPulse, Music, Crown, Star } from 'lucide-react';
+import { Package, Car, HeartPulse, Music, Crown, Star, Clock } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { mockHelpers } from '@/data/mockData';
 import { Helper } from '@/types';
-import { Clock } from 'lucide-react';
 
 const categoryIcons = {
   wellness: HeartPulse,
@@ -38,9 +38,19 @@ const Helpers = () => {
     <div className="min-h-screen bg-background safe-top">
       {/* Header */}
       <div className="px-4 pt-6 pb-4 border-b border-border/20">
-        <h1 className="text-2xl font-bold text-gradient-primary mb-2">
-          Event Helpers
-        </h1>
+        <div className="flex items-center justify-between mb-2">
+          <h1 className="text-2xl font-bold text-gradient-primary">
+            Event Helpers
+          </h1>
+          <Button
+            onClick={() => navigate('/helper-onboarding')}
+            variant="outline"
+            size="sm"
+            className="gradient-primary text-white border-0"
+          >
+            Join as Helper
+          </Button>
+        </div>
         <p className="text-muted-foreground">
           Services to make your night perfect
         </p>

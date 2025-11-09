@@ -15,6 +15,7 @@ import Helpers from "./pages/Helpers";
 import HelperProfile from "./pages/HelperProfile";
 import Profile from "./pages/Profile";
 import Auth from "./pages/Auth";
+import HelperOnboarding from "./pages/HelperOnboarding";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -37,6 +38,7 @@ const App = () => (
                 <Route path="circle-swipe" element={<CircleSwipe />} />
                 <Route path="helpers" element={<Helpers />} />
                 <Route path="helpers/:helperId" element={<HelperProfile />} />
+                <Route path="helper-onboarding" element={<HelperOnboarding />} />
                 <Route path="profile" element={<Profile />} />
                 <Route path="*" element={<NotFound />} />
               </Route>

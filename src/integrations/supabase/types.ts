@@ -392,6 +392,93 @@ export type Database = {
           },
         ]
       }
+      helper_applications: {
+        Row: {
+          admin_notes: string | null
+          availability_24_7: boolean | null
+          availability_schedule: Json | null
+          bio: string | null
+          category_tags: string[] | null
+          city: string
+          coverage_area: string | null
+          created_at: string
+          display_name: string
+          email: string | null
+          gallery_urls: string[] | null
+          hourly_rate: number | null
+          id: string
+          instagram: string | null
+          phone: string | null
+          price_range: string | null
+          profile_image_url: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          role_data: Json | null
+          role_type: Database["public"]["Enums"]["marketplace_role"]
+          session_rate: number | null
+          status: Database["public"]["Enums"]["application_status"]
+          updated_at: string
+          user_id: string
+          website: string | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          availability_24_7?: boolean | null
+          availability_schedule?: Json | null
+          bio?: string | null
+          category_tags?: string[] | null
+          city: string
+          coverage_area?: string | null
+          created_at?: string
+          display_name: string
+          email?: string | null
+          gallery_urls?: string[] | null
+          hourly_rate?: number | null
+          id?: string
+          instagram?: string | null
+          phone?: string | null
+          price_range?: string | null
+          profile_image_url?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          role_data?: Json | null
+          role_type: Database["public"]["Enums"]["marketplace_role"]
+          session_rate?: number | null
+          status?: Database["public"]["Enums"]["application_status"]
+          updated_at?: string
+          user_id: string
+          website?: string | null
+        }
+        Update: {
+          admin_notes?: string | null
+          availability_24_7?: boolean | null
+          availability_schedule?: Json | null
+          bio?: string | null
+          category_tags?: string[] | null
+          city?: string
+          coverage_area?: string | null
+          created_at?: string
+          display_name?: string
+          email?: string | null
+          gallery_urls?: string[] | null
+          hourly_rate?: number | null
+          id?: string
+          instagram?: string | null
+          phone?: string | null
+          price_range?: string | null
+          profile_image_url?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          role_data?: Json | null
+          role_type?: Database["public"]["Enums"]["marketplace_role"]
+          session_rate?: number | null
+          status?: Database["public"]["Enums"]["application_status"]
+          updated_at?: string
+          user_id?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -601,8 +688,16 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "user"
+      application_status: "draft" | "pending" | "approved" | "rejected"
       event_type: "club" | "private_host"
       gender_type: "male" | "female" | "other" | "hidden"
+      marketplace_role:
+        | "general_helper"
+        | "wellness_support"
+        | "dj_musician"
+        | "event_staff"
+        | "vendor_store"
+        | "props_rental"
       vote_type: "like" | "pass"
     }
     CompositeTypes: {
@@ -732,8 +827,17 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user"],
+      application_status: ["draft", "pending", "approved", "rejected"],
       event_type: ["club", "private_host"],
       gender_type: ["male", "female", "other", "hidden"],
+      marketplace_role: [
+        "general_helper",
+        "wellness_support",
+        "dj_musician",
+        "event_staff",
+        "vendor_store",
+        "props_rental",
+      ],
       vote_type: ["like", "pass"],
     },
   },
