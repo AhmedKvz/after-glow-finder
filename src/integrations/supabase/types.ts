@@ -531,6 +531,27 @@ export type Database = {
           },
         ]
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       venues: {
         Row: {
           address: string
@@ -570,8 +591,16 @@ export type Database = {
     }
     Functions: {
       generate_ticket_code: { Args: never; Returns: string }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
+      app_role: "admin" | "user"
       event_type: "club" | "private_host"
       gender_type: "male" | "female" | "other" | "hidden"
       vote_type: "like" | "pass"
@@ -702,6 +731,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      app_role: ["admin", "user"],
       event_type: ["club", "private_host"],
       gender_type: ["male", "female", "other", "hidden"],
       vote_type: ["like", "pass"],
