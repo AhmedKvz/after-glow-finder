@@ -22,6 +22,7 @@ const CircleSwipe = () => {
   const [myVotes, setMyVotes] = useState<Record<string, string>>({});
   const [showMatchNotification, setShowMatchNotification] = useState(false);
   const [currentMatch, setCurrentMatch] = useState<any>(null);
+  const [profileReviews, setProfileReviews] = useState<Record<string, { rating: number; count: number }>>({});
 
   useEffect(() => {
     if (user) {
@@ -82,6 +83,31 @@ const CircleSwipe = () => {
 
     if (profilesData) {
       setProfiles(profilesData);
+
+      // Load reviews for all profiles
+      const userIds = profilesData.map(p => p.user_id);
+      const { data: reviewsData } = await supabase
+        .from('user_reviews')
+        .select('reviewed_user_id, rating')
+        .in('reviewed_user_id', userIds);
+
+      if (reviewsData) {
+        const reviewsMap: Record<string, { rating: number; count: number }> = {};
+        reviewsData.forEach(review => {
+          if (!reviewsMap[review.reviewed_user_id]) {
+            reviewsMap[review.reviewed_user_id] = { rating: 0, count: 0 };
+          }
+          reviewsMap[review.reviewed_user_id].rating += review.rating;
+          reviewsMap[review.reviewed_user_id].count += 1;
+        });
+
+        // Calculate averages
+        Object.keys(reviewsMap).forEach(userId => {
+          reviewsMap[userId].rating = reviewsMap[userId].rating / reviewsMap[userId].count;
+        });
+
+        setProfileReviews(reviewsMap);
+      }
     }
 
     // Load my votes
@@ -263,6 +289,9 @@ const CircleSwipe = () => {
               key={currentProfileToShow.user_id}
               profile={currentProfileToShow}
               onVote={handleVote}
+              eventName={selectedSession.events?.title}
+              averageRating={profileReviews[currentProfileToShow.user_id]?.rating}
+              reviewCount={profileReviews[currentProfileToShow.user_id]?.count}
             />
           ) : (
             <Card className="glass-card p-8 text-center h-full flex flex-col items-center justify-center">

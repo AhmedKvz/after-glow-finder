@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Heart, X, Music } from 'lucide-react';
+import { Heart, X, Music, PartyPopper, Star } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { motion, useMotionValue, useTransform } from 'framer-motion';
@@ -7,9 +7,12 @@ import { motion, useMotionValue, useTransform } from 'framer-motion';
 interface CircleSwipeCardProps {
   profile: any;
   onVote: (vote: 'yes' | 'no') => void;
+  eventName?: string;
+  averageRating?: number;
+  reviewCount?: number;
 }
 
-export const CircleSwipeCard = ({ profile, onVote }: CircleSwipeCardProps) => {
+export const CircleSwipeCard = ({ profile, onVote, eventName, averageRating, reviewCount }: CircleSwipeCardProps) => {
   const [exitX, setExitX] = useState(0);
   const x = useMotionValue(0);
   const rotate = useTransform(x, [-200, 200], [-25, 25]);
@@ -78,6 +81,25 @@ export const CircleSwipeCard = ({ profile, onVote }: CircleSwipeCardProps) => {
             <h2 className="text-xl sm:text-xl md:text-2xl font-bold leading-tight">{profile.display_name || 'Anonymous'}</h2>
             <p className="text-base sm:text-base md:text-base text-muted-foreground mt-1">{profile.city || 'Belgrade'}</p>
           </div>
+
+          {/* Event Badge */}
+          {eventName && (
+            <div className="flex items-center gap-2 glass-card px-3 py-2 rounded-lg">
+              <PartyPopper className="w-4 h-4 text-primary" />
+              <span className="text-sm font-medium">{eventName}</span>
+            </div>
+          )}
+
+          {/* Rating */}
+          {averageRating && reviewCount && (
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1">
+                <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+                <span className="text-sm font-semibold">{averageRating.toFixed(1)}</span>
+              </div>
+              <span className="text-sm text-muted-foreground">({reviewCount} reviews)</span>
+            </div>
+          )}
 
           {profile.bio && (
             <p className="text-base sm:text-base md:text-base leading-relaxed">{profile.bio}</p>
