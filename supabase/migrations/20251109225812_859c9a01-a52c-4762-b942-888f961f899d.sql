@@ -1,0 +1,24 @@
+
+-- Insert Club Events (using admin user: dc2cb392-809a-4a15-ab48-35a986f8940c)
+INSERT INTO events (host_id, title, description, location, date, start_time, end_time, capacity, dj_name, music_tags, event_type, ticketing_enabled, is_location_hidden, join_request_required, bring_own_drinks, allow_plus_one) 
+VALUES 
+('dc2cb392-809a-4a15-ab48-35a986f8940c', '20/44 Deep House Night', 'Underground deep house session in Belgrade. Marko Nastić spinning.', '20/44 Club', '2025-11-15', '23:00:00', '06:00:00', 150, 'Marko Nastić', ARRAY['deep house', 'minimal', 'techno'], 'club', true, false, false, false, true),
+('dc2cb392-809a-4a15-ab48-35a986f8940c', 'Drugstore Techno Session', 'Raw techno vibes. Heavy industrial sounds.', 'Drugstore', '2025-11-16', '00:00:00', '08:00:00', 200, 'DJ Lag', ARRAY['techno', 'industrial', 'hard techno'], 'club', true, false, false, false, true),
+('dc2cb392-809a-4a15-ab48-35a986f8940c', 'KPTM Underground Rave', 'Most underground club in Belgrade. Rebekah live.', 'KPTM', '2025-11-17', '01:00:00', '09:00:00', 120, 'Rebekah', ARRAY['techno', 'underground', 'industrial'], 'club', true, false, false, false, false),
+('dc2cb392-809a-4a15-ab48-35a986f8940c', 'Mladost Cultural Center Party', 'Alternative rave in cultural center.', 'KC Mladost', '2025-11-18', '22:00:00', '05:00:00', 180, 'Vladimir Ivković', ARRAY['house', 'disco', 'balearic'], 'club', true, false, false, true, true),
+('dc2cb392-809a-4a15-ab48-35a986f8940c', 'Dvorište Open Air Session', 'Beautiful garden venue. Daytime vibes.', 'Mezestoran Dvorište', '2025-11-19', '17:00:00', '23:00:00', 100, 'Kristijan Molnar', ARRAY['house', 'nu disco', 'funk'], 'club', true, false, false, true, true),
+('dc2cb392-809a-4a15-ab48-35a986f8940c', 'Tunnel Warehouse Rave', 'Secret warehouse. Pure underground.', 'Tunnel Club', '2025-11-20', '00:00:00', '10:00:00', 250, 'I Hate Models', ARRAY['techno', 'hard techno', 'trance'], 'club', true, false, false, false, false),
+('dc2cb392-809a-4a15-ab48-35a986f8940c', 'Hangar Techno Marathon', 'All-day techno. Ben Klock headlining.', 'Hangar', '2025-11-22', '20:00:00', '12:00:00', 300, 'Ben Klock', ARRAY['techno', 'minimal', 'dub techno'], 'club', true, false, false, false, true),
+('dc2cb392-809a-4a15-ab48-35a986f8940c', 'Café Pavé Intimate Night', 'Small venue. Jazz and funk vibes.', 'Café Pavé', '2025-11-23', '21:00:00', '02:00:00', 60, 'DJ Pips', ARRAY['jazz', 'funk', 'soul'], 'club', true, false, false, true, true);
+
+-- Insert Private After Events (using Kvz888 user: 62eed572-fcba-4005-a760-45c2a2d81aa6)
+INSERT INTO events (host_id, title, description, location, date, start_time, end_time, capacity, music_tags, event_type, ticketing_enabled, is_location_hidden, join_request_required, bring_own_drinks, allow_plus_one) 
+VALUES 
+('62eed572-fcba-4005-a760-45c2a2d81aa6', 'After kod Ane - Novi Beograd 🏠', 'Chill after party na stanu. Opuštena atmosfera.', 'Novi Beograd', '2025-11-16', '06:00:00', '14:00:00', 15, ARRAY['house', 'minimal', 'ambient'], 'private_host', false, true, true, true, true),
+('62eed572-fcba-4005-a760-45c2a2d81aa6', 'Marija After Session - Dorćol 🌅', 'Sunrise session u centru. Mali krug prijatelja.', 'Dorćol', '2025-11-17', '08:00:00', '16:00:00', 12, ARRAY['deep house', 'melodic techno'], 'private_host', false, true, true, true, false),
+('62eed572-fcba-4005-a760-45c2a2d81aa6', 'Jelena Rooftop After - Vračar ☀️', 'Privatni after na terasi sa pogledom na grad.', 'Vračar', '2025-11-18', '07:00:00', '15:00:00', 20, ARRAY['house', 'nu disco', 'balearic'], 'private_host', false, true, true, true, true),
+('62eed572-fcba-4005-a760-45c2a2d81aa6', 'Teodora Art Studio After 🎨', 'After u art studiju. Kreativna atmosfera.', 'Savamala', '2025-11-19', '05:00:00', '13:00:00', 15, ARRAY['techno', 'minimal', 'experimental'], 'private_host', false, true, true, true, false),
+('62eed572-fcba-4005-a760-45c2a2d81aa6', 'Milica Garden Party - Ada 🌳', 'After na Adi Ciganliji. Nature vibes.', 'Ada Ciganlija', '2025-11-20', '10:00:00', '18:00:00', 25, ARRAY['ambient', 'downtempo', 'world music'], 'private_host', false, true, true, true, true),
+('62eed572-fcba-4005-a760-45c2a2d81aa6', 'Sara After kod Zemuna 🏡', 'Privatna kuća u Zemunu. Opuštena ekipa.', 'Zemun', '2025-11-21', '06:00:00', '14:00:00', 18, ARRAY['deep house', 'afro house', 'organic house'], 'private_host', false, true, true, true, true),
+('62eed572-fcba-4005-a760-45c2a2d81aa6', 'Nina Loft After - Beton Hala 🏭', 'Loft prostor u Beton Hali. Industrial vibes.', 'Beton Hala', '2025-11-22', '09:00:00', '17:00:00', 20, ARRAY['techno', 'industrial', 'hard techno'], 'private_host', false, true, true, false, false),
+('62eed572-fcba-4005-a760-45c2a2d81aa6', 'Katarina Penthouse After - Kneza Miloša 🌃', 'Ekskluzivan after u penthouse stanu. Limited capacity.', 'Kneza Miloša', '2025-11-23', '07:00:00', '15:00:00', 10, ARRAY['melodic house', 'progressive house'], 'private_host', false, true, true, false, false);

@@ -392,6 +392,172 @@ export type Database = {
           },
         ]
       }
+      guide_bookings: {
+        Row: {
+          base_price: number
+          booking_type: string
+          client_id: string
+          client_notes: string | null
+          created_at: string
+          destination: string | null
+          duration_hours: number | null
+          end_time: string | null
+          group_size: number | null
+          guide_id: string
+          guide_notes: string | null
+          id: string
+          meeting_point: string
+          payment_intent_id: string | null
+          payment_status: string | null
+          rating: number | null
+          review_text: string | null
+          start_time: string
+          status: string
+          tip_amount: number | null
+          total_price: number
+          updated_at: string
+        }
+        Insert: {
+          base_price: number
+          booking_type: string
+          client_id: string
+          client_notes?: string | null
+          created_at?: string
+          destination?: string | null
+          duration_hours?: number | null
+          end_time?: string | null
+          group_size?: number | null
+          guide_id: string
+          guide_notes?: string | null
+          id?: string
+          meeting_point: string
+          payment_intent_id?: string | null
+          payment_status?: string | null
+          rating?: number | null
+          review_text?: string | null
+          start_time: string
+          status?: string
+          tip_amount?: number | null
+          total_price: number
+          updated_at?: string
+        }
+        Update: {
+          base_price?: number
+          booking_type?: string
+          client_id?: string
+          client_notes?: string | null
+          created_at?: string
+          destination?: string | null
+          duration_hours?: number | null
+          end_time?: string | null
+          group_size?: number | null
+          guide_id?: string
+          guide_notes?: string | null
+          id?: string
+          meeting_point?: string
+          payment_intent_id?: string | null
+          payment_status?: string | null
+          rating?: number | null
+          review_text?: string | null
+          start_time?: string
+          status?: string
+          tip_amount?: number | null
+          total_price?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "guide_bookings_guide_id_fkey"
+            columns: ["guide_id"]
+            isOneToOne: false
+            referencedRelation: "guides"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      guides: {
+        Row: {
+          available_today: boolean | null
+          available_tomorrow: boolean | null
+          available_weekend: boolean | null
+          average_rating: number | null
+          badges: string[] | null
+          can_host_afters: boolean | null
+          created_at: string
+          helper_id: string | null
+          id: string
+          languages: string[] | null
+          max_group_size: number | null
+          nightlife_style: string[] | null
+          preferred_zones: string[] | null
+          price_per_experience: number | null
+          price_per_hour: number | null
+          price_per_night: number | null
+          specialties: string | null
+          total_guests_guided: number | null
+          total_tours: number | null
+          updated_at: string
+          user_id: string
+          years_as_guide: number | null
+        }
+        Insert: {
+          available_today?: boolean | null
+          available_tomorrow?: boolean | null
+          available_weekend?: boolean | null
+          average_rating?: number | null
+          badges?: string[] | null
+          can_host_afters?: boolean | null
+          created_at?: string
+          helper_id?: string | null
+          id?: string
+          languages?: string[] | null
+          max_group_size?: number | null
+          nightlife_style?: string[] | null
+          preferred_zones?: string[] | null
+          price_per_experience?: number | null
+          price_per_hour?: number | null
+          price_per_night?: number | null
+          specialties?: string | null
+          total_guests_guided?: number | null
+          total_tours?: number | null
+          updated_at?: string
+          user_id: string
+          years_as_guide?: number | null
+        }
+        Update: {
+          available_today?: boolean | null
+          available_tomorrow?: boolean | null
+          available_weekend?: boolean | null
+          average_rating?: number | null
+          badges?: string[] | null
+          can_host_afters?: boolean | null
+          created_at?: string
+          helper_id?: string | null
+          id?: string
+          languages?: string[] | null
+          max_group_size?: number | null
+          nightlife_style?: string[] | null
+          preferred_zones?: string[] | null
+          price_per_experience?: number | null
+          price_per_hour?: number | null
+          price_per_night?: number | null
+          specialties?: string | null
+          total_guests_guided?: number | null
+          total_tours?: number | null
+          updated_at?: string
+          user_id?: string
+          years_as_guide?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "guides_helper_id_fkey"
+            columns: ["helper_id"]
+            isOneToOne: false
+            referencedRelation: "helper_applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       helper_applications: {
         Row: {
           admin_notes: string | null
@@ -698,6 +864,7 @@ export type Database = {
         | "event_staff"
         | "vendor_store"
         | "props_rental"
+        | "be_my_guide"
       vote_type: "like" | "pass"
     }
     CompositeTypes: {
@@ -837,6 +1004,7 @@ export const Constants = {
         "event_staff",
         "vendor_store",
         "props_rental",
+        "be_my_guide",
       ],
       vote_type: ["like", "pass"],
     },
