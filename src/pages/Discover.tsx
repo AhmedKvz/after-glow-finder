@@ -23,17 +23,7 @@ const Discover = () => {
   }, []);
 
   const loadEvents = async () => {
-    // 1. First, find Ahmed's user_id from profiles
-    const { data: ahmedProfile } = await supabase
-      .from('profiles')
-      .select('user_id')
-      .ilike('display_name', '%ahmed%')
-      .limit(1)
-      .single();
-
-    console.log('[Discover] Ahmed profile:', ahmedProfile);
-
-    // 2. Load club events (all club type events from any admin/club host)
+    // 1. Load club events (from admin users)
     const { data: clubEvents, error: clubError } = await supabase
       .from('events')
       .select('*')
@@ -45,26 +35,20 @@ const Discover = () => {
       console.error('[Discover] Error loading club events:', clubError);
     }
 
-    // 3. Load private events (only from Ahmed's profile)
-    let privateEvents: any[] = [];
-    if (ahmedProfile?.user_id) {
-      const { data, error: privateError } = await supabase
-        .from('events')
-        .select('*')
-        .eq('event_type', 'private_host')
-        .eq('host_id', ahmedProfile.user_id)
-        .gte('date', new Date().toISOString().split('T')[0])
-        .order('date', { ascending: true });
+    // 2. Load private events (from regular users, non-admins)
+    const { data: privateEvents, error: privateError } = await supabase
+      .from('events')
+      .select('*')
+      .eq('event_type', 'private_host')
+      .gte('date', new Date().toISOString().split('T')[0])
+      .order('date', { ascending: true });
 
-      if (privateError) {
-        console.error('[Discover] Error loading private events:', privateError);
-      } else {
-        privateEvents = data || [];
-      }
+    if (privateError) {
+      console.error('[Discover] Error loading private events:', privateError);
     }
 
-    // 4. Combine all events
-    const allEvents = [...(clubEvents || []), ...privateEvents];
+    // 3. Combine all events
+    const allEvents = [...(clubEvents || []), ...(privateEvents || [])];
 
     if (allEvents.length === 0) {
       setEvents([]);
@@ -72,10 +56,10 @@ const Discover = () => {
       return;
     }
 
-    // 5. Collect unique host_ids
+    // 4. Collect unique host_ids
     const hostIds = [...new Set(allEvents.map(e => e.host_id))];
 
-    // 6. Load profiles for all hosts
+    // 5. Load profiles for all hosts
     const { data: profilesData, error: profilesError } = await supabase
       .from('profiles')
       .select('user_id, display_name, avatar_url')
@@ -85,7 +69,7 @@ const Discover = () => {
       console.error('[Discover] Error loading profiles:', profilesError);
     }
 
-    // 7. Merge data: add host object to each event
+    // 6. Merge data: add host object to each event
     const eventsWithHosts = allEvents.map(event => ({
       ...event,
       host: profilesData?.find(p => p.user_id === event.host_id) || {

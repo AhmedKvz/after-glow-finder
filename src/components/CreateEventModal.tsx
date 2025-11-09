@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -36,6 +36,7 @@ export const CreateEventModal = ({ open, onOpenChange, onSuccess }: CreateEventM
   const { user } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   
   const [formData, setFormData] = useState({
     title: '',
@@ -51,10 +52,33 @@ export const CreateEventModal = ({ open, onOpenChange, onSuccess }: CreateEventM
     bring_own_drinks: false,
     allow_plus_one: false,
     allow_plus_two: false,
-    event_type: 'club' as 'club' | 'private_host'
+    event_type: 'private_host' as 'club' | 'private_host'
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Check if user is admin
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      if (!user) return;
+      
+      const { data } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .eq('role', 'admin')
+        .maybeSingle();
+      
+      setIsAdmin(!!data);
+      
+      // If user is admin, default to club event
+      if (data) {
+        setFormData(prev => ({ ...prev, event_type: 'club' }));
+      }
+    };
+    
+    checkAdminStatus();
+  }, [user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -180,20 +204,23 @@ export const CreateEventModal = ({ open, onOpenChange, onSuccess }: CreateEventM
             <Select
               value={formData.event_type}
               onValueChange={(value) => setFormData({ ...formData, event_type: value as 'club' | 'private_host' })}
+              disabled={!isAdmin}
             >
               <SelectTrigger id="event_type" className="glass-card">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="glass-card">
-                <SelectItem value="club">
-                  <div className="flex items-center gap-2 py-1">
-                    <span>🏛️</span>
-                    <div>
-                      <p className="font-medium">Club Event</p>
-                      <p className="text-xs text-muted-foreground">Public location, ticket sales</p>
+                {isAdmin && (
+                  <SelectItem value="club">
+                    <div className="flex items-center gap-2 py-1">
+                      <span>🏛️</span>
+                      <div>
+                        <p className="font-medium">Club Event</p>
+                        <p className="text-xs text-muted-foreground">Public location, ticket sales (Admin only)</p>
+                      </div>
                     </div>
-                  </div>
-                </SelectItem>
+                  </SelectItem>
+                )}
                 <SelectItem value="private_host">
                   <div className="flex items-center gap-2 py-1">
                     <span>🗝️</span>
@@ -205,6 +232,11 @@ export const CreateEventModal = ({ open, onOpenChange, onSuccess }: CreateEventM
                 </SelectItem>
               </SelectContent>
             </Select>
+            {!isAdmin && (
+              <p className="text-xs text-muted-foreground">
+                ℹ️ Only admins can create Club events. Users can create Private events.
+              </p>
+            )}
           </div>
 
           <div className="space-y-2">
