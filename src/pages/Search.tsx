@@ -27,29 +27,43 @@ const Search = () => {
   }, []);
 
   const loadEvents = async () => {
-    // 1. Load all events without JOIN
-    const { data: eventsData, error: eventsError } = await supabase
+    // 1. Load club events (from admin users)
+    const { data: clubEvents, error: clubError } = await supabase
       .from('events')
       .select('*')
+      .eq('event_type', 'club')
       .gte('date', new Date().toISOString().split('T')[0])
       .order('date', { ascending: true });
 
-    if (eventsError) {
-      console.error('[Search] Error loading events:', eventsError);
-      setLoading(false);
-      return;
+    if (clubError) {
+      console.error('[Search] Error loading club events:', clubError);
     }
 
-    if (!eventsData || eventsData.length === 0) {
+    // 2. Load private events (from regular users, non-admins)
+    const { data: privateEvents, error: privateError } = await supabase
+      .from('events')
+      .select('*')
+      .eq('event_type', 'private_host')
+      .gte('date', new Date().toISOString().split('T')[0])
+      .order('date', { ascending: true });
+
+    if (privateError) {
+      console.error('[Search] Error loading private events:', privateError);
+    }
+
+    // 3. Combine all events
+    const allEvents = [...(clubEvents || []), ...(privateEvents || [])];
+
+    if (allEvents.length === 0) {
       setEvents([]);
       setLoading(false);
       return;
     }
 
-    // 2. Collect unique host_ids
-    const hostIds = [...new Set(eventsData.map(e => e.host_id))];
+    // 4. Collect unique host_ids
+    const hostIds = [...new Set(allEvents.map(e => e.host_id))];
 
-    // 3. Load profiles for all hosts
+    // 5. Load profiles for all hosts
     const { data: profilesData, error: profilesError } = await supabase
       .from('profiles')
       .select('user_id, display_name, avatar_url')
@@ -59,8 +73,8 @@ const Search = () => {
       console.error('[Search] Error loading profiles:', profilesError);
     }
 
-    // 4. Merge data: add host object to each event
-    const eventsWithHosts = eventsData.map(event => ({
+    // 6. Merge data: add host object to each event
+    const eventsWithHosts = allEvents.map(event => ({
       ...event,
       host: profilesData?.find(p => p.user_id === event.host_id) || {
         user_id: event.host_id,
@@ -68,6 +82,9 @@ const Search = () => {
         avatar_url: null
       }
     }));
+
+    // Sort by date
+    eventsWithHosts.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
     setEvents(eventsWithHosts);
     setLoading(false);
