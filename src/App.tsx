@@ -6,8 +6,6 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { DemoModeProvider } from "@/contexts/DemoModeContext";
 import { Layout } from "./components/Layout";
-import { EntranceNotificationModal } from "@/components/EntranceNotificationModal";
-import { useEntranceNotification } from "@/hooks/useEntranceNotification";
 import Index from "./pages/Index";
 import Discover from "./pages/Discover";
 import Search from "./pages/Search";
@@ -30,57 +28,39 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-const AppContent = () => {
-  const { notification, isOpen, handleClose } = useEntranceNotification();
-
-  return (
-    <>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <AuthProvider>
-          <Routes>
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/" element={<Layout />}>
-              <Route index element={<Index />} />
-              <Route path="discover" element={<Discover />} />
-              <Route path="search" element={<Search />} />
-              <Route path="host" element={<Host />} />
-              <Route path="circle-swipe" element={<CircleSwipe />} />
-              <Route path="helpers" element={<Helpers />} />
-              <Route path="helpers/:helperId" element={<HelperProfile />} />
-              <Route path="helper-onboarding" element={<HelperOnboarding />} />
-              <Route path="profile" element={<Profile />} />
-              <Route path="club-dashboard" element={<ClubDashboard />} />
-              <Route path="event/:id/chat" element={<EventChat />} />
-              <Route path="gamification" element={<Gamification />} />
-              <Route path="quests" element={<Quests />} />
-              <Route path="lucky100" element={<Lucky100 />} />
-              <Route path="leaderboard" element={<Leaderboard />} />
-              <Route path="heat-leaderboard" element={<HeatLeaderboard />} />
-              <Route path="admin/golden-tickets" element={<GoldenTicketAdmin />} />
-              <Route path="*" element={<NotFound />} />
-            </Route>
-          </Routes>
-        </AuthProvider>
-      </BrowserRouter>
-      {notification && (
-        <EntranceNotificationModal
-          isOpen={isOpen}
-          onClose={handleClose}
-          message={notification.message}
-          emoji={notification.emoji}
-        />
-      )}
-    </>
-  );
-};
-
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <DemoModeProvider>
       <TooltipProvider>
-        <AppContent />
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <AuthProvider>
+            <Routes>
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/" element={<Layout />}>
+                <Route index element={<Index />} />
+                <Route path="discover" element={<Discover />} />
+                <Route path="search" element={<Search />} />
+                <Route path="host" element={<Host />} />
+                <Route path="circle-swipe" element={<CircleSwipe />} />
+                <Route path="helpers" element={<Helpers />} />
+                <Route path="helpers/:helperId" element={<HelperProfile />} />
+                <Route path="helper-onboarding" element={<HelperOnboarding />} />
+                <Route path="profile" element={<Profile />} />
+                <Route path="club-dashboard" element={<ClubDashboard />} />
+                <Route path="event/:id/chat" element={<EventChat />} />
+                <Route path="gamification" element={<Gamification />} />
+                <Route path="quests" element={<Quests />} />
+                <Route path="lucky100" element={<Lucky100 />} />
+                <Route path="leaderboard" element={<Leaderboard />} />
+                <Route path="heat-leaderboard" element={<HeatLeaderboard />} />
+                <Route path="admin/golden-tickets" element={<GoldenTicketAdmin />} />
+                <Route path="*" element={<NotFound />} />
+              </Route>
+            </Routes>
+          </AuthProvider>
+        </BrowserRouter>
       </TooltipProvider>
     </DemoModeProvider>
   </QueryClientProvider>
