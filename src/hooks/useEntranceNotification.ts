@@ -14,7 +14,7 @@ export const useEntranceNotification = () => {
 
   useEffect(() => {
     // Check if notification was already shown in this session
-    const sessionNotified = sessionStorage.getItem('entrance_notified');
+    const sessionNotified = sessionStorage.getItem('entrance_notified_v2');
     console.log('🔔 Entrance notification hook initialized', { sessionNotified });
     
     if (sessionNotified === 'true') {
@@ -53,7 +53,7 @@ export const useEntranceNotification = () => {
         setIsOpen(true);
 
         // Mark session as notified
-        sessionStorage.setItem('entrance_notified', 'true');
+        sessionStorage.setItem('entrance_notified_v2', 'true');
         console.log('✅ Notification displayed and session marked');
       } catch (error) {
         console.error('❌ Error fetching entrance notification:', error);
