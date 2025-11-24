@@ -14,7 +14,7 @@ export const useEntranceNotification = () => {
 
   useEffect(() => {
     // Check if notification was already shown in this session
-    const sessionNotified = sessionStorage.getItem('entrance_notified_v3');
+    const sessionNotified = sessionStorage.getItem('entrance_notified');
     console.log('🔔 Entrance notification hook initialized', { sessionNotified });
     
     if (sessionNotified === 'true') {
@@ -26,32 +26,35 @@ export const useEntranceNotification = () => {
     
     // Start 3-second timer
     const timer = setTimeout(async () => {
-      console.log('⏰ 3 seconds elapsed, fetching notification from Supabase...');
+      console.log('⏰ 3 seconds elapsed, fetching notification...');
       try {
-        // Fetch one random active notification directly from Supabase
+        // Fetch all active notifications
         const { data, error } = await supabase
           .from('entrance_notifications')
           .select('id, message, emoji, priority')
-          .eq('active', true)
-          .order('random()')
-          .limit(1)
-          .maybeSingle();
+          .eq('active', true);
 
         if (error) throw error;
         
-        console.log('📬 Fetched random notification:', data);
+        console.log('📬 Fetched notifications:', data);
         
-        if (!data) {
+        if (!data || data.length === 0) {
           console.log('❌ No active notifications found');
           return;
         }
 
-        setNotification(data as EntranceNotification);
+        // Pick a random notification (with optional priority weighting)
+        const randomIndex = Math.floor(Math.random() * data.length);
+        const selectedNotification = data[randomIndex];
+
+        console.log('🎯 Selected notification:', selectedNotification);
+        
+        setNotification(selectedNotification);
         setIsOpen(true);
 
         // Mark session as notified
-        sessionStorage.setItem('entrance_notified_v3', 'true');
-        console.log('✅ Notification displayed from list and session marked');
+        sessionStorage.setItem('entrance_notified', 'true');
+        console.log('✅ Notification displayed and session marked');
       } catch (error) {
         console.error('❌ Error fetching entrance notification:', error);
       }
