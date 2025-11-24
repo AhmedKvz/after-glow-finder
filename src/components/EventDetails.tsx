@@ -368,9 +368,13 @@ export const EventDetails: React.FC<EventDetailsProps> = ({ event, onBack }) => 
         <div>
           <h3 className="font-semibold mb-4 flex items-center gap-2">
             <MessageSquare className="w-5 h-5" />
-            Reviews
+            {event.eventType === 'private_host' ? 'Host Reviews' : 'Event Reviews'}
           </h3>
-          <ReviewsList eventId={event.id} />
+          {event.eventType === 'private_host' ? (
+            <ReviewsList userId={event.host.id} />
+          ) : (
+            <ReviewsList eventId={event.id} />
+          )}
         </div>
       </div>
       
