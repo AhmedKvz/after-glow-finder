@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Ticket, QrCode, Calendar, MapPin, Clock, Check, Star } from 'lucide-react';
+import { Ticket, QrCode, Calendar, MapPin, Clock, Check, Star, MessageCircle } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -9,9 +9,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { QRCodeSVG } from 'qrcode.react';
 import { Loader2 } from 'lucide-react';
 import { ReviewEventModal } from '@/components/ReviewEventModal';
+import { useNavigate } from 'react-router-dom';
 
 export const MyTickets = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [tickets, setTickets] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedTicket, setSelectedTicket] = useState<any | null>(null);
@@ -144,17 +146,30 @@ export const MyTickets = () => {
                     </Button>
                   </div>
                   
-                  {isPast && (
-                    <Button
-                      size="sm"
-                      variant={hasReview ? "outline" : "default"}
-                      onClick={() => setSelectedEventForReview(event)}
-                      className={hasReview ? "w-full glass-card" : "w-full gradient-primary"}
-                    >
-                      <Star className="w-4 h-4 mr-2" />
-                      {hasReview ? 'Edit Review' : 'Leave Review'}
-                    </Button>
-                  )}
+                  <div className="space-y-2">
+                    {event?.event_type === 'club' && ticket.status === 'valid' && (
+                      <Button
+                        size="sm"
+                        onClick={() => navigate(`/event/${event.id}/chat`)}
+                        className="w-full gradient-primary"
+                      >
+                        <MessageCircle className="w-4 h-4 mr-2" />
+                        Open Event Chat
+                      </Button>
+                    )}
+                    
+                    {isPast && (
+                      <Button
+                        size="sm"
+                        variant={hasReview ? "outline" : "default"}
+                        onClick={() => setSelectedEventForReview(event)}
+                        className={hasReview ? "w-full glass-card" : "w-full gradient-primary"}
+                      >
+                        <Star className="w-4 h-4 mr-2" />
+                        {hasReview ? 'Edit Review' : 'Leave Review'}
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
