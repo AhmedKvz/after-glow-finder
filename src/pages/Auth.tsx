@@ -32,6 +32,7 @@ const Auth = () => {
     confirmPassword: '',
     displayName: '' 
   });
+  const [selectedRole, setSelectedRole] = useState<'user' | 'club' | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   
   const { signIn, signUp, user } = useAuth();
@@ -86,6 +87,15 @@ const Auth = () => {
     e.preventDefault();
     setErrors({});
     
+    if (!selectedRole) {
+      toast({
+        variant: "destructive",
+        title: "Role required",
+        description: "Please select your role to continue"
+      });
+      return;
+    }
+    
     try {
       signupSchema.parse(signupForm);
       setIsLoading(true);
@@ -93,7 +103,8 @@ const Auth = () => {
       const { error } = await signUp(
         signupForm.email, 
         signupForm.password,
-        signupForm.displayName
+        signupForm.displayName,
+        selectedRole
       );
       
       if (error) {
@@ -191,6 +202,43 @@ const Auth = () => {
             
             <TabsContent value="signup">
               <form onSubmit={handleSignup} className="space-y-4">
+                {/* Role Selection Step */}
+                <div className="space-y-3">
+                  <Label>I am a...</Label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <Button
+                      type="button"
+                      variant={selectedRole === 'club' ? 'default' : 'outline'}
+                      className={`h-auto py-6 px-4 flex flex-col gap-2 ${
+                        selectedRole === 'club' ? 'gradient-primary' : ''
+                      }`}
+                      onClick={() => setSelectedRole('club')}
+                      disabled={isLoading}
+                    >
+                      <Music2 className="w-8 h-8" />
+                      <div className="text-center">
+                        <div className="font-bold">Club / Venue</div>
+                        <div className="text-xs opacity-80">Organize events</div>
+                      </div>
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={selectedRole === 'user' ? 'default' : 'outline'}
+                      className={`h-auto py-6 px-4 flex flex-col gap-2 ${
+                        selectedRole === 'user' ? 'gradient-primary' : ''
+                      }`}
+                      onClick={() => setSelectedRole('user')}
+                      disabled={isLoading}
+                    >
+                      <Music2 className="w-8 h-8" />
+                      <div className="text-center">
+                        <div className="font-bold">Partygoer</div>
+                        <div className="text-xs opacity-80">Discover events</div>
+                      </div>
+                    </Button>
+                  </div>
+                </div>
+                
                 <div className="space-y-2">
                   <Label htmlFor="signup-name">Display Name</Label>
                   <Input

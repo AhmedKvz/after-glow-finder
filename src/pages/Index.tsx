@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
 
 const Index = () => {
@@ -11,7 +12,21 @@ const Index = () => {
     if (!loading) {
       // Redirect to discover page if logged in, otherwise to auth
       if (user) {
-        navigate('/discover');
+        const checkRoleAndRedirect = async () => {
+          const { data: roleData } = await supabase
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', user.id)
+            .single();
+
+          if (roleData?.role === 'club') {
+            navigate('/club-dashboard');
+          } else {
+            navigate('/discover');
+          }
+        };
+
+        checkRoleAndRedirect();
       } else {
         navigate('/auth');
       }
