@@ -12,13 +12,19 @@ import {
   Crown,
   Sparkles,
   Edit,
-  Ticket
+  Ticket,
+  Zap,
+  Trophy,
+  Award,
+  Target,
+  TrendingUp
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useDemoMode } from '@/contexts/DemoModeContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -27,6 +33,7 @@ import { MyTickets } from '@/components/MyTickets';
 import { ReviewsList } from '@/components/ReviewsList';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2, MessageSquare } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface ProfileData {
   display_name: string;
@@ -34,6 +41,14 @@ interface ProfileData {
   city?: string;
   music_tags?: string[];
   avatar_url?: string;
+  xp?: number;
+  level?: string;
+  trust_score?: number;
+  badges?: any;
+  events_attended?: number;
+  afters_hosted?: number;
+  lucky100_wins?: number;
+  vip_status?: boolean;
 }
 
 const Profile = () => {
@@ -42,12 +57,15 @@ const Profile = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [quests, setQuests] = useState<any[]>([]);
   const { isDemoMode, toggleDemoMode } = useDemoMode();
   const { user, signOut } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (user) {
       loadProfile();
+      loadQuests();
     }
   }, [user]);
 
@@ -64,6 +82,51 @@ const Profile = () => {
       setProfileData(data);
     }
     setLoading(false);
+  };
+
+  const loadQuests = async () => {
+    if (!user) return;
+
+    const { data } = await supabase
+      .from('quests')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(5);
+
+    if (data) {
+      setQuests(data);
+    }
+  };
+
+  const getLevelProgress = () => {
+    if (!profileData?.xp) return 0;
+    const levelThresholds: Record<string, number> = {
+      'Newbie': 100,
+      'Explorer': 500,
+      'Rising Star': 1000,
+      'Regular': 2000,
+      'Pro': 5000,
+      'VIP': 10000,
+      'Legend': 99999,
+    };
+    
+    const currentThreshold = levelThresholds[profileData.level || 'Newbie'] || 100;
+    const previousLevelKeys = Object.keys(levelThresholds);
+    const currentLevelIndex = previousLevelKeys.indexOf(profileData.level || 'Newbie');
+    const previousLevel = previousLevelKeys[currentLevelIndex - 1];
+    const previousThreshold = previousLevel ? levelThresholds[previousLevel] : 0;
+    
+    const progress = ((profileData.xp - previousThreshold) / (currentThreshold - previousThreshold)) * 100;
+    return Math.min(Math.max(progress, 0), 100);
+  };
+
+  const getTrustScoreColor = () => {
+    const score = profileData?.trust_score || 50;
+    if (score >= 80) return 'text-emerald-400';
+    if (score >= 60) return 'text-blue-400';
+    if (score >= 40) return 'text-yellow-400';
+    return 'text-red-400';
   };
 
   const handleSignOut = async () => {
@@ -137,9 +200,10 @@ const Profile = () => {
         </h1>
 
         <Tabs defaultValue="profile" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-6">
+          <TabsList className="grid w-full grid-cols-4 mb-6 text-xs">
             <TabsTrigger value="profile">Profile</TabsTrigger>
-            <TabsTrigger value="tickets">My Tickets</TabsTrigger>
+            <TabsTrigger value="stats">Stats</TabsTrigger>
+            <TabsTrigger value="tickets">Tickets</TabsTrigger>
             <TabsTrigger value="reviews">Reviews</TabsTrigger>
           </TabsList>
 
@@ -252,6 +316,118 @@ const Profile = () => {
             </div>
           ))}
         </div>
+          </TabsContent>
+
+          <TabsContent value="stats" className="space-y-4">
+            {/* XP & Level */}
+            <Card className="glass-card p-6 border-2 border-primary/30">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h3 className="text-2xl font-bold text-gradient-primary">
+                    {profileData?.level || 'Newbie'}
+                  </h3>
+                  <p className="text-sm text-muted-foreground">Level</p>
+                </div>
+                <div className="text-right">
+                  <div className="text-2xl font-bold flex items-center gap-1">
+                    <Zap className="w-6 h-6 text-amber-400" />
+                    {profileData?.xp || 0}
+                  </div>
+                  <p className="text-sm text-muted-foreground">XP</p>
+                </div>
+              </div>
+              
+              <Progress value={getLevelProgress()} className="h-3 mb-2" />
+              <p className="text-xs text-muted-foreground text-center">
+                {profileData?.xp || 0} XP to next level
+              </p>
+            </Card>
+
+            {/* Trust Score */}
+            <Card className="glass-card p-5">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="p-3 bg-blue-600/20 rounded-lg">
+                  <Star className={`w-6 h-6 ${getTrustScoreColor()}`} />
+                </div>
+                <div>
+                  <div className={`text-3xl font-bold ${getTrustScoreColor()}`}>
+                    {profileData?.trust_score || 50}
+                  </div>
+                  <p className="text-sm text-muted-foreground">Trust Score</p>
+                </div>
+              </div>
+              <Progress 
+                value={(profileData?.trust_score || 50)} 
+                className="h-2"
+              />
+            </Card>
+
+            {/* Stats Grid */}
+            <div className="grid grid-cols-3 gap-3">
+              <Card className="glass-card p-4 text-center">
+                <div className="text-2xl font-bold text-primary mb-1">
+                  {profileData?.events_attended || 0}
+                </div>
+                <p className="text-xs text-muted-foreground">Events</p>
+              </Card>
+
+              <Card className="glass-card p-4 text-center">
+                <div className="text-2xl font-bold text-purple-400 mb-1">
+                  {profileData?.afters_hosted || 0}
+                </div>
+                <p className="text-xs text-muted-foreground">Hosted</p>
+              </Card>
+
+              <Card className="glass-card p-4 text-center">
+                <div className="text-2xl font-bold text-amber-400 mb-1">
+                  {profileData?.lucky100_wins || 0}
+                </div>
+                <p className="text-xs text-muted-foreground">Lucky</p>
+              </Card>
+            </div>
+
+            {/* Badges */}
+            <Card className="glass-card p-5">
+              <h3 className="font-semibold mb-4 flex items-center gap-2">
+                <Award className="w-5 h-5 text-primary" />
+                Your Badges
+              </h3>
+              
+              {profileData?.badges && (profileData.badges as any).length > 0 ? (
+                <div className="flex gap-2 flex-wrap">
+                  {(profileData.badges as any).map((badge: string, index: number) => (
+                    <Badge key={index} variant="secondary" className="text-xs px-3 py-1">
+                      {badge}
+                    </Badge>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  Complete quests to earn badges! 🏆
+                </p>
+              )}
+            </Card>
+
+            {/* Quick Actions */}
+            <div className="grid grid-cols-2 gap-3">
+              <Button
+                onClick={() => navigate('/quests')}
+                variant="outline"
+                className="h-16"
+              >
+                <Target className="w-5 h-5 mr-2" />
+                View Quests
+              </Button>
+
+              <Button
+                onClick={() => navigate('/leaderboard')}
+                variant="outline"
+                className="h-16"
+              >
+                <Trophy className="w-5 h-5 mr-2" />
+                Leaderboard
+              </Button>
+            </div>
           </TabsContent>
 
           <TabsContent value="tickets">
