@@ -16,11 +16,11 @@ import { supabase } from '@/integrations/supabase/client';
 
 const tabs = [
   { id: 'discover', label: 'Discover', icon: Compass, path: '/discover' },
-  { id: 'search', label: 'Search', icon: Search, path: '/search' },
   { id: 'circle-swipe', label: 'Swipe', icon: Heart, path: '/circle-swipe' },
   { id: 'gamification', label: 'Game', icon: Trophy, path: '/gamification' },
   { id: 'host', label: 'Host', icon: Plus, path: '/host' },
   { id: 'helpers', label: 'Helpers', icon: HandHeart, path: '/helpers' },
+  { id: 'search', label: 'Search', icon: Search, path: '/search' },
   { id: 'profile', label: 'Profile', icon: User, path: '/profile' },
 ];
 
@@ -63,8 +63,9 @@ export const TabBar = () => {
                 key={tab.id}
                 to={tab.path}
                 className={cn(
-                  'flex flex-col items-center space-y-1 px-3 py-2 rounded-xl transition-all duration-300',
-                  'min-w-[60px] relative interactive'
+                  'flex flex-col items-center space-y-1 px-2 py-2 rounded-xl transition-all duration-300',
+                  'min-w-[56px] relative group cursor-pointer',
+                  'hover:scale-110 active:scale-95'
                 )}
               >
                 {/* Active background glow */}
@@ -74,18 +75,20 @@ export const TabBar = () => {
                 
                 {/* Icon with special styling for Host, Gamification, and Circle Swipe tabs */}
                 <div className={cn(
-                  'relative p-2 rounded-lg transition-all duration-300 pointer-events-none',
+                  'relative p-1.5 rounded-lg transition-all duration-300',
+                  'group-hover:p-2.5 group-hover:scale-110',
                   (tab.id === 'host' || tab.id === 'gamification' || tab.id === 'circle-swipe') && 'gradient-primary text-white shadow-primary',
                   tab.id !== 'host' && tab.id !== 'gamification' && tab.id !== 'circle-swipe' && isActive && 'text-primary',
-                  tab.id !== 'host' && tab.id !== 'gamification' && tab.id !== 'circle-swipe' && !isActive && 'text-muted-foreground'
+                  tab.id !== 'host' && tab.id !== 'gamification' && tab.id !== 'circle-swipe' && !isActive && 'text-muted-foreground group-hover:text-primary'
                 )}>
-                  <Icon size={20} />
+                  <Icon size={18} className="group-hover:scale-110 transition-transform duration-300" />
                 </div>
                 
                 {/* Label */}
                 <span className={cn(
-                  'text-xs font-medium transition-colors duration-300 pointer-events-none',
-                  isActive ? 'text-primary' : 'text-muted-foreground'
+                  'text-[10px] font-medium transition-all duration-300',
+                  'group-hover:text-xs',
+                  isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-primary'
                 )}>
                   {tab.label}
                 </span>
