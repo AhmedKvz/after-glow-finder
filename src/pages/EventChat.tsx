@@ -186,7 +186,61 @@ const EventChat = () => {
       profiles: profilesMap.get(msg.user_id) || null
     }));
 
-    setMessages(messagesWithProfiles);
+    // Add demo messages for MVP showcase
+    const demoMessages: ChatMessage[] = [
+      {
+        id: 'demo-1',
+        user_id: 'demo-user-1',
+        message: 'Please be safe, police is in front of the door in civil clothes 👮‍♂️',
+        created_at: new Date(Date.now() - 3600000).toISOString(),
+        profiles: {
+          display_name: 'Marko',
+          avatar_url: null
+        }
+      },
+      {
+        id: 'demo-2',
+        user_id: 'demo-user-2',
+        message: 'Thanks for the heads up! Anyone seen the coat check?',
+        created_at: new Date(Date.now() - 3300000).toISOString(),
+        profiles: {
+          display_name: 'Ana',
+          avatar_url: null
+        }
+      },
+      {
+        id: 'demo-3',
+        user_id: 'demo-user-3',
+        message: 'Coat check is on the left when you enter. Line is moving fast 👍',
+        created_at: new Date(Date.now() - 3000000).toISOString(),
+        profiles: {
+          display_name: 'Stefan',
+          avatar_url: null
+        }
+      },
+      {
+        id: 'demo-4',
+        user_id: 'demo-user-4',
+        message: 'DJ is absolutely killing it tonight! 🔥🔥🔥',
+        created_at: new Date(Date.now() - 2700000).toISOString(),
+        profiles: {
+          display_name: 'Jelena',
+          avatar_url: null
+        }
+      },
+      {
+        id: 'demo-5',
+        user_id: 'demo-user-5',
+        message: 'Meeting outside for a smoke in 5 min if anyone wants to join',
+        created_at: new Date(Date.now() - 1800000).toISOString(),
+        profiles: {
+          display_name: 'Nikola',
+          avatar_url: null
+        }
+      }
+    ];
+
+    setMessages([...demoMessages, ...messagesWithProfiles]);
   };
 
   // Subscribe to new messages
