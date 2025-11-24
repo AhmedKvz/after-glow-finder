@@ -179,7 +179,8 @@ export const CreateEventModal = ({ open, onOpenChange, onSuccess }: CreateEventM
         is_secret: false,
         secret_access_level: 0,
         secret_preview_text: '',
-        secret_cover_blurred: ''
+        secret_cover_blurred: '',
+        golden_only: false
       });
 
       onOpenChange(false);
