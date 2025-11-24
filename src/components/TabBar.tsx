@@ -43,13 +43,8 @@ export const TabBar = () => {
     checkClubStatus();
   }, [user]);
 
-  // Filter tabs based on user role
-  const visibleTabs = tabs.filter(tab => {
-    if (tab.id === 'host') {
-      return isClub; // Only show Host tab for club users
-    }
-    return true;
-  });
+  // All tabs visible to all users
+  const visibleTabs = tabs;
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 safe-bottom">
