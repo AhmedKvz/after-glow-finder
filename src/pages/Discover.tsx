@@ -52,6 +52,17 @@ const Discover = () => {
   }, []);
 
   const loadEvents = async () => {
+    // Load user's previous swipes to filter them out
+    let swipedEventIds: string[] = [];
+    if (user) {
+      const { data: swipes } = await supabase
+        .from('event_swipes')
+        .select('event_id')
+        .eq('user_id', user.id);
+      
+      swipedEventIds = swipes?.map(s => s.event_id) || [];
+    }
+    
     // 1. Load club events (MVP: show all events regardless of date)
     const { data: clubEvents, error: clubError } = await supabase
       .from('events')
@@ -85,8 +96,9 @@ const Discover = () => {
       console.error('[Discover] Error loading private events:', privateError);
     }
 
-    // 4. Combine all events (clubs first, then cafes, then private)
-    const allEvents = [...(clubEvents || []), ...(cafeEvents || []), ...(privateEvents || [])];
+    // 4. Combine all events (clubs first, then cafes, then private) and filter out swiped ones
+    const allEvents = [...(clubEvents || []), ...(cafeEvents || []), ...(privateEvents || [])]
+      .filter(event => !swipedEventIds.includes(event.id));
 
     if (allEvents.length === 0) {
       setEvents([]);
@@ -187,7 +199,30 @@ const Discover = () => {
   const handleSwipeRight = async (event: any) => {
     if (!user) return;
     
-    // Add to wishlist
+    // Save swipe to database
+    await supabase
+      .from('event_swipes')
+      .upsert({
+        user_id: user.id,
+        event_id: event.id,
+        swipe_direction: 'right'
+      }, {
+        onConflict: 'user_id,event_id'
+      });
+    
+    // Add to wishlist_user_ids
+    const currentWishlist = event.wishlist_user_ids || [];
+    if (!currentWishlist.includes(user.id)) {
+      await supabase
+        .from('events')
+        .update({ 
+          wishlist_user_ids: [...currentWishlist, user.id],
+          swipe_count: (event.swipe_count || 0) + 1
+        })
+        .eq('id', event.id);
+    }
+    
+    // Award XP
     const { data: profileData } = await supabase
       .from('profiles')
       .select('xp')
@@ -220,12 +255,46 @@ const Discover = () => {
     });
   };
   
-  const handleSwipeLeft = () => {
-    // Skip - minimal XP
+  const handleSwipeLeft = async (event: any) => {
+    if (!user) return;
+    
+    // Save swipe to database
+    await supabase
+      .from('event_swipes')
+      .upsert({
+        user_id: user.id,
+        event_id: event.id,
+        swipe_direction: 'left'
+      }, {
+        onConflict: 'user_id,event_id'
+      });
+    
+    // Update event swipe count
+    await supabase
+      .from('events')
+      .update({ swipe_count: (event.swipe_count || 0) + 1 })
+      .eq('id', event.id);
+    
+    // Award minimal XP for engagement
+    const { data: profileData } = await supabase
+      .from('profiles')
+      .select('xp')
+      .eq('user_id', user.id)
+      .single();
+    
+    const currentXP = profileData?.xp || 0;
+    
+    await supabase
+      .from('profiles')
+      .update({ xp: currentXP + 1 })
+      .eq('user_id', user.id);
+    
+    // Update stats
     setTotalSwipes(prev => prev + 1);
+    setXpToday(prev => prev + 1);
     
     // Show toast
-    setXpToastData({ type: 'skip', xp: 0, message: 'Skipped' });
+    setXpToastData({ type: 'skip', xp: 1, message: 'Skipped +1 XP' });
     setShowXPToast(true);
     setTimeout(() => setShowXPToast(false), 1500);
     
