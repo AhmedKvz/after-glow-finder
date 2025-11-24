@@ -438,6 +438,11 @@ export const EventDetails: React.FC<EventDetailsProps> = ({ event, onBack }) => 
         open={showTicketDialog}
         onOpenChange={setShowTicketDialog}
         event={event}
+        onSuccess={() => {
+          setHasValidTicket(true);
+          // Optionally close the modal after successful purchase so user can see chat
+          setShowTicketDialog(false);
+        }}
       />
     </div>
   );
