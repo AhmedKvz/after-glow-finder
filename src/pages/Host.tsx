@@ -4,24 +4,66 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { CreateEventModal } from '@/components/CreateEventModal';
 import { EventManageModal } from '@/components/EventManageModal';
+import { ClubProfileSetupModal } from '@/components/ClubProfileSetupModal';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const Host = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showProfileSetup, setShowProfileSetup] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<any | null>(null);
   const [myEvents, setMyEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [hasClubProfile, setHasClubProfile] = useState(false);
+  const [isClub, setIsClub] = useState(false);
   const { user, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     console.log('[Host] User changed:', user?.id, 'Auth loading:', authLoading);
     if (!authLoading && user) {
-      console.log('[Host] Auth ready, loading events');
-      loadMyEvents();
+      console.log('[Host] Auth ready, checking club status');
+      checkClubStatus();
     }
   }, [user, authLoading]);
+
+  const checkClubStatus = async () => {
+    if (!user) return;
+
+    // Check if user has club role
+    const { data: roleData } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .eq('role', 'club')
+      .maybeSingle();
+
+    if (!roleData) {
+      // Not a club, redirect to discover
+      navigate('/discover');
+      return;
+    }
+
+    setIsClub(true);
+
+    // Check if club has a profile
+    const { data: profileData } = await supabase
+      .from('club_profiles')
+      .select('id')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    if (!profileData) {
+      // No profile, show setup modal
+      setHasClubProfile(false);
+      setShowProfileSetup(true);
+    } else {
+      setHasClubProfile(true);
+      loadMyEvents();
+    }
+  };
 
   useEffect(() => {
     console.log('[Host] myEvents updated:', myEvents.length, myEvents);
@@ -82,6 +124,7 @@ const Host = () => {
             onClick={() => setShowCreateModal(true)}
             className="gradient-primary"
             size="sm"
+            disabled={!hasClubProfile}
           >
             <Plus className="w-4 h-4 mr-2" />
             Create
@@ -169,6 +212,15 @@ const Host = () => {
           </div>
         </div>
       </div>
+
+      <ClubProfileSetupModal
+        open={showProfileSetup}
+        onOpenChange={setShowProfileSetup}
+        onSuccess={() => {
+          setHasClubProfile(true);
+          loadMyEvents();
+        }}
+      />
 
       <CreateEventModal
         open={showCreateModal}

@@ -37,6 +37,7 @@ export const CreateEventModal = ({ open, onOpenChange, onSuccess }: CreateEventM
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [clubProfileId, setClubProfileId] = useState<string | null>(null);
   
   const [formData, setFormData] = useState({
     title: '',
@@ -57,27 +58,41 @@ export const CreateEventModal = ({ open, onOpenChange, onSuccess }: CreateEventM
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Check if user is admin
+  // Check if user is admin/club and get club profile
   useEffect(() => {
-    const checkAdminStatus = async () => {
+    const checkStatus = async () => {
       if (!user) return;
       
-      const { data } = await supabase
+      const { data: roleData } = await supabase
         .from('user_roles')
         .select('role')
         .eq('user_id', user.id)
-        .eq('role', 'admin')
+        .in('role', ['admin', 'club'])
         .maybeSingle();
       
-      setIsAdmin(!!data);
+      const isAdminOrClub = !!roleData;
+      setIsAdmin(roleData?.role === 'admin');
       
-      // If user is admin, default to club event
-      if (data) {
+      // Get club profile ID if user has club role
+      if (roleData?.role === 'club') {
+        const { data: profileData } = await supabase
+          .from('club_profiles')
+          .select('id')
+          .eq('user_id', user.id)
+          .maybeSingle();
+        
+        if (profileData) {
+          setClubProfileId(profileData.id);
+        }
+      }
+      
+      // If user is admin or club, default to club event
+      if (isAdminOrClub) {
         setFormData(prev => ({ ...prev, event_type: 'club' }));
       }
     };
     
-    checkAdminStatus();
+    checkStatus();
   }, [user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -114,7 +129,8 @@ export const CreateEventModal = ({ open, onOpenChange, onSuccess }: CreateEventM
           bring_own_drinks: formData.bring_own_drinks,
           allow_plus_one: formData.allow_plus_one,
           allow_plus_two: formData.allow_plus_two,
-          event_type: formData.event_type
+          event_type: formData.event_type,
+          owner_club_id: clubProfileId // Link event to club profile
         });
 
       if (error) throw error;
