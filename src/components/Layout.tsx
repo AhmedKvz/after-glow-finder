@@ -3,6 +3,7 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { TabBar } from '@/components/TabBar';
 import { DemoModeProvider } from '@/contexts/DemoModeContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
 
 export const Layout = () => {
@@ -24,11 +25,25 @@ export const Layout = () => {
     }
   }, [loading, user, navigate]);
 
-  // Redirect to discover if on root
+  // Redirect to discover or club-dashboard based on role if on root
   useEffect(() => {
-    if (location.pathname === '/' && user) {
-      navigate('/discover', { replace: true });
-    }
+    const checkRoleAndRedirect = async () => {
+      if (location.pathname === '/' && user) {
+        const { data: roleData } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', user.id)
+          .single();
+
+        if (roleData?.role === 'club') {
+          navigate('/club-dashboard', { replace: true });
+        } else {
+          navigate('/discover', { replace: true });
+        }
+      }
+    };
+
+    checkRoleAndRedirect();
   }, [location.pathname, user, navigate]);
 
   if (loading) {

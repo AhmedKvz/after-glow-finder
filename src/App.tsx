@@ -16,6 +16,7 @@ import HelperProfile from "./pages/HelperProfile";
 import Profile from "./pages/Profile";
 import Auth from "./pages/Auth";
 import HelperOnboarding from "./pages/HelperOnboarding";
+import ClubDashboard from "./pages/ClubDashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -40,6 +41,7 @@ const App = () => (
                 <Route path="helpers/:helperId" element={<HelperProfile />} />
                 <Route path="helper-onboarding" element={<HelperOnboarding />} />
                 <Route path="profile" element={<Profile />} />
+                <Route path="club-dashboard" element={<ClubDashboard />} />
                 <Route path="*" element={<NotFound />} />
               </Route>
             </Routes>
