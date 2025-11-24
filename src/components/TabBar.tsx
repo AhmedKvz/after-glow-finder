@@ -8,6 +8,9 @@ import {
   Heart
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/contexts/AuthContext';
+import { useEffect, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 const tabs = [
   { id: 'discover', label: 'Discover', icon: Compass, path: '/discover' },
@@ -20,13 +23,40 @@ const tabs = [
 
 export const TabBar = () => {
   const location = useLocation();
+  const { user } = useAuth();
+  const [isClub, setIsClub] = useState(false);
+
+  useEffect(() => {
+    const checkClubStatus = async () => {
+      if (!user) return;
+
+      const { data: roleData } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .eq('role', 'club')
+        .maybeSingle();
+
+      setIsClub(!!roleData);
+    };
+
+    checkClubStatus();
+  }, [user]);
+
+  // Filter tabs based on user role
+  const visibleTabs = tabs.filter(tab => {
+    if (tab.id === 'host') {
+      return isClub; // Only show Host tab for club users
+    }
+    return true;
+  });
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 safe-bottom">
       {/* Glass background with blur */}
       <div className="glass-card border-t border-border/20">
         <div className="flex items-center justify-around px-2 py-3">
-          {tabs.map((tab) => {
+          {visibleTabs.map((tab) => {
             const isActive = location.pathname.startsWith(tab.path);
             const Icon = tab.icon;
             

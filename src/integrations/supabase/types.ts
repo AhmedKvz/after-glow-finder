@@ -189,6 +189,42 @@ export type Database = {
           },
         ]
       }
+      club_profiles: {
+        Row: {
+          address: string
+          cover_image_url: string | null
+          created_at: string
+          description: string | null
+          id: string
+          logo_image_url: string | null
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address: string
+          cover_image_url?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          logo_image_url?: string | null
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address?: string
+          cover_image_url?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          logo_image_url?: string | null
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       event_access: {
         Row: {
           created_at: string
@@ -323,6 +359,7 @@ export type Database = {
           join_request_required: boolean
           location: string
           music_tags: string[] | null
+          owner_club_id: string | null
           requires_approval: boolean | null
           start_time: string
           ticketing_enabled: boolean
@@ -349,6 +386,7 @@ export type Database = {
           join_request_required?: boolean
           location: string
           music_tags?: string[] | null
+          owner_club_id?: string | null
           requires_approval?: boolean | null
           start_time: string
           ticketing_enabled?: boolean
@@ -375,6 +413,7 @@ export type Database = {
           join_request_required?: boolean
           location?: string
           music_tags?: string[] | null
+          owner_club_id?: string | null
           requires_approval?: boolean | null
           start_time?: string
           ticketing_enabled?: boolean
@@ -383,6 +422,13 @@ export type Database = {
           venue_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "events_owner_club_id_fkey"
+            columns: ["owner_club_id"]
+            isOneToOne: false
+            referencedRelation: "club_profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "events_venue_id_fkey"
             columns: ["venue_id"]
