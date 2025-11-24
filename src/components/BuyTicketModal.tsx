@@ -68,7 +68,7 @@ export const BuyTicketModal = ({ open, onOpenChange, event, onSuccess }: BuyTick
     });
 
     // Create ticket in database
-    const { error } = await supabase
+    const { error: ticketError } = await supabase
       .from('tickets')
       .insert({
         event_id: event.id,
@@ -79,15 +79,64 @@ export const BuyTicketModal = ({ open, onOpenChange, event, onSuccess }: BuyTick
         status: 'valid'
       });
 
-    if (error) {
+    if (ticketError) {
       toast({
         variant: "destructive",
         title: "Purchase failed",
-        description: error.message
+        description: ticketError.message
       });
       setStep('payment');
       setLoading(false);
       return;
+    }
+
+    // Add user to event chat
+    try {
+      // Find or create event chat
+      let { data: chatData, error: chatFetchError } = await supabase
+        .from('event_chats')
+        .select('id')
+        .eq('event_id', event.id)
+        .maybeSingle();
+
+      if (chatFetchError && chatFetchError.code !== 'PGRST116') {
+        console.error('Error fetching chat:', chatFetchError);
+      }
+
+      if (!chatData) {
+        // Create new chat for this event
+        const { data: newChat, error: chatCreateError } = await supabase
+          .from('event_chats')
+          .insert({ event_id: event.id })
+          .select('id')
+          .single();
+
+        if (chatCreateError) {
+          console.error('Error creating chat:', chatCreateError);
+        } else {
+          chatData = newChat;
+        }
+      }
+
+      // Add user as chat member if chat exists
+      if (chatData) {
+        const { error: memberError } = await supabase
+          .from('event_chat_members')
+          .insert({
+            chat_id: chatData.id,
+            user_id: user.id
+          })
+          .select()
+          .maybeSingle();
+
+        // Ignore duplicate key errors (user already in chat)
+        if (memberError && memberError.code !== '23505') {
+          console.error('Error adding chat member:', memberError);
+        }
+      }
+    } catch (chatError) {
+      console.error('Error setting up chat:', chatError);
+      // Don't fail the ticket purchase if chat setup fails
     }
 
     setStep('success');

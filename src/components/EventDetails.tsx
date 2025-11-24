@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, MapPin, Users, Clock, Star, Check, X, Calendar, Music, MessageSquare, Ticket } from 'lucide-react';
+import { ArrowLeft, MapPin, Users, Clock, Star, Check, X, Calendar, Music, MessageSquare, Ticket, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
@@ -15,6 +15,7 @@ import { RequestToJoinModal } from '@/components/RequestToJoinModal';
 import { BuyTicketModal } from '@/components/BuyTicketModal';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import eventPoster1 from '@/assets/event-poster-1.jpg';
 import eventPoster2 from '@/assets/event-poster-2.jpg';
 import eventPoster3 from '@/assets/event-poster-3.jpg';
@@ -32,10 +33,12 @@ export const EventDetails: React.FC<EventDetailsProps> = ({ event, onBack }) => 
   const [selectedPlusOnes, setSelectedPlusOnes] = useState('0');
   const [showRequestDialog, setShowRequestDialog] = useState(false);
   const [showTicketDialog, setShowTicketDialog] = useState(false);
+  const [hasValidTicket, setHasValidTicket] = useState(false);
   
   const { user } = useAuth();
   const { isDemoMode, showDemoSuccess } = useDemoMode();
   const { toast } = useToast();
+  const navigate = useNavigate();
   
   const posterImage = posterImages[event.id.charCodeAt(0) % posterImages.length];
   
@@ -44,6 +47,17 @@ export const EventDetails: React.FC<EventDetailsProps> = ({ event, onBack }) => 
     if (!user) return;
     
     const checkExistingStatus = async () => {
+      // Check if user has a valid ticket
+      const { data: ticketData } = await supabase
+        .from('tickets')
+        .select('status')
+        .eq('event_id', event.id)
+        .eq('user_id', user.id)
+        .eq('status', 'valid')
+        .maybeSingle();
+      
+      setHasValidTicket(!!ticketData);
+      
       // For private host events, check event_access
       if (event.eventType === 'private_host') {
         const { data } = await supabase
@@ -363,6 +377,40 @@ export const EventDetails: React.FC<EventDetailsProps> = ({ event, onBack }) => 
         <div className="pt-4">
           {getStatusButton()}
         </div>
+
+        {/* Event Chat Section */}
+        {event.eventType === 'club' && (
+          <Card className="glass-card p-4">
+            <div className="flex items-start gap-3">
+              <MessageCircle className="w-5 h-5 text-primary mt-0.5" />
+              <div className="flex-1">
+                <h3 className="font-medium mb-1">Event Info Chat</h3>
+                <p className="text-sm text-muted-foreground mb-3">
+                  Connect with other ticket holders
+                </p>
+                {hasValidTicket ? (
+                  <Button
+                    onClick={() => navigate(`/event/${event.id}/chat`)}
+                    className="w-full gradient-primary"
+                  >
+                    <MessageCircle className="w-4 h-4 mr-2" />
+                    Open Event Chat
+                  </Button>
+                ) : (
+                  <div>
+                    <Button disabled className="w-full" variant="outline">
+                      <MessageCircle className="w-4 h-4 mr-2" />
+                      Open Event Chat
+                    </Button>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Chat is available only for ticket holders
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </Card>
+        )}
 
         {/* Reviews Section */}
         <div>
