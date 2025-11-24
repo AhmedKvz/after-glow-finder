@@ -16,11 +16,11 @@ import { supabase } from '@/integrations/supabase/client';
 
 const tabs = [
   { id: 'discover', label: 'Discover', icon: Compass, path: '/discover' },
+  { id: 'search', label: 'Search', icon: Search, path: '/search' },
   { id: 'circle-swipe', label: 'Swipe', icon: Heart, path: '/circle-swipe' },
   { id: 'gamification', label: 'Game', icon: Trophy, path: '/gamification' },
   { id: 'host', label: 'Host', icon: Plus, path: '/host' },
   { id: 'helpers', label: 'Helpers', icon: HandHeart, path: '/helpers' },
-  { id: 'search', label: 'Search', icon: Search, path: '/search' },
   { id: 'profile', label: 'Profile', icon: User, path: '/profile' },
 ];
 
