@@ -8,6 +8,8 @@ export interface User {
   rating?: number;
   joinedEvents?: number;
   hostedEvents?: number;
+  has_golden_ticket?: boolean;
+  golden_ticket_count?: number;
 }
 
 export interface Host {
@@ -55,6 +57,17 @@ export interface Event {
   secretAccessLevel?: number;
   secretPreviewText?: string;
   secretCoverBlurred?: string;
+  goldenOnly?: boolean;
+}
+
+export interface GoldenTicket {
+  id: string;
+  user_id: string;
+  issued_at: string;
+  expires_at?: string;
+  source: 'Lucky100' | 'SecretPopUp' | 'ManualReward' | 'SeasonalEvent';
+  status: 'active' | 'used' | 'expired';
+  notes?: string;
 }
 
 export interface Helper {

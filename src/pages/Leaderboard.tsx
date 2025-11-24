@@ -8,6 +8,7 @@ import { ArrowLeft, Trophy, Zap, Star, Crown, Award, TrendingUp } from 'lucide-r
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { GoldenTicketBadge } from '@/components/GoldenTicketBadge';
 
 interface LeaderboardUser {
   user_id: string;
@@ -17,6 +18,7 @@ interface LeaderboardUser {
   level: string;
   afters_hosted: number;
   badges: string[];
+  has_golden_ticket: boolean;
 }
 
 const Leaderboard = () => {
@@ -33,7 +35,7 @@ const Leaderboard = () => {
     // Load top XP users
     const { data: xpData } = await supabase
       .from('profiles')
-      .select('user_id, display_name, avatar_url, xp, level, afters_hosted, badges')
+      .select('user_id, display_name, avatar_url, xp, level, afters_hosted, badges, has_golden_ticket')
       .order('xp', { ascending: false })
       .limit(50);
 
@@ -44,7 +46,7 @@ const Leaderboard = () => {
     // Load top hosts
     const { data: hostData } = await supabase
       .from('profiles')
-      .select('user_id, display_name, avatar_url, xp, level, afters_hosted, badges')
+      .select('user_id, display_name, avatar_url, xp, level, afters_hosted, badges, has_golden_ticket')
       .order('afters_hosted', { ascending: false })
       .limit(50);
 
@@ -91,8 +93,9 @@ const Leaderboard = () => {
             </Avatar>
 
             <div className="flex-1 min-w-0">
-              <div className="font-semibold truncate">
+              <div className="font-semibold truncate flex items-center gap-2">
                 {user.display_name || 'Anonymous'}
+                {user.has_golden_ticket && <GoldenTicketBadge size="sm" />}
               </div>
               <div className="flex items-center gap-2 mt-1">
                 <Badge variant="secondary" className="text-xs">

@@ -501,6 +501,7 @@ export type Database = {
           event_type: Database["public"]["Enums"]["event_type"]
           exact_address: string | null
           full_address: string | null
+          golden_only: boolean | null
           host_id: string
           id: string
           is_location_hidden: boolean
@@ -543,6 +544,7 @@ export type Database = {
           event_type?: Database["public"]["Enums"]["event_type"]
           exact_address?: string | null
           full_address?: string | null
+          golden_only?: boolean | null
           host_id: string
           id?: string
           is_location_hidden?: boolean
@@ -585,6 +587,7 @@ export type Database = {
           event_type?: Database["public"]["Enums"]["event_type"]
           exact_address?: string | null
           full_address?: string | null
+          golden_only?: boolean | null
           host_id?: string
           id?: string
           is_location_hidden?: boolean
@@ -628,6 +631,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      golden_tickets: {
+        Row: {
+          created_at: string
+          expires_at: string | null
+          id: string
+          issued_at: string
+          notes: string | null
+          source: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          issued_at?: string
+          notes?: string | null
+          source?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          issued_at?: string
+          notes?: string | null
+          source?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       guide_bookings: {
         Row: {
@@ -894,6 +933,8 @@ export type Database = {
           display_name: string | null
           events_attended: number | null
           gender: Database["public"]["Enums"]["gender_type"] | null
+          golden_ticket_count: number | null
+          has_golden_ticket: boolean | null
           id: string
           lat: number | null
           level: string | null
@@ -917,6 +958,8 @@ export type Database = {
           display_name?: string | null
           events_attended?: number | null
           gender?: Database["public"]["Enums"]["gender_type"] | null
+          golden_ticket_count?: number | null
+          has_golden_ticket?: boolean | null
           id?: string
           lat?: number | null
           level?: string | null
@@ -940,6 +983,8 @@ export type Database = {
           display_name?: string | null
           events_attended?: number | null
           gender?: Database["public"]["Enums"]["gender_type"] | null
+          golden_ticket_count?: number | null
+          has_golden_ticket?: boolean | null
           id?: string
           lat?: number | null
           level?: string | null
@@ -1156,6 +1201,15 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      issue_golden_ticket: {
+        Args: {
+          _expires_at?: string
+          _notes?: string
+          _source?: string
+          _user_id: string
+        }
+        Returns: string
       }
     }
     Enums: {
