@@ -55,10 +55,14 @@ export const CreateEventModal = ({ open, onOpenChange, onSuccess }: CreateEventM
     bring_own_drinks: false,
     allow_plus_one: false,
     allow_plus_two: false,
-    event_type: 'private_host' as 'club' | 'private_host',
+    event_type: 'private_host' as 'club' | 'private_host' | 'secret',
     preferred_levels: [] as string[],
     min_trust_score: 0,
-    vibe_tags: [] as string[]
+    vibe_tags: [] as string[],
+    is_secret: false,
+    secret_access_level: 0,
+    secret_preview_text: '',
+    secret_cover_blurred: ''
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -138,7 +142,11 @@ export const CreateEventModal = ({ open, onOpenChange, onSuccess }: CreateEventM
           owner_club_id: clubProfileId,
           preferred_levels: formData.preferred_levels,
           min_trust_score: formData.min_trust_score,
-          vibe_tags: formData.vibe_tags
+          vibe_tags: formData.vibe_tags,
+          is_secret: formData.is_secret,
+          secret_access_level: formData.is_secret ? formData.secret_access_level : null,
+          secret_preview_text: formData.is_secret ? formData.secret_preview_text : null,
+          secret_cover_blurred: formData.is_secret ? formData.secret_cover_blurred : null
         });
 
       if (error) throw error;
@@ -166,7 +174,11 @@ export const CreateEventModal = ({ open, onOpenChange, onSuccess }: CreateEventM
         event_type: clubProfileId ? 'club' : 'private_host',
         preferred_levels: [],
         min_trust_score: 0,
-        vibe_tags: []
+        vibe_tags: [],
+        is_secret: false,
+        secret_access_level: 0,
+        secret_preview_text: '',
+        secret_cover_blurred: ''
       });
 
       onOpenChange(false);
@@ -248,16 +260,25 @@ export const CreateEventModal = ({ open, onOpenChange, onSuccess }: CreateEventM
                     </div>
                   </SelectItem>
                 )}
-                <SelectItem value="private_host">
-                  <div className="flex items-center gap-2 py-1">
-                    <span>🗝️</span>
-                    <div>
-                      <p className="font-medium">Private Host</p>
-                      <p className="text-xs text-muted-foreground">Hidden location, request to join</p>
+                  <SelectItem value="private_host">
+                    <div className="flex items-center gap-2 py-1">
+                      <span>🗝️</span>
+                      <div>
+                        <p className="font-medium">Private Host</p>
+                        <p className="text-xs text-muted-foreground">Hidden location, request to join</p>
+                      </div>
                     </div>
-                  </div>
-                </SelectItem>
-              </SelectContent>
+                  </SelectItem>
+                  <SelectItem value="secret">
+                    <div className="flex items-center gap-2 py-1">
+                      <span>🔮</span>
+                      <div>
+                        <p className="font-medium">Secret Event</p>
+                        <p className="text-xs text-muted-foreground">Level-locked, exclusive access</p>
+                      </div>
+                    </div>
+                  </SelectItem>
+                </SelectContent>
             </Select>
             {!isAdmin && (
               <p className="text-xs text-muted-foreground">
@@ -441,7 +462,7 @@ export const CreateEventModal = ({ open, onOpenChange, onSuccess }: CreateEventM
             </div>
           </div>
 
-          {formData.event_type === 'private_host' && (
+          {(formData.event_type === 'private_host' || formData.event_type === 'secret') && (
             <div className="space-y-4 border-t pt-4">
               <div>
                 <Label className="text-primary">🎯 Preferred Guests (Leaderboard Filter)</Label>
@@ -540,6 +561,71 @@ export const CreateEventModal = ({ open, onOpenChange, onSuccess }: CreateEventM
                     </Button>
                   ))}
                 </div>
+              </div>
+            </div>
+          )}
+          
+          {/* Secret Event Fields */}
+          {formData.event_type === 'secret' && (
+            <div className="space-y-4 border-t pt-4 bg-purple-950/20 p-4 rounded-lg border-purple-500/30">
+              <div>
+                <Label className="text-purple-200">🔮 Secret Event Settings</Label>
+                <p className="text-xs text-purple-300/70 mb-4">
+                  Secret events are locked until users reach your required level
+                </p>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="secret_access_level">Required Level (1-7) *</Label>
+                <Input
+                  id="secret_access_level"
+                  type="number"
+                  min="1"
+                  max="7"
+                  value={formData.secret_access_level}
+                  onChange={(e) => setFormData({ ...formData, secret_access_level: parseInt(e.target.value) || 0 })}
+                  placeholder="Enter level (1=Newbie, 7=Legend)"
+                  className="glass-card"
+                />
+                <p className="text-xs text-muted-foreground">
+                  1=Newbie, 2=Explorer, 3=Rising Star, 4=Regular, 5=Pro, 6=VIP, 7=Legend
+                </p>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="secret_preview_text">Preview Text (Teaser) *</Label>
+                <Textarea
+                  id="secret_preview_text"
+                  value={formData.secret_preview_text}
+                  onChange={(e) => setFormData({ ...formData, secret_preview_text: e.target.value })}
+                  placeholder="A mysterious hint about what awaits..."
+                  maxLength={200}
+                  rows={2}
+                  className="glass-card"
+                />
+                <p className="text-xs text-muted-foreground">
+                  This teaser will be shown to locked users
+                </p>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="secret_cover_blurred">Blurred Cover Image URL (Optional)</Label>
+                <Input
+                  id="secret_cover_blurred"
+                  value={formData.secret_cover_blurred}
+                  onChange={(e) => setFormData({ ...formData, secret_cover_blurred: e.target.value })}
+                  placeholder="https://example.com/blurred-image.jpg"
+                  className="glass-card"
+                />
+                <p className="text-xs text-muted-foreground">
+                  If not provided, we'll blur the default event image
+                </p>
+              </div>
+              
+              <div className="bg-purple-900/30 p-3 rounded border border-purple-500/20">
+                <p className="text-xs text-purple-200">
+                  ⚠️ Secret events are visible only to users who meet your access level. They'll see a locked preview until they level up.
+                </p>
               </div>
             </div>
           )}

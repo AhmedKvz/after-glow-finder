@@ -506,6 +506,7 @@ export type Database = {
           is_location_hidden: boolean
           is_private: boolean | null
           is_private_after: boolean | null
+          is_secret: boolean | null
           join_request_required: boolean
           location: string
           min_trust_score: number | null
@@ -514,6 +515,9 @@ export type Database = {
           preferred_levels: string[] | null
           public_location_label: string | null
           requires_approval: boolean | null
+          secret_access_level: number | null
+          secret_cover_blurred: string | null
+          secret_preview_text: string | null
           start_time: string
           swipe_count: number | null
           ticketing_enabled: boolean
@@ -544,6 +548,7 @@ export type Database = {
           is_location_hidden?: boolean
           is_private?: boolean | null
           is_private_after?: boolean | null
+          is_secret?: boolean | null
           join_request_required?: boolean
           location: string
           min_trust_score?: number | null
@@ -552,6 +557,9 @@ export type Database = {
           preferred_levels?: string[] | null
           public_location_label?: string | null
           requires_approval?: boolean | null
+          secret_access_level?: number | null
+          secret_cover_blurred?: string | null
+          secret_preview_text?: string | null
           start_time: string
           swipe_count?: number | null
           ticketing_enabled?: boolean
@@ -582,6 +590,7 @@ export type Database = {
           is_location_hidden?: boolean
           is_private?: boolean | null
           is_private_after?: boolean | null
+          is_secret?: boolean | null
           join_request_required?: boolean
           location?: string
           min_trust_score?: number | null
@@ -590,6 +599,9 @@ export type Database = {
           preferred_levels?: string[] | null
           public_location_label?: string | null
           requires_approval?: boolean | null
+          secret_access_level?: number | null
+          secret_cover_blurred?: string | null
+          secret_preview_text?: string | null
           start_time?: string
           swipe_count?: number | null
           ticketing_enabled?: boolean
@@ -1149,7 +1161,7 @@ export type Database = {
     Enums: {
       app_role: "admin" | "user" | "club"
       application_status: "draft" | "pending" | "approved" | "rejected"
-      event_type: "club" | "private_host" | "cafe"
+      event_type: "club" | "private_host" | "cafe" | "secret" | "after"
       gender_type: "male" | "female" | "other" | "hidden"
       marketplace_role:
         | "general_helper"
@@ -1289,7 +1301,7 @@ export const Constants = {
     Enums: {
       app_role: ["admin", "user", "club"],
       application_status: ["draft", "pending", "approved", "rejected"],
-      event_type: ["club", "private_host", "cafe"],
+      event_type: ["club", "private_host", "cafe", "secret", "after"],
       gender_type: ["male", "female", "other", "hidden"],
       marketplace_role: [
         "general_helper",

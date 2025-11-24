@@ -159,6 +159,7 @@ const Search = () => {
     { id: 'house', label: 'House', type: 'genre' },
     { id: 'free', label: 'Free Entry', type: 'price' },
     { id: 'private', label: 'Private', type: 'access' },
+    { id: 'secret', label: '🔮 Secret', type: 'access' },
     { id: 'tonight', label: 'Tonight', type: 'time' },
     { id: 'weekend', label: 'This Weekend', type: 'time' },
     { id: 'nearby', label: 'Nearby (2km)', type: 'distance' },
@@ -185,6 +186,9 @@ const Search = () => {
     // Genre filters
     if (selectedFilters.includes('techno') && !event.music_tags?.some((g: string) => g.toLowerCase().includes('techno'))) return false;
     if (selectedFilters.includes('house') && !event.music_tags?.some((g: string) => g.toLowerCase().includes('house'))) return false;
+    
+    // Secret mode filter
+    if (selectedFilters.includes('secret') && !(event.is_secret || event.event_type === 'secret')) return false;
     
     return true;
   });

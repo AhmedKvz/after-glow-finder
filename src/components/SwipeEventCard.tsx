@@ -3,6 +3,7 @@ import { useSpring, animated } from 'react-spring';
 import { useDrag } from '@use-gesture/react';
 import { Heart, Lock, Key, X, Check, Zap } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { SecretEventLockOverlay } from '@/components/SecretEventLockOverlay';
 import eventPoster1 from '@/assets/event-poster-1.jpg';
 import eventPoster2 from '@/assets/event-poster-2.jpg';
 import eventPoster3 from '@/assets/event-poster-3.jpg';
@@ -29,6 +30,8 @@ export const SwipeEventCard = ({
   
   const posterImage = posterImages[event.id.charCodeAt(0) % posterImages.length];
   const isPrivate = event.event_type === 'private_host' || event.is_private;
+  const isSecret = event.is_secret || event.event_type === 'secret';
+  const isLocked = isSecret && event.secret_access_level && (!event.userLevel || event.userLevel < event.secret_access_level);
 
   const [{ x, y, rotate, scale }, api] = useSpring(() => ({
     x: 0,
@@ -126,14 +129,23 @@ export const SwipeEventCard = ({
       <div className="relative w-full h-full rounded-2xl overflow-hidden shadow-2xl">
         {/* Event Cover Photo */}
         <img
-          src={posterImage}
+          src={event.secret_cover_blurred && isLocked ? event.secret_cover_blurred : posterImage}
           alt={event.title}
-          className="absolute inset-0 w-full h-full object-cover"
+          className={`absolute inset-0 w-full h-full object-cover ${isLocked ? 'blur-md' : ''}`}
           draggable={false}
         />
         
         {/* Gradient Overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+        
+        {/* Secret Event Lock Overlay */}
+        {isLocked && (
+          <SecretEventLockOverlay 
+            requiredLevel={event.secret_access_level}
+            userLevel={event.userLevel}
+            previewText={event.secret_preview_text}
+          />
+        )}
         
         {/* Private Lock Overlay */}
         {isPrivate && (
@@ -199,9 +211,9 @@ export const SwipeEventCard = ({
                 🗝️ PRIVATE
               </Badge>
             )}
-            {event.is_private_after && (
+            {(event.is_private_after || isSecret) && (
               <Badge className="bg-purple-600/30 text-purple-200 border-0 backdrop-blur-sm">
-                🌙 SECRET
+                {isSecret ? '🔮 SECRET' : '🌙 AFTER'}
               </Badge>
             )}
             

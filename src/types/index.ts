@@ -47,10 +47,14 @@ export interface Event {
   bringOwnDrinks: boolean;
   allowPlusOnes: boolean;
   maxPlusOnes?: number;
-  eventType?: 'club' | 'private_host';
+  eventType?: 'club' | 'private_host' | 'secret' | 'after';
   isLocationHidden?: boolean;
   ticketingEnabled?: boolean;
   joinRequestRequired?: boolean;
+  isSecret?: boolean;
+  secretAccessLevel?: number;
+  secretPreviewText?: string;
+  secretCoverBlurred?: string;
 }
 
 export interface Helper {
