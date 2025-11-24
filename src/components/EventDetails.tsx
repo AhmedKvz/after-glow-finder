@@ -40,6 +40,13 @@ export const EventDetails: React.FC<EventDetailsProps> = ({ event, onBack }) => 
   const [showAfterDetailsModal, setShowAfterDetailsModal] = useState(false);
   const [isPrivateAfter, setIsPrivateAfter] = useState(false);
   const [afterEventData, setAfterEventData] = useState<any>(null);
+  const [eventPreferences, setEventPreferences] = useState<{
+    preferred_levels: string[];
+    min_trust_score: number;
+    vibe_tags: string[];
+  } | null>(null);
+  const [userMatchesPreference, setUserMatchesPreference] = useState(true);
+  const [userProfile, setUserProfile] = useState<any>(null);
   
   const { user } = useAuth();
   const { isDemoMode, showDemoSuccess } = useDemoMode();
@@ -53,12 +60,45 @@ export const EventDetails: React.FC<EventDetailsProps> = ({ event, onBack }) => 
     if (!user) return;
     
     const checkExistingStatus = async () => {
-      // Check if this is a private after event
+      // Check if this is a private after event and get preferences
       const { data: eventData } = await supabase
         .from('events')
-        .select('is_private_after, full_address, after_instructions, public_location_label')
+        .select('is_private_after, full_address, after_instructions, public_location_label, event_type, preferred_levels, min_trust_score, vibe_tags')
         .eq('id', event.id)
         .single();
+      
+      // Get user profile
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('level, trust_score')
+        .eq('user_id', user.id)
+        .single();
+      
+      setUserProfile(profileData);
+      
+      if (eventData?.is_private_after || (eventData?.event_type === 'private_host' && (eventData?.preferred_levels?.length > 0 || eventData?.min_trust_score > 0))) {
+        setEventPreferences({
+          preferred_levels: eventData.preferred_levels || [],
+          min_trust_score: eventData.min_trust_score || 0,
+          vibe_tags: eventData.vibe_tags || []
+        });
+        
+        // Check if user matches preferences
+        const userLevel = profileData?.level || '';
+        const userTrust = profileData?.trust_score || 0;
+        const preferredLevels = eventData.preferred_levels || [];
+        const minTrust = eventData.min_trust_score || 0;
+        
+        let matches = true;
+        if (preferredLevels.length > 0 && !preferredLevels.includes(userLevel)) {
+          matches = false;
+        }
+        if (userTrust < minTrust) {
+          matches = false;
+        }
+        
+        setUserMatchesPreference(matches);
+      }
       
       if (eventData?.is_private_after) {
         setIsPrivateAfter(true);
@@ -474,6 +514,71 @@ export const EventDetails: React.FC<EventDetailsProps> = ({ event, onBack }) => 
             )}
           </div>
         </div>
+        
+        {/* Host Preferences */}
+        {eventPreferences && (eventPreferences.preferred_levels.length > 0 || eventPreferences.min_trust_score > 0) && (
+          <Card className={`glass-card p-4 ${!userMatchesPreference ? 'border-amber-600/50' : ''}`}>
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <span className="text-lg">🎯</span>
+                <h3 className="font-semibold">Host Preferences</h3>
+              </div>
+              
+              {eventPreferences.preferred_levels.length > 0 && (
+                <div>
+                  <p className="text-xs text-muted-foreground mb-2">Preferred Levels:</p>
+                  <div className="flex gap-2 flex-wrap">
+                    {eventPreferences.preferred_levels.map((level) => (
+                      <Badge key={level} variant="secondary" className="text-xs">
+                        {level}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {eventPreferences.min_trust_score > 0 && (
+                <div>
+                  <p className="text-xs text-muted-foreground">
+                    Min Trust Score: <span className="font-semibold text-foreground">{eventPreferences.min_trust_score}+</span>
+                  </p>
+                </div>
+              )}
+              
+              {eventPreferences.vibe_tags.length > 0 && (
+                <div>
+                  <p className="text-xs text-muted-foreground mb-2">Vibe:</p>
+                  <div className="flex gap-2 flex-wrap">
+                    {eventPreferences.vibe_tags.map((tag) => (
+                      <Badge key={tag} variant="outline" className="text-xs">
+                        {tag}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {!userMatchesPreference && user && (
+                <div className="mt-3 pt-3 border-t border-amber-600/30">
+                  <div className="flex items-start gap-2">
+                    <span className="text-amber-400">⚠️</span>
+                    <div className="flex-1">
+                      <p className="text-xs text-amber-400 font-medium">
+                        You're outside host preferences
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Your level: {userProfile?.level || 'New Raver'} • Trust: {userProfile?.trust_score || 50}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        You can still request access, but approval may be less likely.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </Card>
+        )}
         
         {/* Music Genres */}
         <div>

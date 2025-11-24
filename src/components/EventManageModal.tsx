@@ -31,6 +31,8 @@ interface EventManageModalProps {
 }
 
 const MUSIC_GENRES = ['techno', 'house', 'rnb', 'minimal', 'psy', 'disco', 'trance', 'drum & bass', 'swing', 'electro swing', 'jazz', 'indie', 'rock', 'alternative'];
+const USER_LEVELS = ['New Raver', 'Night Explorer', 'After Enthusiast', 'Secret Host', 'Elite Raver', 'After Legend'];
+const VIBE_TAGS = ['Chill', 'Hardcore', 'International crowd', 'Locals only', 'Open minded'];
 
 const eventSchema = z.object({
   title: z.string().min(3).max(140),
@@ -62,7 +64,10 @@ export const EventManageModal = ({ open, onOpenChange, event, onSuccess }: Event
     music_tags: event?.music_tags || [],
     bring_own_drinks: event?.bring_own_drinks || false,
     allow_plus_one: event?.allow_plus_one || false,
-    allow_plus_two: event?.allow_plus_two || false
+    allow_plus_two: event?.allow_plus_two || false,
+    preferred_levels: event?.preferred_levels || [],
+    min_trust_score: event?.min_trust_score || 0,
+    vibe_tags: event?.vibe_tags || []
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -81,7 +86,10 @@ export const EventManageModal = ({ open, onOpenChange, event, onSuccess }: Event
         music_tags: event.music_tags || [],
         bring_own_drinks: event.bring_own_drinks || false,
         allow_plus_one: event.allow_plus_one || false,
-        allow_plus_two: event.allow_plus_two || false
+        allow_plus_two: event.allow_plus_two || false,
+        preferred_levels: event.preferred_levels || [],
+        min_trust_score: event.min_trust_score || 0,
+        vibe_tags: event.vibe_tags || []
       });
       loadEventData();
     }
@@ -148,7 +156,10 @@ export const EventManageModal = ({ open, onOpenChange, event, onSuccess }: Event
           music_tags: formData.music_tags,
           bring_own_drinks: formData.bring_own_drinks,
           allow_plus_one: formData.allow_plus_one,
-          allow_plus_two: formData.allow_plus_two
+          allow_plus_two: formData.allow_plus_two,
+          preferred_levels: formData.preferred_levels,
+          min_trust_score: formData.min_trust_score,
+          vibe_tags: formData.vibe_tags
         })
         .eq('id', event.id);
 
@@ -309,6 +320,109 @@ export const EventManageModal = ({ open, onOpenChange, event, onSuccess }: Event
                     />
                   </div>
                 </div>
+
+                {event?.event_type === 'private_host' && (
+                  <div className="space-y-4 border-t pt-4">
+                    <div>
+                      <Label className="text-primary">🎯 Preferred Guests (Leaderboard Filter)</Label>
+                      <p className="text-xs text-muted-foreground mb-3">
+                        Set preferences to help filter requests - users outside preferences can still request
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Preferred Levels</Label>
+                      <div className="flex gap-2 flex-wrap mb-2">
+                        {formData.preferred_levels.map((level) => (
+                          <Badge key={level} variant="secondary" className="glass-card">
+                            {level}
+                            <button
+                              type="button"
+                              onClick={() => setFormData({ 
+                                ...formData, 
+                                preferred_levels: formData.preferred_levels.filter(l => l !== level) 
+                              })}
+                              className="ml-1 hover:text-destructive"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </Badge>
+                        ))}
+                      </div>
+                      <div className="flex gap-2 flex-wrap">
+                        {USER_LEVELS.filter(l => !formData.preferred_levels.includes(l)).map((level) => (
+                          <Button
+                            key={level}
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setFormData({ 
+                              ...formData, 
+                              preferred_levels: [...formData.preferred_levels, level] 
+                            })}
+                            className="text-xs"
+                          >
+                            <Plus className="w-3 h-3 mr-1" />
+                            {level}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="edit_min_trust_score">Minimum Trust Score</Label>
+                      <Input
+                        id="edit_min_trust_score"
+                        type="number"
+                        value={formData.min_trust_score}
+                        onChange={(e) => setFormData({ ...formData, min_trust_score: parseFloat(e.target.value) || 0 })}
+                        min="0"
+                        max="100"
+                        placeholder="0"
+                      />
+                      <p className="text-xs text-muted-foreground">Set 0 for no minimum</p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Vibe Tags</Label>
+                      <div className="flex gap-2 flex-wrap mb-2">
+                        {formData.vibe_tags.map((tag) => (
+                          <Badge key={tag} variant="secondary" className="glass-card">
+                            {tag}
+                            <button
+                              type="button"
+                              onClick={() => setFormData({ 
+                                ...formData, 
+                                vibe_tags: formData.vibe_tags.filter(t => t !== tag) 
+                              })}
+                              className="ml-1 hover:text-destructive"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </Badge>
+                        ))}
+                      </div>
+                      <div className="flex gap-2 flex-wrap">
+                        {VIBE_TAGS.filter(t => !formData.vibe_tags.includes(t)).map((tag) => (
+                          <Button
+                            key={tag}
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setFormData({ 
+                              ...formData, 
+                              vibe_tags: [...formData.vibe_tags, tag] 
+                            })}
+                            className="text-xs"
+                          >
+                            <Plus className="w-3 h-3 mr-1" />
+                            {tag}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 <div className="flex gap-3 pt-4 border-t">
                   <Button
