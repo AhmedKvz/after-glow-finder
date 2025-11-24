@@ -22,11 +22,11 @@ export const useEntranceNotification = () => {
       return;
     }
 
-    console.log('⏱️ Starting 60-second timer for entrance notification');
+    console.log('⏱️ Starting 3-second timer for entrance notification');
     
-    // Start 60-second timer
+    // Start 3-second timer
     const timer = setTimeout(async () => {
-      console.log('⏰ 60 seconds elapsed, fetching notification...');
+      console.log('⏰ 3 seconds elapsed, fetching notification...');
       try {
         // Fetch all active notifications
         const { data, error } = await supabase
@@ -58,7 +58,7 @@ export const useEntranceNotification = () => {
       } catch (error) {
         console.error('❌ Error fetching entrance notification:', error);
       }
-    }, 60000); // 60 seconds
+    }, 3000); // 3 seconds
 
     return () => {
       console.log('🧹 Cleaning up entrance notification timer');
