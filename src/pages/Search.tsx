@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
-import { Search as SearchIcon, Filter, MapPin, Clock, DollarSign, Loader2, Map } from 'lucide-react';
+import { Search as SearchIcon, Filter, MapPin, Clock, DollarSign, Loader2, Map as MapIcon, Star, MessageSquare } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { ReviewsList } from '@/components/ReviewsList';
 import { supabase } from '@/integrations/supabase/client';
 import { BuyTicketModal } from '@/components/BuyTicketModal';
 import { RequestToJoinModal } from '@/components/RequestToJoinModal';
@@ -21,6 +23,7 @@ const Search = () => {
   const [loading, setLoading] = useState(true);
   const [selectedEventForTicket, setSelectedEventForTicket] = useState<any | null>(null);
   const [selectedEventForRequest, setSelectedEventForRequest] = useState<any | null>(null);
+  const [showReviewsForEvent, setShowReviewsForEvent] = useState<any | null>(null);
 
   useEffect(() => {
     loadEvents();
@@ -82,15 +85,67 @@ const Search = () => {
       console.error('[Search] Error loading profiles:', profilesError);
     }
 
-    // 6. Merge data: add host object to each event
-    const eventsWithHosts = allEvents.map(event => ({
-      ...event,
-      host: profilesData?.find(p => p.user_id === event.host_id) || {
+    // 6. Load reviews for all events (clubs & cafes)
+    const eventIds = allEvents.map(e => e.id);
+    const { data: eventReviews, error: eventReviewsError } = await supabase
+      .from('event_reviews')
+      .select('event_id, rating')
+      .in('event_id', eventIds);
+
+    if (eventReviewsError) {
+      console.error('[Search] Error loading event reviews:', eventReviewsError);
+    }
+
+    // 7. Load host reviews for private events
+    const { data: userReviews, error: userReviewsError } = await supabase
+      .from('user_reviews')
+      .select('reviewed_user_id, rating')
+      .in('reviewed_user_id', hostIds);
+
+    if (userReviewsError) {
+      console.error('[Search] Error loading user reviews:', userReviewsError);
+    }
+
+    // 8. Build aggregate maps
+    const eventRatingMap = new Map<string, { avgRating: number; count: number }>();
+    if (eventReviews) {
+      eventReviews.forEach((r: any) => {
+        const existing = eventRatingMap.get(r.event_id) || { avgRating: 0, count: 0 };
+        const total = existing.avgRating * existing.count + r.rating;
+        const count = existing.count + 1;
+        eventRatingMap.set(r.event_id, { avgRating: total / count, count });
+      });
+    }
+
+    const hostRatingMap = new Map<string, { avgRating: number; count: number }>();
+    if (userReviews) {
+      userReviews.forEach((r: any) => {
+        const existing = hostRatingMap.get(r.reviewed_user_id) || { avgRating: 0, count: 0 };
+        const total = existing.avgRating * existing.count + r.rating;
+        const count = existing.count + 1;
+        hostRatingMap.set(r.reviewed_user_id, { avgRating: total / count, count });
+      });
+    }
+
+    // 9. Merge data: add host object and rating info to each event
+    const eventsWithHosts = allEvents.map(event => {
+      const hostProfile = profilesData?.find(p => p.user_id === event.host_id) || {
         user_id: event.host_id,
         display_name: 'Unknown Host',
         avatar_url: null
-      }
-    }));
+      };
+
+      const ratingData = event.event_type === 'private_host'
+        ? hostRatingMap.get(event.host_id)
+        : eventRatingMap.get(event.id);
+
+      return {
+        ...event,
+        host: hostProfile,
+        average_rating: ratingData?.avgRating ?? null,
+        review_count: ratingData?.count ?? 0,
+      };
+    });
 
     // Sort by date
     eventsWithHosts.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
@@ -269,7 +324,27 @@ const Search = () => {
                           )}
                         </div>
                         
-                        <h3 className="font-semibold text-base sm:text-lg md:text-xl leading-snug break-words whitespace-normal mb-1">{event.title}</h3>
+                        <h3 className="font-semibold text-base sm:text-lg md:text-xl leading-snug break-words whitespace-normal mb-1">
+                          {event.title}
+                        </h3>
+
+                        {/* Rating summary - clickable */}
+                        {event.average_rating && event.review_count > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => setShowReviewsForEvent(event)}
+                            className="flex items-center gap-2 text-[12px] sm:text-[13px] text-muted-foreground mb-1 flex-wrap cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/40 rounded-full px-2 py-1 bg-background/60"
+                          >
+                            <div className="flex items-center gap-1">
+                              <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                              <span className="font-semibold">{event.average_rating.toFixed(1)}</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <MessageSquare className="w-3 h-3" />
+                              <span>{event.review_count} reviews</span>
+                            </div>
+                          </button>
+                        )}
                         
                         <div className="flex items-center gap-2 text-[13px] sm:text-sm text-muted-foreground mt-1">
                           <MapPin size={14} />
@@ -309,7 +384,7 @@ const Search = () => {
                               window.open(`https://www.google.com/maps/search/?api=1&query=${address}`, '_blank');
                             }}
                           >
-                            <Map className="w-3 h-3 mr-1" />
+                            <MapIcon className="w-3 h-3 mr-1" />
                             See on Map
                           </Button>
                         ) : event.event_type === 'private_host' ? (
@@ -354,6 +429,26 @@ const Search = () => {
           onOpenChange={(open) => !open && setSelectedEventForRequest(null)}
           event={selectedEventForRequest}
         />
+      )}
+
+      {/* Reviews modal */}
+      {showReviewsForEvent && (
+        <Dialog
+          open={!!showReviewsForEvent}
+          onOpenChange={(open) => !open && setShowReviewsForEvent(null)}
+        >
+          <DialogContent className="glass-card max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>
+                What clubbers say about {showReviewsForEvent.title}
+              </DialogTitle>
+            </DialogHeader>
+            <ReviewsList
+              eventId={showReviewsForEvent.event_type === 'private_host' ? undefined : showReviewsForEvent.id}
+              userId={showReviewsForEvent.event_type === 'private_host' ? showReviewsForEvent.host_id : undefined}
+            />
+          </DialogContent>
+        </Dialog>
       )}
     </div>
   );
