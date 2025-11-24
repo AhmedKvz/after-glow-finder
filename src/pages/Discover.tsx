@@ -229,9 +229,13 @@ const Discover = () => {
                       {event.title}
                     </h3>
 
-                    {/* Rating summary */}
+                    {/* Rating summary - clickable */}
                     {event.average_rating && event.review_count > 0 && (
-                      <div className="flex items-center gap-2 text-xs sm:text-[13px] text-white/90 mb-1">
+                      <button
+                        type="button"
+                        onClick={() => setShowReviewsForEvent(event)}
+                        className="flex items-center gap-2 text-xs sm:text-[13px] text-white/90 mb-2 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/70 rounded-full px-2 py-1 bg-black/30 backdrop-blur-sm"
+                      >
                         <div className="flex items-center gap-1">
                           <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
                           <span>{event.average_rating.toFixed(1)}</span>
@@ -240,7 +244,7 @@ const Discover = () => {
                           <MessageSquare className="w-3 h-3" />
                           <span>{event.review_count}</span>
                         </div>
-                      </div>
+                      </button>
                     )}
 
                     <div className="flex items-center gap-4 text-white/80 text-[13px] sm:text-sm mb-2">
@@ -322,9 +326,13 @@ const Discover = () => {
                         {event.title}
                       </h3>
 
-                      {/* Rating summary */}
+                      {/* Rating summary - clickable */}
                       {event.average_rating && event.review_count > 0 && (
-                        <div className="flex items-center gap-2 text-[12px] sm:text-[13px] text-muted-foreground mb-1 flex-wrap">
+                        <button
+                          type="button"
+                          onClick={() => setShowReviewsForEvent(event)}
+                          className="flex items-center gap-2 text-[12px] sm:text-[13px] text-muted-foreground mb-1 flex-wrap cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/40 rounded-full px-2 py-1 bg-background/60"
+                        >
                           <div className="flex items-center gap-1">
                             <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
                             <span className="font-semibold">{event.average_rating.toFixed(1)}</span>
@@ -333,7 +341,7 @@ const Discover = () => {
                             <MessageSquare className="w-3 h-3" />
                             <span>{event.review_count} reviews</span>
                           </div>
-                        </div>
+                        </button>
                       )}
                       
                       <div className="flex items-center gap-2 text-[13px] sm:text-sm text-muted-foreground mt-1">
