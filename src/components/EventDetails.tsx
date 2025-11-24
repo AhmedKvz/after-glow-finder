@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, MapPin, Users, Clock, Star, Check, X, Calendar, Music, MessageSquare, Ticket, MessageCircle, Lock, Key } from 'lucide-react';
+import { ArrowLeft, MapPin, Users, Clock, Star, Check, X, Calendar, Music, MessageSquare, Ticket, MessageCircle, Lock, Key, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
@@ -14,6 +14,7 @@ import { ReviewsList } from '@/components/ReviewsList';
 import { RequestToJoinModal } from '@/components/RequestToJoinModal';
 import { BuyTicketModal } from '@/components/BuyTicketModal';
 import { AfterDetailsModal } from '@/components/AfterDetailsModal';
+import { SecretEventLockOverlay } from '@/components/SecretEventLockOverlay';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -55,15 +56,25 @@ export const EventDetails: React.FC<EventDetailsProps> = ({ event, onBack }) => 
   
   const posterImage = posterImages[event.id.charCodeAt(0) % posterImages.length];
   
+  // Helper to convert level name to number (0-6)
+  const getLevelNumber = (levelName: string): number => {
+    const levels = ['Newbie', 'Explorer', 'Rising Star', 'Regular', 'Pro', 'VIP', 'Legend'];
+    return levels.indexOf(levelName);
+  };
+  
+  // Check if event is secret and locked
+  const isSecret = event.isSecret || event.eventType === 'secret';
+  const isLocked = isSecret && event.secretAccessLevel && (!userProfile?.level || getLevelNumber(userProfile?.level) < event.secretAccessLevel);
+  
   // Check if user already has an order/access for this event
   useEffect(() => {
     if (!user) return;
     
     const checkExistingStatus = async () => {
-      // Check if this is a private after event and get preferences
+      // Check if this is a private after event or secret event and get preferences
       const { data: eventData } = await supabase
         .from('events')
-        .select('is_private_after, full_address, after_instructions, public_location_label, event_type, preferred_levels, min_trust_score, vibe_tags')
+        .select('is_private_after, is_secret, secret_access_level, full_address, after_instructions, public_location_label, event_type, preferred_levels, min_trust_score, vibe_tags')
         .eq('id', event.id)
         .single();
       
@@ -345,9 +356,21 @@ export const EventDetails: React.FC<EventDetailsProps> = ({ event, onBack }) => 
         <img
           src={posterImage}
           alt={event.title}
-          className="w-full h-full object-cover"
+          className={`w-full h-full object-cover ${isLocked ? 'blur-lg' : ''}`}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20" />
+        
+        {/* Secret Lock Overlay (smaller version for header) */}
+        {isLocked && (
+          <div className="absolute inset-0 flex items-center justify-center bg-purple-900/50 backdrop-blur-sm">
+            <div className="text-center">
+              <Lock className="w-12 h-12 text-purple-300 mx-auto mb-2" />
+              <Badge className="bg-purple-600/30 text-purple-200 border-purple-400/40 backdrop-blur-sm">
+                🔮 LEVEL {event.secretAccessLevel} REQUIRED
+              </Badge>
+            </div>
+          </div>
+        )}
         
         {/* Back button */}
         <Button
@@ -365,9 +388,14 @@ export const EventDetails: React.FC<EventDetailsProps> = ({ event, onBack }) => 
             🏛️ CLUB
           </Badge>
         )}
-        {event.eventType === 'private_host' && (
+        {event.eventType === 'private_host' && !isSecret && (
           <Badge className="absolute top-4 right-4 safe-top bg-yellow-600/20 text-yellow-300 backdrop-blur-sm">
             🗝️ PRIVATE
+          </Badge>
+        )}
+        {isSecret && (
+          <Badge className="absolute top-4 right-4 safe-top bg-purple-600/20 text-purple-200 backdrop-blur-sm border-purple-400/40">
+            🔮 SECRET
           </Badge>
         )}
         
@@ -381,20 +409,50 @@ export const EventDetails: React.FC<EventDetailsProps> = ({ event, onBack }) => 
       
       {/* Content */}
       <div className="px-4 py-6 space-y-6">
+        {/* Secret Lock Message */}
+        {isLocked && (
+          <Card className="glass-card p-6 border-purple-500/30 bg-purple-950/20">
+            <div className="text-center space-y-4">
+              <div className="w-16 h-16 rounded-full bg-purple-600/20 backdrop-blur-xl flex items-center justify-center mx-auto border-2 border-purple-400/40">
+                <Lock className="w-8 h-8 text-purple-300" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-purple-200 mb-2">Secret Event Locked</h3>
+                {event.secretPreviewText && (
+                  <p className="text-sm text-purple-300 italic mb-4">
+                    "{event.secretPreviewText}"
+                  </p>
+                )}
+                <p className="text-muted-foreground text-sm">
+                  Unlock this secret event by reaching <span className="text-purple-300 font-bold">Level {event.secretAccessLevel}</span> to view full details and request access.
+                </p>
+              </div>
+              <Button 
+                onClick={() => navigate('/gamification')}
+                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white"
+              >
+                <Zap className="w-4 h-4 mr-2" />
+                How to Level Up
+              </Button>
+            </div>
+          </Card>
+        )}
+        
         {/* Event Title & Basic Info */}
         <div>
           <h1 className="text-2xl font-bold mb-2">{event.title}</h1>
-          <p className="text-muted-foreground mb-4">{event.description}</p>
+          {!isLocked && <p className="text-muted-foreground mb-4">{event.description}</p>}
           
-          {/* Host Info */}
-          <Card className="glass-card p-4">
-            <div className="flex items-center gap-3">
-              <Avatar className="w-12 h-12">
-                <AvatarImage src={event.host.avatar} />
-                <AvatarFallback>{event.host.name.charAt(0)}</AvatarFallback>
-              </Avatar>
-              <div className="flex-1">
-                <h3 className="font-semibold">Hosted by {event.host.name}</h3>
+          {/* Host Info (hidden if locked) */}
+          {!isLocked && (
+            <Card className="glass-card p-4">
+              <div className="flex items-center gap-3">
+                <Avatar className="w-12 h-12">
+                  <AvatarImage src={event.host.avatar} />
+                  <AvatarFallback>{event.host.name.charAt(0)}</AvatarFallback>
+                </Avatar>
+                <div className="flex-1">
+                  <h3 className="font-semibold">Hosted by {isLocked ? 'Hidden' : event.host.name}</h3>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <div className="flex items-center gap-1">
                     <Star className="w-3 h-3 fill-accent text-accent" />
@@ -406,13 +464,15 @@ export const EventDetails: React.FC<EventDetailsProps> = ({ event, onBack }) => 
                     </Badge>
                   )}
                 </div>
+                </div>
               </div>
-            </div>
-          </Card>
+            </Card>
+          )}
         </div>
         
-        {/* Event Details Grid */}
-        <div className="grid grid-cols-2 gap-4">
+        {/* Event Details Grid (hidden if locked) */}
+        {!isLocked && (
+          <div className="grid grid-cols-2 gap-4">
           <Card className="glass-card p-4 text-center">
             <Clock className="w-5 h-5 mx-auto mb-2 text-primary" />
             <div className="text-sm font-medium">Start Time</div>
@@ -450,12 +510,14 @@ export const EventDetails: React.FC<EventDetailsProps> = ({ event, onBack }) => 
             <div className="text-sm font-medium">DJ</div>
             <div className="text-xs text-muted-foreground">
               {event.djName || 'TBA'}
-            </div>
-          </Card>
-        </div>
+              </div>
+            </Card>
+          </div>
+        )}
         
-        {/* Location */}
-        <Card className="glass-card p-4">
+        {/* Location (hidden if locked) */}
+        {!isLocked && (
+          <Card className="glass-card p-4">
           <div className="flex items-start gap-3">
             {isPrivateAfter && afterRequestStatus !== 'approved' ? (
               <>
@@ -497,6 +559,7 @@ export const EventDetails: React.FC<EventDetailsProps> = ({ event, onBack }) => 
             )}
           </div>
         </Card>
+        )}
         
         {/* Event Features */}
         <div>
