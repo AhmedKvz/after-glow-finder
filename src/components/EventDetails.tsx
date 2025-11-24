@@ -74,14 +74,14 @@ export const EventDetails: React.FC<EventDetailsProps> = ({ event, onBack }) => 
       // Check if this is a private after event or secret event and get preferences
       const { data: eventData } = await supabase
         .from('events')
-        .select('is_private_after, is_secret, secret_access_level, full_address, after_instructions, public_location_label, event_type, preferred_levels, min_trust_score, vibe_tags')
+        .select('is_private_after, is_secret, secret_access_level, full_address, after_instructions, public_location_label, event_type, preferred_levels, min_trust_score, vibe_tags, golden_only')
         .eq('id', event.id)
         .single();
       
       // Get user profile
       const { data: profileData } = await supabase
         .from('profiles')
-        .select('level, trust_score')
+        .select('level, trust_score, has_golden_ticket')
         .eq('user_id', user.id)
         .single();
       
@@ -225,6 +225,22 @@ export const EventDetails: React.FC<EventDetailsProps> = ({ event, onBack }) => 
   };
   
   const getStatusButton = () => {
+    // Check if golden_only and user doesn't have golden ticket
+    const isGoldenOnly = event.goldenOnly;
+    if (isGoldenOnly && !userProfile?.has_golden_ticket) {
+      return (
+        <div className="space-y-2">
+          <Button disabled className="w-full" variant="outline">
+            <Ticket className="w-4 h-4 mr-2 text-yellow-400" />
+            Golden Ticket Required
+          </Button>
+          <p className="text-xs text-center text-muted-foreground">
+            This event is exclusively for Golden Ticket holders. Earn a Golden Ticket through Lucky events & Secret Pop-Ups.
+          </p>
+        </div>
+      );
+    }
+    
     // Handle private after events
     if (isPrivateAfter) {
       switch (afterRequestStatus) {
