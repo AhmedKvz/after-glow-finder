@@ -40,27 +40,29 @@ const Host = () => {
       .eq('role', 'club')
       .maybeSingle();
 
-    if (!roleData) {
-      // Not a club, redirect to discover
-      navigate('/discover');
-      return;
-    }
+    if (roleData) {
+      // Is a club user
+      setIsClub(true);
 
-    setIsClub(true);
+      // Check if club has a profile
+      const { data: profileData } = await supabase
+        .from('club_profiles')
+        .select('id')
+        .eq('user_id', user.id)
+        .maybeSingle();
 
-    // Check if club has a profile
-    const { data: profileData } = await supabase
-      .from('club_profiles')
-      .select('id')
-      .eq('user_id', user.id)
-      .maybeSingle();
-
-    if (!profileData) {
-      // No profile, show setup modal
-      setHasClubProfile(false);
-      setShowProfileSetup(true);
+      if (!profileData) {
+        // No profile, show setup modal
+        setHasClubProfile(false);
+        setShowProfileSetup(true);
+      } else {
+        setHasClubProfile(true);
+        loadMyEvents();
+      }
     } else {
-      setHasClubProfile(true);
+      // Regular user - can create private_host events
+      setIsClub(false);
+      setHasClubProfile(true); // Regular users don't need club profile
       loadMyEvents();
     }
   };
@@ -114,10 +116,10 @@ const Host = () => {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-2xl font-bold text-gradient-primary">
-              Host Events
+              {isClub ? 'Host Events' : 'Host Private Parties'}
             </h1>
             <p className="text-muted-foreground mt-1">
-              Create and manage your events
+              {isClub ? 'Create and manage your club events' : 'Create and host your own private parties'}
             </p>
           </div>
           <Button
@@ -147,7 +149,9 @@ const Host = () => {
                 </div>
                 <h3 className="font-semibold mb-2">No events yet</h3>
                 <p className="text-sm text-muted-foreground mb-4">
-                  Create your first event to start hosting!
+                  {isClub 
+                    ? 'Create your first event to start hosting!' 
+                    : 'Host your first private party! Only invited guests can join.'}
                 </p>
                 <Button
                   onClick={() => setShowCreateModal(true)}

@@ -155,7 +155,7 @@ export const CreateEventModal = ({ open, onOpenChange, onSuccess }: CreateEventM
         bring_own_drinks: false,
         allow_plus_one: false,
         allow_plus_two: false,
-        event_type: 'club'
+        event_type: clubProfileId ? 'club' : 'private_host' // Reset to correct type based on user role
       });
 
       onOpenChange(false);
