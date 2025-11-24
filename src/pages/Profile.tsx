@@ -24,8 +24,9 @@ import { useDemoMode } from '@/contexts/DemoModeContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { EditProfileModal } from '@/components/EditProfileModal';
 import { MyTickets } from '@/components/MyTickets';
+import { ReviewsList } from '@/components/ReviewsList';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2 } from 'lucide-react';
+import { Loader2, MessageSquare } from 'lucide-react';
 
 interface ProfileData {
   display_name: string;
@@ -136,9 +137,10 @@ const Profile = () => {
         </h1>
 
         <Tabs defaultValue="profile" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-6">
+          <TabsList className="grid w-full grid-cols-3 mb-6">
             <TabsTrigger value="profile">Profile</TabsTrigger>
             <TabsTrigger value="tickets">My Tickets</TabsTrigger>
+            <TabsTrigger value="reviews">Reviews</TabsTrigger>
           </TabsList>
 
           <TabsContent value="profile" className="space-y-6">
@@ -254,6 +256,21 @@ const Profile = () => {
 
           <TabsContent value="tickets">
             <MyTickets />
+          </TabsContent>
+
+          <TabsContent value="reviews">
+            <div className="space-y-4">
+              <Card className="glass-card p-4">
+                <h3 className="font-semibold mb-2 flex items-center gap-2">
+                  <MessageSquare className="w-5 h-5" />
+                  My Reviews
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Reviews from other users about your hosting and participation
+                </p>
+              </Card>
+              {user && <ReviewsList userId={user.id} />}
+            </div>
           </TabsContent>
         </Tabs>
       </div>
