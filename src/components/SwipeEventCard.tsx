@@ -4,6 +4,7 @@ import { useDrag } from '@use-gesture/react';
 import { Heart, Lock, Key, X, Check, Zap } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { SecretEventLockOverlay } from '@/components/SecretEventLockOverlay';
+import { HeatBadge } from '@/components/HeatBadge';
 import eventPoster1 from '@/assets/event-poster-1.jpg';
 import eventPoster2 from '@/assets/event-poster-2.jpg';
 import eventPoster3 from '@/assets/event-poster-3.jpg';
@@ -194,8 +195,8 @@ export const SwipeEventCard = ({
 
         {/* Event Content */}
         <div className="absolute bottom-0 left-0 right-0 p-6 space-y-3">
-          {/* Event Type Badge */}
-          <div className="flex gap-2 items-center">
+          {/* Event Type Badge & Heat Badge */}
+          <div className="flex gap-2 items-center flex-wrap">
             {event.event_type === 'club' && (
               <Badge className="bg-emerald-600/30 text-emerald-200 border-0 backdrop-blur-sm">
                 🏛️ PUBLIC
@@ -217,10 +218,15 @@ export const SwipeEventCard = ({
               </Badge>
             )}
             
-            {/* XP Indicator */}
+            {/* Heat Badge */}
+            {event.heat_score > 0 && (
+              <HeatBadge heatScore={event.heat_score} heatBadge={event.heat_badge} size="sm" />
+            )}
+            
+            {/* XP Indicator - show bonus for hot events */}
             <Badge className="bg-primary/30 text-primary-foreground border-0 backdrop-blur-sm ml-auto">
               <Zap className="w-3 h-3 mr-1 fill-current" />
-              +3 XP
+              {event.heat_score >= 70 ? '+10 XP' : '+3 XP'}
             </Badge>
           </div>
 

@@ -15,6 +15,7 @@ import { RequestToJoinModal } from '@/components/RequestToJoinModal';
 import { BuyTicketModal } from '@/components/BuyTicketModal';
 import { AfterDetailsModal } from '@/components/AfterDetailsModal';
 import { SecretEventLockOverlay } from '@/components/SecretEventLockOverlay';
+import { HeatBadge } from '@/components/HeatBadge';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -399,21 +400,27 @@ export const EventDetails: React.FC<EventDetailsProps> = ({ event, onBack }) => 
         </Button>
         
         {/* Event Type badges */}
-        {event.eventType === 'club' && (
-          <Badge className="absolute top-4 right-4 safe-top bg-emerald-600/20 text-emerald-300 backdrop-blur-sm">
-            🏛️ CLUB
-          </Badge>
-        )}
-        {event.eventType === 'private_host' && !isSecret && (
-          <Badge className="absolute top-4 right-4 safe-top bg-yellow-600/20 text-yellow-300 backdrop-blur-sm">
-            🗝️ PRIVATE
-          </Badge>
-        )}
-        {isSecret && (
-          <Badge className="absolute top-4 right-4 safe-top bg-purple-600/20 text-purple-200 backdrop-blur-sm border-purple-400/40">
-            🔮 SECRET
-          </Badge>
-        )}
+        <div className="absolute top-4 right-4 safe-top flex flex-col gap-2 items-end">
+          {event.eventType === 'club' && (
+            <Badge className="bg-emerald-600/20 text-emerald-300 backdrop-blur-sm">
+              🏛️ CLUB
+            </Badge>
+          )}
+          {event.eventType === 'private_host' && !isSecret && (
+            <Badge className="bg-yellow-600/20 text-yellow-300 backdrop-blur-sm">
+              🗝️ PRIVATE
+            </Badge>
+          )}
+          {isSecret && (
+            <Badge className="bg-purple-600/20 text-purple-200 backdrop-blur-sm border-purple-400/40">
+              🔮 SECRET
+            </Badge>
+          )}
+          {/* Heat Badge */}
+          {event.heatScore && event.heatScore > 0 && (
+            <HeatBadge heatScore={event.heatScore} heatBadge={event.heatBadge} size="md" />
+          )}
+        </div>
         
         {/* Promoted badge */}
         {event.isPromoted && (
@@ -696,6 +703,39 @@ export const EventDetails: React.FC<EventDetailsProps> = ({ event, onBack }) => 
             </div>
           )}
         </Card>
+        
+        {/* XP Bonus Preview for Hot Events */}
+        {!isLocked && event.heatScore && event.heatScore >= 70 && (
+          <Card className="glass-card p-4 border-2 border-orange-500/30 bg-gradient-to-br from-orange-950/20 to-red-950/20">
+            <div className="flex items-start gap-3">
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center flex-shrink-0">
+                <Zap className="w-6 h-6 text-white fill-white" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-bold text-orange-400 mb-1 flex items-center gap-2">
+                  {event.heatScore >= 90 ? '🔥 INFERNO BONUS' : '⚡ HOT EVENT BONUS'}
+                </h3>
+                <p className="text-sm text-muted-foreground mb-2">
+                  This event is on fire! Earn extra XP rewards:
+                </p>
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-2 text-sm">
+                    <Zap className="w-4 h-4 text-orange-400 fill-orange-400" />
+                    <span className="text-foreground">
+                      Swipe right: <span className="font-bold text-orange-400">+10 XP</span> (instead of +3)
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <Ticket className="w-4 h-4 text-orange-400" />
+                    <span className="text-foreground">
+                      Attend event: <span className="font-bold text-orange-400">+20 XP bonus</span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Card>
+        )}
         
         {/* Action Button */}
         <div className="pt-4">

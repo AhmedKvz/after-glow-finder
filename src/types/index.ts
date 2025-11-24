@@ -58,6 +58,14 @@ export interface Event {
   secretPreviewText?: string;
   secretCoverBlurred?: string;
   goldenOnly?: boolean;
+  watchlistCount?: number;
+  ticketSalesCount?: number;
+  privateRequestCount?: number;
+  xpInterestSum?: number;
+  trustInterestAvg?: number;
+  sharesCount?: number;
+  heatScore?: number;
+  heatBadge?: 'Inferno' | 'Hot' | 'Warm' | 'Starting' | 'New Drop';
 }
 
 export interface GoldenTicket {

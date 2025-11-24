@@ -5,6 +5,7 @@ import { Card } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Event } from '@/types';
 import { supabase } from '@/integrations/supabase/client';
+import { HeatBadge } from '@/components/HeatBadge';
 import eventPoster1 from '@/assets/event-poster-1.jpg';
 import eventPoster2 from '@/assets/event-poster-2.jpg';
 import eventPoster3 from '@/assets/event-poster-3.jpg';
@@ -166,7 +167,11 @@ export const EventCard: React.FC<EventCardProps> = ({ event, compact = false }) 
           </div>
 
           {/* Tags - Show ALL tags */}
-          <div className="flex gap-1.5 flex-wrap">
+          <div className="flex gap-1.5 flex-wrap items-center">
+            {/* Heat Badge */}
+            {event.heatScore && event.heatScore > 0 && (
+              <HeatBadge heatScore={event.heatScore} heatBadge={event.heatBadge} size="sm" />
+            )}
             {event.genres.map((genre) => (
               <Badge 
                 key={genre} 
