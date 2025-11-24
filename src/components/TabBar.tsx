@@ -62,18 +62,17 @@ export const TabBar = () => {
                 to={tab.path}
                 className={cn(
                   'flex flex-col items-center space-y-1 px-3 py-2 rounded-xl transition-all duration-300',
-                  'min-w-[60px] relative interactive',
-                  isActive && 'text-primary'
+                  'min-w-[60px] relative interactive'
                 )}
               >
                 {/* Active background glow */}
                 {isActive && (
-                  <div className="absolute inset-0 rounded-xl gradient-primary opacity-10 scale-110" />
+                  <div className="absolute inset-0 rounded-xl gradient-primary opacity-10 scale-110 pointer-events-none" />
                 )}
                 
                 {/* Icon with special styling for Host and Gamification tabs */}
                 <div className={cn(
-                  'relative p-2 rounded-lg transition-all duration-300',
+                  'relative p-2 rounded-lg transition-all duration-300 pointer-events-none',
                   (tab.id === 'host' || tab.id === 'gamification') && 'gradient-primary text-white shadow-primary',
                   tab.id !== 'host' && tab.id !== 'gamification' && isActive && 'text-primary',
                   tab.id !== 'host' && tab.id !== 'gamification' && !isActive && 'text-muted-foreground'
@@ -83,7 +82,7 @@ export const TabBar = () => {
                 
                 {/* Label */}
                 <span className={cn(
-                  'text-xs font-medium transition-colors duration-300',
+                  'text-xs font-medium transition-colors duration-300 pointer-events-none',
                   isActive ? 'text-primary' : 'text-muted-foreground'
                 )}>
                   {tab.label}
