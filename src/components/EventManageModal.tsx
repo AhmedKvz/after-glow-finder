@@ -107,10 +107,7 @@ export const EventManageModal = ({ open, onOpenChange, event, onSuccess }: Event
     // Load access requests (primarily used for private events)
     const { data: requestData, error: requestError } = await supabase
       .from('event_access')
-      .select(`
-        *,
-        profiles:user_id (display_name, avatar_url)
-      `)
+      .select('*')
       .eq('event_id', event.id)
       .order('created_at', { ascending: false });
 
@@ -383,14 +380,13 @@ export const EventManageModal = ({ open, onOpenChange, event, onSuccess }: Event
                       <Card key={request.id} className="glass-card p-4">
                         <div className="flex items-start gap-3">
                           <Avatar className="w-10 h-10">
-                            <AvatarImage src={request.profiles?.avatar_url} />
                             <AvatarFallback>
-                              {request.profiles?.display_name?.[0] || '?'}
+                              {request.user_id?.slice(0, 2).toUpperCase() || '?'}
                             </AvatarFallback>
                           </Avatar>
                           
                           <div className="flex-1 min-w-0">
-                            <p className="font-medium break-words">{request.profiles?.display_name || 'Anonymous'}</p>
+                            <p className="font-medium break-words">Guest {request.user_id?.slice(0, 6) || ''}</p>
                             {request.message && (
                               <p className="text-sm text-muted-foreground mt-1 break-words whitespace-normal">{request.message}</p>
                             )}
