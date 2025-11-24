@@ -6,7 +6,8 @@ import {
   HandHeart, 
   User,
   Heart,
-  Trophy
+  Trophy,
+  Users
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -16,6 +17,7 @@ import { supabase } from '@/integrations/supabase/client';
 const tabs = [
   { id: 'discover', label: 'Discover', icon: Compass, path: '/discover' },
   { id: 'search', label: 'Search', icon: Search, path: '/search' },
+  { id: 'circle-swipe', label: 'Swipe', icon: Heart, path: '/circle-swipe' },
   { id: 'gamification', label: 'Game', icon: Trophy, path: '/gamification' },
   { id: 'host', label: 'Host', icon: Plus, path: '/host' },
   { id: 'helpers', label: 'Helpers', icon: HandHeart, path: '/helpers' },
@@ -70,12 +72,12 @@ export const TabBar = () => {
                   <div className="absolute inset-0 rounded-xl gradient-primary opacity-10 scale-110 pointer-events-none" />
                 )}
                 
-                {/* Icon with special styling for Host and Gamification tabs */}
+                {/* Icon with special styling for Host, Gamification, and Circle Swipe tabs */}
                 <div className={cn(
                   'relative p-2 rounded-lg transition-all duration-300 pointer-events-none',
-                  (tab.id === 'host' || tab.id === 'gamification') && 'gradient-primary text-white shadow-primary',
-                  tab.id !== 'host' && tab.id !== 'gamification' && isActive && 'text-primary',
-                  tab.id !== 'host' && tab.id !== 'gamification' && !isActive && 'text-muted-foreground'
+                  (tab.id === 'host' || tab.id === 'gamification' || tab.id === 'circle-swipe') && 'gradient-primary text-white shadow-primary',
+                  tab.id !== 'host' && tab.id !== 'gamification' && tab.id !== 'circle-swipe' && isActive && 'text-primary',
+                  tab.id !== 'host' && tab.id !== 'gamification' && tab.id !== 'circle-swipe' && !isActive && 'text-muted-foreground'
                 )}>
                   <Icon size={20} />
                 </div>
