@@ -14,6 +14,44 @@ export type Database = {
   }
   public: {
     Tables: {
+      after_access_requests: {
+        Row: {
+          created_at: string
+          decision_at: string | null
+          decision_by_user_id: string | null
+          event_id: string
+          id: string
+          requester_user_id: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          decision_at?: string | null
+          decision_by_user_id?: string | null
+          event_id: string
+          id?: string
+          requester_user_id: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          decision_at?: string | null
+          decision_by_user_id?: string | null
+          event_id?: string
+          id?: string
+          requester_user_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "after_access_requests_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       checkins: {
         Row: {
           checked_in_at: string
@@ -428,6 +466,7 @@ export type Database = {
       }
       events: {
         Row: {
+          after_instructions: string | null
           allow_plus_one: boolean | null
           allow_plus_two: boolean | null
           bring_own_drinks: boolean | null
@@ -439,14 +478,17 @@ export type Database = {
           end_time: string
           event_type: Database["public"]["Enums"]["event_type"]
           exact_address: string | null
+          full_address: string | null
           host_id: string
           id: string
           is_location_hidden: boolean
           is_private: boolean | null
+          is_private_after: boolean | null
           join_request_required: boolean
           location: string
           music_tags: string[] | null
           owner_club_id: string | null
+          public_location_label: string | null
           requires_approval: boolean | null
           start_time: string
           ticketing_enabled: boolean
@@ -455,6 +497,7 @@ export type Database = {
           venue_id: string | null
         }
         Insert: {
+          after_instructions?: string | null
           allow_plus_one?: boolean | null
           allow_plus_two?: boolean | null
           bring_own_drinks?: boolean | null
@@ -466,14 +509,17 @@ export type Database = {
           end_time: string
           event_type?: Database["public"]["Enums"]["event_type"]
           exact_address?: string | null
+          full_address?: string | null
           host_id: string
           id?: string
           is_location_hidden?: boolean
           is_private?: boolean | null
+          is_private_after?: boolean | null
           join_request_required?: boolean
           location: string
           music_tags?: string[] | null
           owner_club_id?: string | null
+          public_location_label?: string | null
           requires_approval?: boolean | null
           start_time: string
           ticketing_enabled?: boolean
@@ -482,6 +528,7 @@ export type Database = {
           venue_id?: string | null
         }
         Update: {
+          after_instructions?: string | null
           allow_plus_one?: boolean | null
           allow_plus_two?: boolean | null
           bring_own_drinks?: boolean | null
@@ -493,14 +540,17 @@ export type Database = {
           end_time?: string
           event_type?: Database["public"]["Enums"]["event_type"]
           exact_address?: string | null
+          full_address?: string | null
           host_id?: string
           id?: string
           is_location_hidden?: boolean
           is_private?: boolean | null
+          is_private_after?: boolean | null
           join_request_required?: boolean
           location?: string
           music_tags?: string[] | null
           owner_club_id?: string | null
+          public_location_label?: string | null
           requires_approval?: boolean | null
           start_time?: string
           ticketing_enabled?: boolean

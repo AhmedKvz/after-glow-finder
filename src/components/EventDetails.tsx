@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, MapPin, Users, Clock, Star, Check, X, Calendar, Music, MessageSquare, Ticket, MessageCircle } from 'lucide-react';
+import { ArrowLeft, MapPin, Users, Clock, Star, Check, X, Calendar, Music, MessageSquare, Ticket, MessageCircle, Lock, Key } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
@@ -13,6 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import { ReviewsList } from '@/components/ReviewsList';
 import { RequestToJoinModal } from '@/components/RequestToJoinModal';
 import { BuyTicketModal } from '@/components/BuyTicketModal';
+import { AfterDetailsModal } from '@/components/AfterDetailsModal';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -34,6 +35,11 @@ export const EventDetails: React.FC<EventDetailsProps> = ({ event, onBack }) => 
   const [showRequestDialog, setShowRequestDialog] = useState(false);
   const [showTicketDialog, setShowTicketDialog] = useState(false);
   const [hasValidTicket, setHasValidTicket] = useState(false);
+  const [afterRequestStatus, setAfterRequestStatus] = useState<'none' | 'pending' | 'approved' | 'rejected'>('none');
+  const [hasReviews, setHasReviews] = useState(false);
+  const [showAfterDetailsModal, setShowAfterDetailsModal] = useState(false);
+  const [isPrivateAfter, setIsPrivateAfter] = useState(false);
+  const [afterEventData, setAfterEventData] = useState<any>(null);
   
   const { user } = useAuth();
   const { isDemoMode, showDemoSuccess } = useDemoMode();
@@ -47,6 +53,39 @@ export const EventDetails: React.FC<EventDetailsProps> = ({ event, onBack }) => 
     if (!user) return;
     
     const checkExistingStatus = async () => {
+      // Check if this is a private after event
+      const { data: eventData } = await supabase
+        .from('events')
+        .select('is_private_after, full_address, after_instructions, public_location_label')
+        .eq('id', event.id)
+        .single();
+      
+      if (eventData?.is_private_after) {
+        setIsPrivateAfter(true);
+        setAfterEventData(eventData);
+        
+        // Check if user has any reviews (requirement for private after)
+        const { count } = await supabase
+          .from('event_reviews')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', user.id);
+        
+        setHasReviews((count || 0) > 0);
+        
+        // Check if user has already requested access
+        const { data: afterRequest } = await supabase
+          .from('after_access_requests')
+          .select('status')
+          .eq('event_id', event.id)
+          .eq('requester_user_id', user.id)
+          .maybeSingle();
+        
+        if (afterRequest) {
+          setAfterRequestStatus(afterRequest.status as 'pending' | 'approved' | 'rejected');
+        }
+        return; // Skip other checks for private after events
+      }
+      
       // Check if user has a valid ticket
       const { data: ticketData } = await supabase
         .from('tickets')
@@ -99,7 +138,95 @@ export const EventDetails: React.FC<EventDetailsProps> = ({ event, onBack }) => 
     }
   };
   
+  const handleRequestAfterAccess = async () => {
+    if (!user) return;
+    
+    const { error } = await supabase
+      .from('after_access_requests')
+      .insert({
+        event_id: event.id,
+        requester_user_id: user.id,
+        status: 'pending',
+      });
+    
+    if (error) {
+      if (error.code === '23505') { // Unique constraint violation
+        toast({
+          title: 'Request already exists',
+          description: 'You have already requested access to this after.',
+        });
+      } else {
+        toast({
+          variant: 'destructive',
+          title: 'Failed to send request',
+          description: error.message,
+        });
+      }
+      return;
+    }
+    
+    toast({
+      title: 'Request sent!',
+      description: 'The host will review your profile and respond soon.',
+    });
+    
+    setAfterRequestStatus('pending');
+  };
+  
   const getStatusButton = () => {
+    // Handle private after events
+    if (isPrivateAfter) {
+      switch (afterRequestStatus) {
+        case 'pending':
+          return (
+            <Button disabled className="w-full glass-card">
+              <Clock className="w-4 h-4 mr-2" />
+              Pending Host Review
+            </Button>
+          );
+        case 'approved':
+          return (
+            <Button 
+              onClick={() => setShowAfterDetailsModal(true)} 
+              className="w-full gradient-primary text-white"
+            >
+              <Key className="w-4 h-4 mr-2" />
+              Open After Details
+            </Button>
+          );
+        case 'rejected':
+          return (
+            <Button disabled variant="destructive" className="w-full">
+              <X className="w-4 h-4 mr-2" />
+              Request Declined
+            </Button>
+          );
+        default:
+          if (!hasReviews) {
+            return (
+              <>
+                <Button disabled className="w-full" variant="outline">
+                  <Lock className="w-4 h-4 mr-2" />
+                  Request Access
+                </Button>
+                <p className="text-xs text-muted-foreground mt-2 text-center">
+                  You need at least one review on your profile to request access to this after.
+                </p>
+              </>
+            );
+          }
+          return (
+            <Button 
+              onClick={handleRequestAfterAccess} 
+              className="w-full bg-[#8C52FF] hover:bg-[#7840DD] text-white"
+            >
+              <Lock className="w-4 h-4 mr-2" />
+              Request Access
+            </Button>
+          );
+      }
+    }
+    
     // Handle private host events
     if (event.eventType === 'private_host') {
       switch (accessStatus) {
@@ -290,7 +417,20 @@ export const EventDetails: React.FC<EventDetailsProps> = ({ event, onBack }) => 
         {/* Location */}
         <Card className="glass-card p-4">
           <div className="flex items-start gap-3">
-            {isLocationVisible ? (
+            {isPrivateAfter && afterRequestStatus !== 'approved' ? (
+              <>
+                <Lock className="w-5 h-5 text-amber-400 mt-0.5" />
+                <div className="flex-1">
+                  <h3 className="font-medium text-amber-300">Private After Location</h3>
+                  <div className="text-sm text-muted-foreground">
+                    {afterEventData?.public_location_label || 'Location revealed after approval'}
+                  </div>
+                  <Badge variant="secondary" className="mt-2 text-xs">
+                    🔐 Address revealed after host approval
+                  </Badge>
+                </div>
+              </>
+            ) : isLocationVisible ? (
               <>
                 <MapPin className="w-5 h-5 text-primary mt-0.5" />
                 <div className="flex-1">
@@ -444,6 +584,19 @@ export const EventDetails: React.FC<EventDetailsProps> = ({ event, onBack }) => 
           setShowTicketDialog(false);
         }}
       />
+      
+      {/* After Details Modal for Private After Events */}
+      {afterEventData && (
+        <AfterDetailsModal
+          open={showAfterDetailsModal}
+          onOpenChange={setShowAfterDetailsModal}
+          event={{
+            title: event.title,
+            full_address: afterEventData.full_address,
+            after_instructions: afterEventData.after_instructions,
+          }}
+        />
+      )}
     </div>
   );
 };
