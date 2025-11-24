@@ -18,6 +18,10 @@ import Auth from "./pages/Auth";
 import HelperOnboarding from "./pages/HelperOnboarding";
 import ClubDashboard from "./pages/ClubDashboard";
 import EventChat from "./pages/EventChat";
+import Gamification from "./pages/Gamification";
+import Quests from "./pages/Quests";
+import Lucky100 from "./pages/Lucky100";
+import Leaderboard from "./pages/Leaderboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -44,6 +48,10 @@ const App = () => (
                 <Route path="profile" element={<Profile />} />
                 <Route path="club-dashboard" element={<ClubDashboard />} />
                 <Route path="event/:id/chat" element={<EventChat />} />
+                <Route path="gamification" element={<Gamification />} />
+                <Route path="quests" element={<Quests />} />
+                <Route path="lucky100" element={<Lucky100 />} />
+                <Route path="leaderboard" element={<Leaderboard />} />
                 <Route path="*" element={<NotFound />} />
               </Route>
             </Routes>

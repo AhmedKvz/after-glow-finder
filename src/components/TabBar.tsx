@@ -5,7 +5,8 @@ import {
   Plus, 
   HandHeart, 
   User,
-  Heart
+  Heart,
+  Trophy
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -15,8 +16,8 @@ import { supabase } from '@/integrations/supabase/client';
 const tabs = [
   { id: 'discover', label: 'Discover', icon: Compass, path: '/discover' },
   { id: 'search', label: 'Search', icon: Search, path: '/search' },
+  { id: 'gamification', label: 'Game', icon: Trophy, path: '/gamification' },
   { id: 'host', label: 'Host', icon: Plus, path: '/host' },
-  { id: 'circle', label: 'Circle', icon: Heart, path: '/circle-swipe' },
   { id: 'helpers', label: 'Helpers', icon: HandHeart, path: '/helpers' },
   { id: 'profile', label: 'Profile', icon: User, path: '/profile' },
 ];
@@ -70,12 +71,12 @@ export const TabBar = () => {
                   <div className="absolute inset-0 rounded-xl gradient-primary opacity-10 scale-110" />
                 )}
                 
-                {/* Icon with special styling for Host tab */}
+                {/* Icon with special styling for Host and Gamification tabs */}
                 <div className={cn(
                   'relative p-2 rounded-lg transition-all duration-300',
-                  tab.id === 'host' && 'gradient-primary text-white shadow-primary',
-                  tab.id !== 'host' && isActive && 'text-primary',
-                  tab.id !== 'host' && !isActive && 'text-muted-foreground'
+                  (tab.id === 'host' || tab.id === 'gamification') && 'gradient-primary text-white shadow-primary',
+                  tab.id !== 'host' && tab.id !== 'gamification' && isActive && 'text-primary',
+                  tab.id !== 'host' && tab.id !== 'gamification' && !isActive && 'text-muted-foreground'
                 )}>
                   <Icon size={20} />
                 </div>
