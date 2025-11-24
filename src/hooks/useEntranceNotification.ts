@@ -26,7 +26,21 @@ export const useEntranceNotification = () => {
     
     // Start 3-second timer
     const timer = setTimeout(async () => {
-      console.log('⏰ 3 seconds elapsed, fetching notification...');
+      console.log('⏰ 3 seconds elapsed, showing fallback notification and fetching from DB...');
+
+      // Always show at least one notification per session, even if Supabase fails
+      const fallbackNotification: EntranceNotification = {
+        id: 'local-fallback',
+        message: "🔥 Welcome back to the after.",
+        emoji: '🔥',
+        priority: 1,
+      };
+
+      setNotification(fallbackNotification);
+      setIsOpen(true);
+      sessionStorage.setItem('entrance_notified_v2', 'true');
+      console.log('✅ Fallback notification displayed, session marked');
+
       try {
         // Fetch all active notifications
         const { data, error } = await supabase
@@ -39,7 +53,7 @@ export const useEntranceNotification = () => {
         console.log('📬 Fetched notifications:', data);
         
         if (!data || data.length === 0) {
-          console.log('❌ No active notifications found');
+          console.log('❌ No active notifications found, keeping fallback');
           return;
         }
 
@@ -47,14 +61,9 @@ export const useEntranceNotification = () => {
         const randomIndex = Math.floor(Math.random() * data.length);
         const selectedNotification = data[randomIndex];
 
-        console.log('🎯 Selected notification:', selectedNotification);
+        console.log('🎯 Selected notification from DB:', selectedNotification);
         
         setNotification(selectedNotification);
-        setIsOpen(true);
-
-        // Mark session as notified
-        sessionStorage.setItem('entrance_notified_v2', 'true');
-        console.log('✅ Notification displayed and session marked');
       } catch (error) {
         console.error('❌ Error fetching entrance notification:', error);
       }
