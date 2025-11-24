@@ -22,7 +22,9 @@ export type Database = {
           event_id: string
           id: string
           requester_user_id: string
+          shared_events_count: number | null
           status: string
+          trust_preview: string | null
         }
         Insert: {
           created_at?: string
@@ -31,7 +33,9 @@ export type Database = {
           event_id: string
           id?: string
           requester_user_id: string
+          shared_events_count?: number | null
           status?: string
+          trust_preview?: string | null
         }
         Update: {
           created_at?: string
@@ -40,7 +44,9 @@ export type Database = {
           event_id?: string
           id?: string
           requester_user_id?: string
+          shared_events_count?: number | null
           status?: string
+          trust_preview?: string | null
         }
         Relationships: [
           {
@@ -230,6 +236,8 @@ export type Database = {
       club_profiles: {
         Row: {
           address: string
+          club_badges: Json | null
+          club_reputation: number | null
           cover_image_url: string | null
           created_at: string
           description: string | null
@@ -241,6 +249,8 @@ export type Database = {
         }
         Insert: {
           address: string
+          club_badges?: Json | null
+          club_reputation?: number | null
           cover_image_url?: string | null
           created_at?: string
           description?: string | null
@@ -252,6 +262,8 @@ export type Database = {
         }
         Update: {
           address?: string
+          club_badges?: Json | null
+          club_reputation?: number | null
           cover_image_url?: string | null
           created_at?: string
           description?: string | null
@@ -435,6 +447,7 @@ export type Database = {
           rating: number
           updated_at: string
           user_id: string
+          weight: number | null
         }
         Insert: {
           comment?: string | null
@@ -444,6 +457,7 @@ export type Database = {
           rating: number
           updated_at?: string
           user_id: string
+          weight?: number | null
         }
         Update: {
           comment?: string | null
@@ -453,6 +467,7 @@ export type Database = {
           rating?: number
           updated_at?: string
           user_id?: string
+          weight?: number | null
         }
         Relationships: [
           {
@@ -469,6 +484,7 @@ export type Database = {
           after_instructions: string | null
           allow_plus_one: boolean | null
           allow_plus_two: boolean | null
+          attendee_user_ids: Json | null
           bring_own_drinks: boolean | null
           capacity: number
           created_at: string
@@ -491,15 +507,19 @@ export type Database = {
           public_location_label: string | null
           requires_approval: boolean | null
           start_time: string
+          swipe_count: number | null
           ticketing_enabled: boolean
           title: string
           updated_at: string
           venue_id: string | null
+          wishlist_user_ids: Json | null
+          xp_reward: number | null
         }
         Insert: {
           after_instructions?: string | null
           allow_plus_one?: boolean | null
           allow_plus_two?: boolean | null
+          attendee_user_ids?: Json | null
           bring_own_drinks?: boolean | null
           capacity: number
           created_at?: string
@@ -522,15 +542,19 @@ export type Database = {
           public_location_label?: string | null
           requires_approval?: boolean | null
           start_time: string
+          swipe_count?: number | null
           ticketing_enabled?: boolean
           title: string
           updated_at?: string
           venue_id?: string | null
+          wishlist_user_ids?: Json | null
+          xp_reward?: number | null
         }
         Update: {
           after_instructions?: string | null
           allow_plus_one?: boolean | null
           allow_plus_two?: boolean | null
+          attendee_user_ids?: Json | null
           bring_own_drinks?: boolean | null
           capacity?: number
           created_at?: string
@@ -553,10 +577,13 @@ export type Database = {
           public_location_label?: string | null
           requires_approval?: boolean | null
           start_time?: string
+          swipe_count?: number | null
           ticketing_enabled?: boolean
           title?: string
           updated_at?: string
           venue_id?: string | null
+          wishlist_user_ids?: Json | null
+          xp_reward?: number | null
         }
         Relationships: [
           {
@@ -830,49 +857,115 @@ export type Database = {
       }
       profiles: {
         Row: {
+          afters_hosted: number | null
           avatar_url: string | null
+          badges: Json | null
           bio: string | null
           birthdate: string | null
           city: string | null
           created_at: string
           display_name: string | null
+          events_attended: number | null
           gender: Database["public"]["Enums"]["gender_type"] | null
           id: string
           lat: number | null
+          level: string | null
           lng: number | null
+          lucky100_wins: number | null
           music_tags: string[] | null
+          trust_score: number | null
           updated_at: string
           user_id: string
+          vip_status: boolean | null
+          xp: number | null
         }
         Insert: {
+          afters_hosted?: number | null
           avatar_url?: string | null
+          badges?: Json | null
           bio?: string | null
           birthdate?: string | null
           city?: string | null
           created_at?: string
           display_name?: string | null
+          events_attended?: number | null
           gender?: Database["public"]["Enums"]["gender_type"] | null
           id?: string
           lat?: number | null
+          level?: string | null
           lng?: number | null
+          lucky100_wins?: number | null
           music_tags?: string[] | null
+          trust_score?: number | null
           updated_at?: string
           user_id: string
+          vip_status?: boolean | null
+          xp?: number | null
         }
         Update: {
+          afters_hosted?: number | null
           avatar_url?: string | null
+          badges?: Json | null
           bio?: string | null
           birthdate?: string | null
           city?: string | null
           created_at?: string
           display_name?: string | null
+          events_attended?: number | null
           gender?: Database["public"]["Enums"]["gender_type"] | null
           id?: string
           lat?: number | null
+          level?: string | null
           lng?: number | null
+          lucky100_wins?: number | null
           music_tags?: string[] | null
+          trust_score?: number | null
           updated_at?: string
           user_id?: string
+          vip_status?: boolean | null
+          xp?: number | null
+        }
+        Relationships: []
+      }
+      quests: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          description: string
+          expires_at: string | null
+          id: string
+          quest_type: string
+          status: string
+          title: string
+          updated_at: string
+          user_id: string
+          xp_reward: number
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          description: string
+          expires_at?: string | null
+          id?: string
+          quest_type: string
+          status?: string
+          title: string
+          updated_at?: string
+          user_id: string
+          xp_reward?: number
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          description?: string
+          expires_at?: string | null
+          id?: string
+          quest_type?: string
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+          xp_reward?: number
         }
         Relationships: []
       }
@@ -881,6 +974,7 @@ export type Database = {
           created_at: string
           event_id: string
           id: string
+          is_lucky100_winner: boolean | null
           payment_intent_id: string | null
           price_paid: number
           purchase_date: string
@@ -894,6 +988,7 @@ export type Database = {
           created_at?: string
           event_id: string
           id?: string
+          is_lucky100_winner?: boolean | null
           payment_intent_id?: string | null
           price_paid?: number
           purchase_date?: string
@@ -907,6 +1002,7 @@ export type Database = {
           created_at?: string
           event_id?: string
           id?: string
+          is_lucky100_winner?: boolean | null
           payment_intent_id?: string | null
           price_paid?: number
           purchase_date?: string
