@@ -263,6 +263,93 @@ export type Database = {
           },
         ]
       }
+      event_chat_members: {
+        Row: {
+          chat_id: string
+          id: string
+          joined_at: string
+          user_id: string
+        }
+        Insert: {
+          chat_id: string
+          id?: string
+          joined_at?: string
+          user_id: string
+        }
+        Update: {
+          chat_id?: string
+          id?: string
+          joined_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_chat_members_chat_id_fkey"
+            columns: ["chat_id"]
+            isOneToOne: false
+            referencedRelation: "event_chats"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_chat_messages: {
+        Row: {
+          chat_id: string
+          created_at: string
+          id: string
+          message: string
+          user_id: string
+        }
+        Insert: {
+          chat_id: string
+          created_at?: string
+          id?: string
+          message: string
+          user_id: string
+        }
+        Update: {
+          chat_id?: string
+          created_at?: string
+          id?: string
+          message?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_chat_messages_chat_id_fkey"
+            columns: ["chat_id"]
+            isOneToOne: false
+            referencedRelation: "event_chats"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_chats: {
+        Row: {
+          created_at: string
+          event_id: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          id?: string
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_chats_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: true
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_orders: {
         Row: {
           created_at: string
