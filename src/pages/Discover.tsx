@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { MapPin, Clock, Users, Loader2, Music, Search, Ticket, Map } from 'lucide-react';
+import { MapPin, Clock, Users, Loader2, Music, Search, Ticket, Map as MapIcon, Star, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
@@ -65,10 +65,10 @@ const Discover = () => {
       return;
     }
 
-    // 4. Collect unique host_ids
+    // 6. Collect unique host_ids
     const hostIds = [...new Set(allEvents.map(e => e.host_id))];
 
-    // 5. Load profiles for all hosts
+    // 7. Load profiles for all hosts
     const { data: profilesData, error: profilesError } = await supabase
       .from('profiles')
       .select('user_id, display_name, avatar_url')
@@ -78,15 +78,67 @@ const Discover = () => {
       console.error('[Discover] Error loading profiles:', profilesError);
     }
 
-    // 6. Merge data: add host object to each event
-    const eventsWithHosts = allEvents.map(event => ({
-      ...event,
-      host: profilesData?.find(p => p.user_id === event.host_id) || {
+    // 8. Load reviews for all events (clubs & cafes)
+    const eventIds = allEvents.map(e => e.id);
+    const { data: eventReviews, error: eventReviewsError } = await supabase
+      .from('event_reviews')
+      .select('event_id, rating')
+      .in('event_id', eventIds);
+
+    if (eventReviewsError) {
+      console.error('[Discover] Error loading event reviews:', eventReviewsError);
+    }
+
+    // 9. Load host reviews for private events
+    const { data: userReviews, error: userReviewsError } = await supabase
+      .from('user_reviews')
+      .select('reviewed_user_id, rating')
+      .in('reviewed_user_id', hostIds);
+
+    if (userReviewsError) {
+      console.error('[Discover] Error loading user reviews:', userReviewsError);
+    }
+
+    // 10. Build aggregate maps
+    const eventRatingMap = new Map<string, { avgRating: number; count: number }>();
+    if (eventReviews) {
+      eventReviews.forEach((r: any) => {
+        const existing = eventRatingMap.get(r.event_id) || { avgRating: 0, count: 0 };
+        const total = existing.avgRating * existing.count + r.rating;
+        const count = existing.count + 1;
+        eventRatingMap.set(r.event_id, { avgRating: total / count, count });
+      });
+    }
+
+    const hostRatingMap = new Map<string, { avgRating: number; count: number }>();
+    if (userReviews) {
+      userReviews.forEach((r: any) => {
+        const existing = hostRatingMap.get(r.reviewed_user_id) || { avgRating: 0, count: 0 };
+        const total = existing.avgRating * existing.count + r.rating;
+        const count = existing.count + 1;
+        hostRatingMap.set(r.reviewed_user_id, { avgRating: total / count, count });
+      });
+    }
+
+    // 11. Merge data: add host object and rating info to each event
+    const eventsWithHosts = allEvents.map(event => {
+      const hostProfile = profilesData?.find(p => p.user_id === event.host_id) || {
         user_id: event.host_id,
         display_name: 'Unknown Host',
-        avatar_url: null
-      }
-    }));
+        avatar_url: null,
+      };
+
+      const ratingData = event.event_type === 'private_host'
+        ? hostRatingMap.get(event.host_id)
+        : eventRatingMap.get(event.id);
+
+      return {
+        ...event,
+        host: hostProfile,
+        average_rating: ratingData?.avgRating ?? null,
+        review_count: ratingData?.count ?? 0,
+      };
+    });
 
     // Sort by date
     eventsWithHosts.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
@@ -170,9 +222,24 @@ const Discover = () => {
                       </Badge>
                     )}
                     
-                    <h3 className="text-white font-semibold text-base sm:text-lg md:text-xl mb-2 leading-snug break-words whitespace-normal">
+                    <h3 className="text-white font-semibold text-base sm:text-lg md:text-xl mb-1 leading-snug break-words whitespace-normal">
                       {event.title}
                     </h3>
+
+                    {/* Rating summary */}
+                    {event.average_rating && event.review_count > 0 && (
+                      <div className="flex items-center gap-2 text-xs sm:text-[13px] text-white/90 mb-1">
+                        <div className="flex items-center gap-1">
+                          <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                          <span>{event.average_rating.toFixed(1)}</span>
+                        </div>
+                        <div className="flex items-center gap-1 text-white/80">
+                          <MessageSquare className="w-3 h-3" />
+                          <span>{event.review_count}</span>
+                        </div>
+                      </div>
+                    )}
+
                     <div className="flex items-center gap-4 text-white/80 text-[13px] sm:text-sm mb-2">
                       <div className="flex items-center gap-1">
                         <Clock size={14} />
@@ -248,7 +315,23 @@ const Discover = () => {
                         )}
                       </div>
                       
-                      <h3 className="font-semibold text-base sm:text-lg md:text-xl leading-snug break-words whitespace-normal mb-1">{event.title}</h3>
+                      <h3 className="font-semibold text-base sm:text-lg md:text-xl leading-snug break-words whitespace-normal mb-1">
+                        {event.title}
+                      </h3>
+
+                      {/* Rating summary */}
+                      {event.average_rating && event.review_count > 0 && (
+                        <div className="flex items-center gap-2 text-[12px] sm:text-[13px] text-muted-foreground mb-1 flex-wrap">
+                          <div className="flex items-center gap-1">
+                            <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                            <span className="font-semibold">{event.average_rating.toFixed(1)}</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <MessageSquare className="w-3 h-3" />
+                            <span>{event.review_count} reviews</span>
+                          </div>
+                        </div>
+                      )}
                       
                       <div className="flex items-center gap-2 text-[13px] sm:text-sm text-muted-foreground mt-1">
                         <MapPin size={14} />
@@ -288,7 +371,7 @@ const Discover = () => {
                             window.open(`https://www.google.com/maps/search/?api=1&query=${address}`, '_blank');
                           }}
                         >
-                          <Map className="w-3 h-3 mr-1" />
+                          <MapIcon className="w-3 h-3 mr-1" />
                           See on Map
                         </Button>
                       ) : event.event_type === 'private_host' ? (
