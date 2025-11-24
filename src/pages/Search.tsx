@@ -27,36 +27,33 @@ const Search = () => {
   }, []);
 
   const loadEvents = async () => {
-    // 1. Load club events
+    // 1. Load club events (MVP: show all events regardless of date)
     const { data: clubEvents, error: clubError } = await supabase
       .from('events')
       .select('*')
       .eq('event_type', 'club')
-      .gte('date', new Date().toISOString().split('T')[0])
       .order('date', { ascending: true });
 
     if (clubError) {
       console.error('[Search] Error loading club events:', clubError);
     }
 
-    // 2. Load cafe events
+    // 2. Load cafe events (MVP: show all events regardless of date)
     const { data: cafeEvents, error: cafeError } = await supabase
       .from('events')
       .select('*')
       .eq('event_type', 'cafe')
-      .gte('date', new Date().toISOString().split('T')[0])
       .order('date', { ascending: true });
 
     if (cafeError) {
       console.error('[Search] Error loading cafe events:', cafeError);
     }
 
-    // 3. Load private events
+    // 3. Load private events (MVP: show all events regardless of date)
     const { data: privateEvents, error: privateError } = await supabase
       .from('events')
       .select('*')
       .eq('event_type', 'private_host')
-      .gte('date', new Date().toISOString().split('T')[0])
       .order('date', { ascending: true });
 
     if (privateError) {
