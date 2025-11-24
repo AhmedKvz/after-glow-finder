@@ -104,19 +104,26 @@ export const EventManageModal = ({ open, onOpenChange, event, onSuccess }: Event
     
     if (orderData) setOrders(orderData);
 
-    // Load access requests for private events
-    if (event.event_type === 'private_host') {
-      const { data: requestData } = await supabase
-        .from('event_access')
-        .select(`
-          *,
-          profiles:user_id (display_name, avatar_url)
-        `)
-        .eq('event_id', event.id)
-        .order('created_at', { ascending: false });
-      
-      if (requestData) setAccessRequests(requestData);
+    // Load access requests (primarily used for private events)
+    const { data: requestData, error: requestError } = await supabase
+      .from('event_access')
+      .select(`
+        *,
+        profiles:user_id (display_name, avatar_url)
+      `)
+      .eq('event_id', event.id)
+      .order('created_at', { ascending: false });
+
+    if (requestError) {
+      console.error('[EventManageModal] Error loading access requests:', requestError);
+      toast({
+        variant: 'destructive',
+        title: 'Failed to load join requests',
+        description: requestError.message,
+      });
     }
+
+    if (requestData) setAccessRequests(requestData);
   };
 
   const handleUpdate = async (e: React.FormEvent) => {
