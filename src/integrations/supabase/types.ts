@@ -21,6 +21,8 @@ export type Database = {
           decision_by_user_id: string | null
           event_id: string
           id: string
+          is_within_preference: boolean | null
+          reason_flag: string | null
           requester_user_id: string
           shared_events_count: number | null
           status: string
@@ -32,6 +34,8 @@ export type Database = {
           decision_by_user_id?: string | null
           event_id: string
           id?: string
+          is_within_preference?: boolean | null
+          reason_flag?: string | null
           requester_user_id: string
           shared_events_count?: number | null
           status?: string
@@ -43,6 +47,8 @@ export type Database = {
           decision_by_user_id?: string | null
           event_id?: string
           id?: string
+          is_within_preference?: boolean | null
+          reason_flag?: string | null
           requester_user_id?: string
           shared_events_count?: number | null
           status?: string
@@ -502,8 +508,10 @@ export type Database = {
           is_private_after: boolean | null
           join_request_required: boolean
           location: string
+          min_trust_score: number | null
           music_tags: string[] | null
           owner_club_id: string | null
+          preferred_levels: string[] | null
           public_location_label: string | null
           requires_approval: boolean | null
           start_time: string
@@ -512,6 +520,7 @@ export type Database = {
           title: string
           updated_at: string
           venue_id: string | null
+          vibe_tags: string[] | null
           wishlist_user_ids: Json | null
           xp_reward: number | null
         }
@@ -537,8 +546,10 @@ export type Database = {
           is_private_after?: boolean | null
           join_request_required?: boolean
           location: string
+          min_trust_score?: number | null
           music_tags?: string[] | null
           owner_club_id?: string | null
+          preferred_levels?: string[] | null
           public_location_label?: string | null
           requires_approval?: boolean | null
           start_time: string
@@ -547,6 +558,7 @@ export type Database = {
           title: string
           updated_at?: string
           venue_id?: string | null
+          vibe_tags?: string[] | null
           wishlist_user_ids?: Json | null
           xp_reward?: number | null
         }
@@ -572,8 +584,10 @@ export type Database = {
           is_private_after?: boolean | null
           join_request_required?: boolean
           location?: string
+          min_trust_score?: number | null
           music_tags?: string[] | null
           owner_club_id?: string | null
+          preferred_levels?: string[] | null
           public_location_label?: string | null
           requires_approval?: boolean | null
           start_time?: string
@@ -582,6 +596,7 @@ export type Database = {
           title?: string
           updated_at?: string
           venue_id?: string | null
+          vibe_tags?: string[] | null
           wishlist_user_ids?: Json | null
           xp_reward?: number | null
         }

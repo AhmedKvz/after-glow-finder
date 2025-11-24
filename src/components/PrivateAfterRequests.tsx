@@ -14,12 +14,18 @@ interface AfterRequest {
   requester_user_id: string;
   status: string;
   created_at: string;
+  is_within_preference: boolean;
+  reason_flag: string | null;
   events: {
     title: string;
+    preferred_levels: string[];
+    min_trust_score: number;
   };
   profiles: {
     display_name: string | null;
     avatar_url: string | null;
+    level: string | null;
+    trust_score: number | null;
   };
 }
 
@@ -45,8 +51,8 @@ export const PrivateAfterRequests = ({ hostId }: PrivateAfterRequestsProps) => {
       .from('after_access_requests')
       .select(`
         *,
-        events!inner(title, host_id),
-        profiles(display_name, avatar_url)
+        events!inner(title, host_id, preferred_levels, min_trust_score),
+        profiles(display_name, avatar_url, level, trust_score)
       `)
       .eq('events.host_id', hostId)
       .order('created_at', { ascending: false });
@@ -59,7 +65,38 @@ export const PrivateAfterRequests = ({ hostId }: PrivateAfterRequestsProps) => {
         description: error.message,
       });
     } else if (data) {
-      setRequests(data as any);
+      // Calculate preference matching for each request
+      const processedRequests = data.map((req: any) => {
+        const userLevel = req.profiles?.level || '';
+        const userTrust = req.profiles?.trust_score || 0;
+        const eventPreferredLevels = req.events?.preferred_levels || [];
+        const eventMinTrust = req.events?.min_trust_score || 0;
+
+        let isWithinPreference = true;
+        let reasonFlag = null;
+
+        // Check level match (if any levels are set)
+        if (eventPreferredLevels.length > 0 && !eventPreferredLevels.includes(userLevel)) {
+          isWithinPreference = false;
+          reasonFlag = `Level mismatch: User is "${userLevel}", host prefers ${eventPreferredLevels.join(', ')}`;
+        }
+
+        // Check trust score
+        if (userTrust < eventMinTrust) {
+          isWithinPreference = false;
+          reasonFlag = reasonFlag 
+            ? `${reasonFlag}. Trust too low (${userTrust} < ${eventMinTrust})`
+            : `Trust score too low: ${userTrust} (min: ${eventMinTrust})`;
+        }
+
+        return {
+          ...req,
+          is_within_preference: isWithinPreference,
+          reason_flag: reasonFlag
+        };
+      });
+
+      setRequests(processedRequests as any);
     }
 
     setLoading(false);
@@ -115,79 +152,204 @@ export const PrivateAfterRequests = ({ hostId }: PrivateAfterRequestsProps) => {
     );
   }
 
+  const preferredRequests = requests.filter(r => r.is_within_preference && r.status === 'pending');
+  const outsidePreferenceRequests = requests.filter(r => !r.is_within_preference && r.status === 'pending');
+  const processedRequests = requests.filter(r => r.status !== 'pending');
+
   return (
     <>
-      <div className="space-y-3">
-        {requests.map((request) => (
-          <Card key={request.id} className="glass-card p-4">
-            <div className="flex items-start gap-3">
-              <Avatar className="w-10 h-10">
-                <AvatarImage src={request.profiles?.avatar_url || undefined} />
-                <AvatarFallback>
-                  {request.profiles?.display_name?.[0] || '?'}
-                </AvatarFallback>
-              </Avatar>
+      <div className="space-y-4">
+        {preferredRequests.length > 0 && (
+          <div>
+            <h3 className="text-sm font-semibold text-emerald-300 mb-2 flex items-center gap-2">
+              <Check className="w-4 h-4" />
+              Preferred Matches ({preferredRequests.length})
+            </h3>
+            <div className="space-y-3">
+              {preferredRequests.map((request) => (
+                <Card key={request.id} className="glass-card p-4 border-emerald-600/30">
+                  <div className="flex items-start gap-3">
+                    <Avatar className="w-10 h-10">
+                      <AvatarImage src={request.profiles?.avatar_url || undefined} />
+                      <AvatarFallback>
+                        {request.profiles?.display_name?.[0] || '?'}
+                      </AvatarFallback>
+                    </Avatar>
 
-              <div className="flex-1 min-w-0">
-                <div className="flex items-start justify-between gap-2 mb-1">
-                  <button
-                    onClick={() => handleViewProfile(request.requester_user_id)}
-                    className="font-medium text-primary hover:underline text-left"
-                  >
-                    {request.profiles?.display_name || 'Anonymous'}
-                  </button>
-                  <Badge
-                    variant={
-                      request.status === 'approved'
-                        ? 'default'
-                        : request.status === 'rejected'
-                        ? 'destructive'
-                        : 'secondary'
-                    }
-                  >
-                    {request.status}
-                  </Badge>
-                </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-2 mb-1">
+                        <button
+                          onClick={() => handleViewProfile(request.requester_user_id)}
+                          className="font-medium text-primary hover:underline text-left"
+                        >
+                          {request.profiles?.display_name || 'Anonymous'}
+                        </button>
+                        <Badge className="bg-emerald-600/20 text-emerald-300">
+                          ✓ Match
+                        </Badge>
+                      </div>
 
-                <p className="text-sm text-muted-foreground mb-1">
-                  {request.events?.title}
-                </p>
+                      <p className="text-xs text-muted-foreground mb-1">
+                        {request.profiles?.level || 'New Raver'} • Trust: {request.profiles?.trust_score || 50}
+                      </p>
 
-                <p className="text-xs text-muted-foreground">
-                  {new Date(request.created_at).toLocaleString()}
-                </p>
-              </div>
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(request.created_at).toLocaleString()}
+                      </p>
+                    </div>
 
-              {request.status === 'pending' && (
-                <div className="flex gap-2 flex-shrink-0">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleViewProfile(request.requester_user_id)}
-                  >
-                    <Eye className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="bg-emerald-600/20 text-emerald-300 border-emerald-600/40 hover:bg-emerald-600/30"
-                    onClick={() => handleUpdateRequest(request.id, 'approved')}
-                  >
-                    <Check className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="bg-red-600/20 text-red-300 border-red-600/40 hover:bg-red-600/30"
-                    onClick={() => handleUpdateRequest(request.id, 'rejected')}
-                  >
-                    <X className="w-4 h-4" />
-                  </Button>
-                </div>
-              )}
+                    <div className="flex gap-2 flex-shrink-0">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleViewProfile(request.requester_user_id)}
+                      >
+                        <Eye className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="bg-emerald-600/20 text-emerald-300 border-emerald-600/40 hover:bg-emerald-600/30"
+                        onClick={() => handleUpdateRequest(request.id, 'approved')}
+                      >
+                        <Check className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="bg-red-600/20 text-red-300 border-red-600/40 hover:bg-red-600/30"
+                        onClick={() => handleUpdateRequest(request.id, 'rejected')}
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </Card>
+              ))}
             </div>
-          </Card>
-        ))}
+          </div>
+        )}
+
+        {outsidePreferenceRequests.length > 0 && (
+          <div>
+            <h3 className="text-sm font-semibold text-amber-300 mb-2 flex items-center gap-2">
+              ⚠️ Outside Host Preference ({outsidePreferenceRequests.length})
+            </h3>
+            <div className="space-y-3">
+              {outsidePreferenceRequests.map((request) => (
+                <Card key={request.id} className="glass-card p-4 border-amber-600/30">
+                  <div className="flex items-start gap-3">
+                    <Avatar className="w-10 h-10">
+                      <AvatarImage src={request.profiles?.avatar_url || undefined} />
+                      <AvatarFallback>
+                        {request.profiles?.display_name?.[0] || '?'}
+                      </AvatarFallback>
+                    </Avatar>
+
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-2 mb-1">
+                        <button
+                          onClick={() => handleViewProfile(request.requester_user_id)}
+                          className="font-medium text-primary hover:underline text-left"
+                        >
+                          {request.profiles?.display_name || 'Anonymous'}
+                        </button>
+                      </div>
+
+                      <p className="text-xs text-muted-foreground mb-1">
+                        {request.profiles?.level || 'New Raver'} • Trust: {request.profiles?.trust_score || 50}
+                      </p>
+
+                      {request.reason_flag && (
+                        <p className="text-xs text-amber-400 mb-1">
+                          {request.reason_flag}
+                        </p>
+                      )}
+
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(request.created_at).toLocaleString()}
+                      </p>
+                    </div>
+
+                    <div className="flex gap-2 flex-shrink-0">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleViewProfile(request.requester_user_id)}
+                      >
+                        <Eye className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="bg-emerald-600/20 text-emerald-300 border-emerald-600/40 hover:bg-emerald-600/30"
+                        onClick={() => handleUpdateRequest(request.id, 'approved')}
+                      >
+                        <Check className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="bg-red-600/20 text-red-300 border-red-600/40 hover:bg-red-600/30"
+                        onClick={() => handleUpdateRequest(request.id, 'rejected')}
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {processedRequests.length > 0 && (
+          <div>
+            <h3 className="text-sm font-semibold text-muted-foreground mb-2">
+              Processed Requests ({processedRequests.length})
+            </h3>
+            <div className="space-y-3">
+              {processedRequests.map((request) => (
+                <Card key={request.id} className="glass-card p-4 opacity-60">
+                  <div className="flex items-start gap-3">
+                    <Avatar className="w-10 h-10">
+                      <AvatarImage src={request.profiles?.avatar_url || undefined} />
+                      <AvatarFallback>
+                        {request.profiles?.display_name?.[0] || '?'}
+                      </AvatarFallback>
+                    </Avatar>
+
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-2 mb-1">
+                        <button
+                          onClick={() => handleViewProfile(request.requester_user_id)}
+                          className="font-medium text-primary hover:underline text-left"
+                        >
+                          {request.profiles?.display_name || 'Anonymous'}
+                        </button>
+                        <Badge
+                          variant={
+                            request.status === 'approved'
+                              ? 'default'
+                              : request.status === 'rejected'
+                              ? 'destructive'
+                              : 'secondary'
+                          }
+                        >
+                          {request.status}
+                        </Badge>
+                      </div>
+
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(request.created_at).toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {selectedUserId && (
