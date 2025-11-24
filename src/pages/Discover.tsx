@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { ReviewsList } from '@/components/ReviewsList';
 import { supabase } from '@/integrations/supabase/client';
 import { BuyTicketModal } from '@/components/BuyTicketModal';
 import { RequestToJoinModal } from '@/components/RequestToJoinModal';
@@ -17,6 +19,7 @@ const Discover = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedEventForTicket, setSelectedEventForTicket] = useState<any | null>(null);
   const [selectedEventForRequest, setSelectedEventForRequest] = useState<any | null>(null);
+  const [showReviewsForEvent, setShowReviewsForEvent] = useState<any | null>(null);
 
   useEffect(() => {
     loadEvents();
@@ -416,6 +419,26 @@ const Discover = () => {
           onOpenChange={(open) => !open && setSelectedEventForRequest(null)}
           event={selectedEventForRequest}
         />
+      )}
+
+      {/* Reviews modal */}
+      {showReviewsForEvent && (
+        <Dialog
+          open={!!showReviewsForEvent}
+          onOpenChange={(open) => !open && setShowReviewsForEvent(null)}
+        >
+          <DialogContent className="glass-card max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>
+                What clubbers say about {showReviewsForEvent.title}
+              </DialogTitle>
+            </DialogHeader>
+            <ReviewsList
+              eventId={showReviewsForEvent.event_type === 'private_host' ? undefined : showReviewsForEvent.id}
+              userId={showReviewsForEvent.event_type === 'private_host' ? showReviewsForEvent.host_id : undefined}
+            />
+          </DialogContent>
+        </Dialog>
       )}
     </div>
   );
