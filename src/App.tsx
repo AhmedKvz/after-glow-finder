@@ -23,6 +23,7 @@ import Quests from "./pages/Quests";
 import Lucky100 from "./pages/Lucky100";
 import Leaderboard from "./pages/Leaderboard";
 import GoldenTicketAdmin from "./pages/GoldenTicketAdmin";
+import HeatLeaderboard from "./pages/HeatLeaderboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -53,6 +54,7 @@ const App = () => (
                 <Route path="quests" element={<Quests />} />
                 <Route path="lucky100" element={<Lucky100 />} />
                 <Route path="leaderboard" element={<Leaderboard />} />
+                <Route path="heat-leaderboard" element={<HeatLeaderboard />} />
                 <Route path="admin/golden-tickets" element={<GoldenTicketAdmin />} />
                 <Route path="*" element={<NotFound />} />
               </Route>

@@ -267,11 +267,19 @@ const Gamification = () => {
           </Button>
 
           <Button
-            onClick={() => navigate('/profile')}
-            variant="outline"
-            className="h-20 flex-col gap-2"
+            onClick={() => navigate('/heat-leaderboard')}
+            className="bg-gradient-to-r from-red-600 to-orange-500 h-20 flex-col gap-2"
           >
             <Flame className="w-6 h-6" />
+            <span>Heat Ranks</span>
+          </Button>
+
+          <Button
+            onClick={() => navigate('/profile')}
+            variant="outline"
+            className="h-20 flex-col gap-2 col-span-2"
+          >
+            <Star className="w-6 h-6" />
             <span>My Profile</span>
           </Button>
         </motion.div>

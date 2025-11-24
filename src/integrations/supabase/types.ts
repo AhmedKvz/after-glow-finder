@@ -243,39 +243,48 @@ export type Database = {
         Row: {
           address: string
           club_badges: Json | null
+          club_heat_rank: number | null
           club_reputation: number | null
           cover_image_url: string | null
           created_at: string
           description: string | null
+          heat_average: number | null
           id: string
           logo_image_url: string | null
           name: string
+          recent_event_heat_scores: Json | null
           updated_at: string
           user_id: string
         }
         Insert: {
           address: string
           club_badges?: Json | null
+          club_heat_rank?: number | null
           club_reputation?: number | null
           cover_image_url?: string | null
           created_at?: string
           description?: string | null
+          heat_average?: number | null
           id?: string
           logo_image_url?: string | null
           name: string
+          recent_event_heat_scores?: Json | null
           updated_at?: string
           user_id: string
         }
         Update: {
           address?: string
           club_badges?: Json | null
+          club_heat_rank?: number | null
           club_reputation?: number | null
           cover_image_url?: string | null
           created_at?: string
           description?: string | null
+          heat_average?: number | null
           id?: string
           logo_image_url?: string | null
           name?: string
+          recent_event_heat_scores?: Json | null
           updated_at?: string
           user_id?: string
         }
@@ -534,6 +543,8 @@ export type Database = {
           exact_address: string | null
           full_address: string | null
           golden_only: boolean | null
+          heat_badge: string | null
+          heat_score: number | null
           host_id: string
           id: string
           is_location_hidden: boolean
@@ -546,19 +557,25 @@ export type Database = {
           music_tags: string[] | null
           owner_club_id: string | null
           preferred_levels: string[] | null
+          private_request_count: number | null
           public_location_label: string | null
           requires_approval: boolean | null
           secret_access_level: number | null
           secret_cover_blurred: string | null
           secret_preview_text: string | null
+          shares_count: number | null
           start_time: string
           swipe_count: number | null
+          ticket_sales_count: number | null
           ticketing_enabled: boolean
           title: string
+          trust_interest_avg: number | null
           updated_at: string
           venue_id: string | null
           vibe_tags: string[] | null
+          watchlist_count: number | null
           wishlist_user_ids: Json | null
+          xp_interest_sum: number | null
           xp_reward: number | null
         }
         Insert: {
@@ -577,6 +594,8 @@ export type Database = {
           exact_address?: string | null
           full_address?: string | null
           golden_only?: boolean | null
+          heat_badge?: string | null
+          heat_score?: number | null
           host_id: string
           id?: string
           is_location_hidden?: boolean
@@ -589,19 +608,25 @@ export type Database = {
           music_tags?: string[] | null
           owner_club_id?: string | null
           preferred_levels?: string[] | null
+          private_request_count?: number | null
           public_location_label?: string | null
           requires_approval?: boolean | null
           secret_access_level?: number | null
           secret_cover_blurred?: string | null
           secret_preview_text?: string | null
+          shares_count?: number | null
           start_time: string
           swipe_count?: number | null
+          ticket_sales_count?: number | null
           ticketing_enabled?: boolean
           title: string
+          trust_interest_avg?: number | null
           updated_at?: string
           venue_id?: string | null
           vibe_tags?: string[] | null
+          watchlist_count?: number | null
           wishlist_user_ids?: Json | null
+          xp_interest_sum?: number | null
           xp_reward?: number | null
         }
         Update: {
@@ -620,6 +645,8 @@ export type Database = {
           exact_address?: string | null
           full_address?: string | null
           golden_only?: boolean | null
+          heat_badge?: string | null
+          heat_score?: number | null
           host_id?: string
           id?: string
           is_location_hidden?: boolean
@@ -632,19 +659,25 @@ export type Database = {
           music_tags?: string[] | null
           owner_club_id?: string | null
           preferred_levels?: string[] | null
+          private_request_count?: number | null
           public_location_label?: string | null
           requires_approval?: boolean | null
           secret_access_level?: number | null
           secret_cover_blurred?: string | null
           secret_preview_text?: string | null
+          shares_count?: number | null
           start_time?: string
           swipe_count?: number | null
+          ticket_sales_count?: number | null
           ticketing_enabled?: boolean
           title?: string
+          trust_interest_avg?: number | null
           updated_at?: string
           venue_id?: string | null
           vibe_tags?: string[] | null
+          watchlist_count?: number | null
           wishlist_user_ids?: Json | null
+          xp_interest_sum?: number | null
           xp_reward?: number | null
         }
         Relationships: [
