@@ -14,7 +14,7 @@ export const useEntranceNotification = () => {
 
   useEffect(() => {
     // Check if notification was already shown in this session
-    const sessionNotified = sessionStorage.getItem('entrance_notified_v2');
+    const sessionNotified = sessionStorage.getItem('entrance_notified_v3');
     console.log('🔔 Entrance notification hook initialized', { sessionNotified });
     
     if (sessionNotified === 'true') {
@@ -26,44 +26,32 @@ export const useEntranceNotification = () => {
     
     // Start 3-second timer
     const timer = setTimeout(async () => {
-      console.log('⏰ 3 seconds elapsed, showing fallback notification and fetching from DB...');
-
-      // Always show at least one notification per session, even if Supabase fails
-      const fallbackNotification: EntranceNotification = {
-        id: 'local-fallback',
-        message: "🔥 Welcome back to the after.",
-        emoji: '🔥',
-        priority: 1,
-      };
-
-      setNotification(fallbackNotification);
-      setIsOpen(true);
-      sessionStorage.setItem('entrance_notified_v2', 'true');
-      console.log('✅ Fallback notification displayed, session marked');
-
+      console.log('⏰ 3 seconds elapsed, fetching notification from Supabase...');
       try {
-        // Fetch all active notifications
+        // Fetch one random active notification directly from Supabase
         const { data, error } = await supabase
           .from('entrance_notifications')
           .select('id, message, emoji, priority')
-          .eq('active', true);
+          .eq('active', true)
+          .order('random()')
+          .limit(1)
+          .maybeSingle();
 
         if (error) throw error;
         
-        console.log('📬 Fetched notifications:', data);
+        console.log('📬 Fetched random notification:', data);
         
-        if (!data || data.length === 0) {
-          console.log('❌ No active notifications found, keeping fallback');
+        if (!data) {
+          console.log('❌ No active notifications found');
           return;
         }
 
-        // Pick a random notification (with optional priority weighting)
-        const randomIndex = Math.floor(Math.random() * data.length);
-        const selectedNotification = data[randomIndex];
+        setNotification(data as EntranceNotification);
+        setIsOpen(true);
 
-        console.log('🎯 Selected notification from DB:', selectedNotification);
-        
-        setNotification(selectedNotification);
+        // Mark session as notified
+        sessionStorage.setItem('entrance_notified_v3', 'true');
+        console.log('✅ Notification displayed from list and session marked');
       } catch (error) {
         console.error('❌ Error fetching entrance notification:', error);
       }
