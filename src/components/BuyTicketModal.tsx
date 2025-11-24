@@ -29,6 +29,16 @@ export const BuyTicketModal = ({ open, onOpenChange, event, onSuccess }: BuyTick
     cvv: ''
   });
 
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (!nextOpen) {
+      // Reset form and step when modal closes
+      setStep('payment');
+      setCardData({ number: '', name: '', expiry: '', cvv: '' });
+      setLoading(false);
+    }
+    onOpenChange(nextOpen);
+  };
+
   const handlePurchase = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -147,12 +157,8 @@ export const BuyTicketModal = ({ open, onOpenChange, event, onSuccess }: BuyTick
       description: "Your ticket has been added to your profile"
     });
 
-    setTimeout(() => {
-      onSuccess?.();
-      onOpenChange(false);
-      setStep('payment');
-      setCardData({ number: '', name: '', expiry: '', cvv: '' });
-    }, 2000);
+    // Notify parent to refresh data, but keep modal open until user closes it
+    onSuccess?.();
   };
 
   const generateTicketCode = () => {
@@ -179,7 +185,7 @@ export const BuyTicketModal = ({ open, onOpenChange, event, onSuccess }: BuyTick
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="glass-card max-w-md">
         <DialogHeader>
           <DialogTitle>
