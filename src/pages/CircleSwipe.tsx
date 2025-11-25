@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react';
-import { Heart, X, Sparkles, Users, Loader2, PartyPopper, Clock } from 'lucide-react';
+import { Heart, X, Sparkles, Users, Loader2, PartyPopper, Clock, Flame } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { CircleSwipeCard } from '@/components/CircleSwipeCard';
 import { MatchesModal } from '@/components/MatchesModal';
 import { MatchNotificationModal } from '@/components/MatchNotificationModal';
+import { SpicyModeModal } from '@/components/SpicyModeModal';
+import { SpicyConfirmationModal } from '@/components/SpicyConfirmationModal';
+import { SpicyPromptModal } from '@/components/SpicyPromptModal';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -23,6 +26,10 @@ const CircleSwipe = () => {
   const [showMatchNotification, setShowMatchNotification] = useState(false);
   const [currentMatch, setCurrentMatch] = useState<any>(null);
   const [profileReviews, setProfileReviews] = useState<Record<string, { rating: number; count: number }>>({});
+  const [showSpicyMode, setShowSpicyMode] = useState(false);
+  const [showSpicyConfirmation, setShowSpicyConfirmation] = useState(false);
+  const [showSpicyPrompt, setShowSpicyPrompt] = useState(false);
+  const [purchasingSpicy, setPurchasingSpicy] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -141,6 +148,166 @@ const CircleSwipe = () => {
     }
   };
 
+  const calculateSpicyLikelihoodScore = (profile: any): number => {
+    let score = 0;
+
+    // Recent activity (last 10 minutes)
+    if (profile.last_circle_activity) {
+      const timeDiff = Date.now() - new Date(profile.last_circle_activity).getTime();
+      if (timeDiff < 10 * 60 * 1000) score += 20;
+    }
+
+    // Swipe velocity
+    if (profile.circle_swipe_velocity > 10) score += 15;
+    else if (profile.circle_swipe_velocity > 5) score += 10;
+
+    // Time of night boost (2:30 AM - 7:00 AM)
+    const hour = new Date().getHours();
+    if ((hour >= 2 && hour < 7) || hour === 2) score += 25;
+
+    // Overall Circle energy (if they have matches)
+    if (matches.length > 2) score += 15;
+
+    // Base engagement score
+    score += 25;
+
+    return Math.min(100, score);
+  };
+
+  const handleSpicyModePurchase = async () => {
+    if (!user || !selectedSession) return;
+
+    setPurchasingSpicy(true);
+
+    try {
+      // Create spicy mode purchase record
+      const { error: purchaseError } = await supabase
+        .from('spicy_mode_purchases')
+        .insert({
+          user_id: user.id,
+          circle_session_id: selectedSession.id,
+          amount_paid: 8.88,
+          expires_at: new Date(Date.now() + 12 * 60 * 60 * 1000).toISOString()
+        });
+
+      if (purchaseError) throw purchaseError;
+
+      // Update user's last activity
+      await supabase
+        .from('profiles')
+        .update({ last_circle_activity: new Date().toISOString() })
+        .eq('user_id', user.id);
+
+      setShowSpicyMode(false);
+      setShowSpicyConfirmation(true);
+
+      // Trigger spicy prompts for eligible users
+      await triggerSpicyPrompts();
+
+      toast({
+        title: '🔥 Spicy Mode Activated',
+        description: 'Your visibility is boosted for the next 12 hours!',
+      });
+    } catch (error) {
+      console.error('Error purchasing spicy mode:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to activate Spicy Mode. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setPurchasingSpicy(false);
+    }
+  };
+
+  const triggerSpicyPrompts = async () => {
+    if (!user || !selectedSession) return;
+
+    try {
+      // Get all profiles in session with their scores
+      const eligibleProfiles = profiles
+        .filter(p => {
+          const score = calculateSpicyLikelihoodScore(p);
+          return score >= 55;
+        })
+        .slice(0, 20); // Max 20 prompts
+
+      // Create spicy prompt records
+      const prompts = eligibleProfiles.map(profile => ({
+        user_id: profile.user_id,
+        circle_session_id: selectedSession.id,
+        triggered_by_user_id: user.id,
+        spicy_likelihood_score: calculateSpicyLikelihoodScore(profile),
+        response: 'pending'
+      }));
+
+      if (prompts.length > 0) {
+        await supabase
+          .from('spicy_prompts')
+          .insert(prompts);
+      }
+    } catch (error) {
+      console.error('Error triggering spicy prompts:', error);
+    }
+  };
+
+  const handleSpicyPromptResponse = async (response: 'yes' | 'no') => {
+    if (!user || !selectedSession) return;
+
+    try {
+      // Update the prompt response
+      await supabase
+        .from('spicy_prompts')
+        .update({
+          response,
+          responded_at: new Date().toISOString()
+        })
+        .eq('user_id', user.id)
+        .eq('circle_session_id', selectedSession.id)
+        .eq('response', 'pending');
+
+      if (response === 'yes') {
+        // Set spicy state for 4 hours
+        await supabase
+          .from('profiles')
+          .update({
+            spicy_state: true,
+            spicy_state_expires_at: new Date(Date.now() + 4 * 60 * 60 * 1000).toISOString()
+          })
+          .eq('user_id', user.id);
+
+        toast({
+          title: '🔥 You\'re feeling spicy!',
+          description: 'Your energy is visible to others for the next 4 hours.',
+        });
+      }
+    } catch (error) {
+      console.error('Error responding to spicy prompt:', error);
+    }
+  };
+
+  // Check for pending spicy prompts
+  useEffect(() => {
+    const checkSpicyPrompts = async () => {
+      if (!user || !selectedSession) return;
+
+      const { data: pendingPrompts } = await supabase
+        .from('spicy_prompts')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('circle_session_id', selectedSession.id)
+        .eq('response', 'pending')
+        .limit(1);
+
+      if (pendingPrompts && pendingPrompts.length > 0) {
+        // Show prompt after a short delay
+        setTimeout(() => setShowSpicyPrompt(true), 2000);
+      }
+    };
+
+    checkSpicyPrompts();
+  }, [user, selectedSession]);
+
   const timeLeft = () => {
     if (!selectedSession) return 0;
     const now = new Date();
@@ -204,11 +371,22 @@ const CircleSwipe = () => {
         </Button>
       </div>
 
-      <div className="text-center mb-4">
+      <div className="text-center mb-4 space-y-2">
         <Badge variant="secondary" className="glass-card text-sm sm:text-base">
           <Clock className="w-4 h-4 sm:w-5 sm:h-5 mr-1" />
           {timeLeft()} hours left
         </Badge>
+        
+        <div>
+          <Button
+            onClick={() => setShowSpicyMode(true)}
+            className="gradient-primary"
+            size="sm"
+          >
+            <Flame className="w-4 h-4 mr-2" />
+            Spicy Mode €8.88
+          </Button>
+        </div>
       </div>
 
       {/* Swipe Area */}
@@ -258,6 +436,25 @@ const CircleSwipe = () => {
         open={showMatches}
         onOpenChange={setShowMatches}
         matches={matches}
+      />
+
+      {/* Spicy Mode Modals */}
+      <SpicyModeModal
+        open={showSpicyMode}
+        onOpenChange={setShowSpicyMode}
+        onConfirm={handleSpicyModePurchase}
+        loading={purchasingSpicy}
+      />
+
+      <SpicyConfirmationModal
+        open={showSpicyConfirmation}
+        onOpenChange={setShowSpicyConfirmation}
+      />
+
+      <SpicyPromptModal
+        open={showSpicyPrompt}
+        onOpenChange={setShowSpicyPrompt}
+        onResponse={handleSpicyPromptResponse}
       />
     </div>
   );

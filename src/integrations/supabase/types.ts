@@ -1020,6 +1020,7 @@ export type Database = {
           badges: Json | null
           bio: string | null
           birthdate: string | null
+          circle_swipe_velocity: number | null
           city: string | null
           created_at: string
           display_name: string | null
@@ -1028,11 +1029,15 @@ export type Database = {
           golden_ticket_count: number | null
           has_golden_ticket: boolean | null
           id: string
+          last_circle_activity: string | null
           lat: number | null
           level: string | null
           lng: number | null
           lucky100_wins: number | null
           music_tags: string[] | null
+          spicy_likelihood_score: number | null
+          spicy_state: boolean | null
+          spicy_state_expires_at: string | null
           trust_score: number | null
           updated_at: string
           user_id: string
@@ -1045,6 +1050,7 @@ export type Database = {
           badges?: Json | null
           bio?: string | null
           birthdate?: string | null
+          circle_swipe_velocity?: number | null
           city?: string | null
           created_at?: string
           display_name?: string | null
@@ -1053,11 +1059,15 @@ export type Database = {
           golden_ticket_count?: number | null
           has_golden_ticket?: boolean | null
           id?: string
+          last_circle_activity?: string | null
           lat?: number | null
           level?: string | null
           lng?: number | null
           lucky100_wins?: number | null
           music_tags?: string[] | null
+          spicy_likelihood_score?: number | null
+          spicy_state?: boolean | null
+          spicy_state_expires_at?: string | null
           trust_score?: number | null
           updated_at?: string
           user_id: string
@@ -1070,6 +1080,7 @@ export type Database = {
           badges?: Json | null
           bio?: string | null
           birthdate?: string | null
+          circle_swipe_velocity?: number | null
           city?: string | null
           created_at?: string
           display_name?: string | null
@@ -1078,11 +1089,15 @@ export type Database = {
           golden_ticket_count?: number | null
           has_golden_ticket?: boolean | null
           id?: string
+          last_circle_activity?: string | null
           lat?: number | null
           level?: string | null
           lng?: number | null
           lucky100_wins?: number | null
           music_tags?: string[] | null
+          spicy_likelihood_score?: number | null
+          spicy_state?: boolean | null
+          spicy_state_expires_at?: string | null
           trust_score?: number | null
           updated_at?: string
           user_id?: string
@@ -1132,6 +1147,88 @@ export type Database = {
           xp_reward?: number
         }
         Relationships: []
+      }
+      spicy_mode_purchases: {
+        Row: {
+          amount_paid: number
+          circle_session_id: string
+          created_at: string
+          expires_at: string
+          id: string
+          payment_intent_id: string | null
+          purchased_at: string
+          user_id: string
+        }
+        Insert: {
+          amount_paid?: number
+          circle_session_id: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          payment_intent_id?: string | null
+          purchased_at?: string
+          user_id: string
+        }
+        Update: {
+          amount_paid?: number
+          circle_session_id?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          payment_intent_id?: string | null
+          purchased_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "spicy_mode_purchases_circle_session_id_fkey"
+            columns: ["circle_session_id"]
+            isOneToOne: false
+            referencedRelation: "circle_swipe_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      spicy_prompts: {
+        Row: {
+          circle_session_id: string
+          created_at: string
+          id: string
+          responded_at: string | null
+          response: string | null
+          spicy_likelihood_score: number
+          triggered_by_user_id: string
+          user_id: string
+        }
+        Insert: {
+          circle_session_id: string
+          created_at?: string
+          id?: string
+          responded_at?: string | null
+          response?: string | null
+          spicy_likelihood_score: number
+          triggered_by_user_id: string
+          user_id: string
+        }
+        Update: {
+          circle_session_id?: string
+          created_at?: string
+          id?: string
+          responded_at?: string | null
+          response?: string | null
+          spicy_likelihood_score?: number
+          triggered_by_user_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "spicy_prompts_circle_session_id_fkey"
+            columns: ["circle_session_id"]
+            isOneToOne: false
+            referencedRelation: "circle_swipe_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       tickets: {
         Row: {
