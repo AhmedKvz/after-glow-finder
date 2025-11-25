@@ -290,6 +290,33 @@ export type Database = {
         }
         Relationships: []
       }
+      entrance_notifications: {
+        Row: {
+          active: boolean
+          created_at: string | null
+          emoji: string | null
+          id: string
+          message: string
+          priority: number | null
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string | null
+          emoji?: string | null
+          id?: string
+          message: string
+          priority?: number | null
+        }
+        Update: {
+          active?: boolean
+          created_at?: string | null
+          emoji?: string | null
+          id?: string
+          message?: string
+          priority?: number | null
+        }
+        Relationships: []
+      }
       event_access: {
         Row: {
           created_at: string
