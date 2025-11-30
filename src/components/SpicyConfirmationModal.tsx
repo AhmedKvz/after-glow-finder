@@ -37,9 +37,9 @@ export const SpicyConfirmationModal = ({ open, onOpenChange }: SpicyConfirmation
             </motion.div>
             
             <div className="space-y-2">
-              <h3 className="text-2xl font-bold">🔥 Spicy Mode Activated</h3>
+              <h3 className="text-2xl font-bold">🔥 Spicy Mode ON</h3>
               <p className="text-muted-foreground">
-                Your visibility is boosted for tonight.
+                You will now see users in high-energy mode and appear first in tonight's Circle.
               </p>
               <p className="text-sm text-muted-foreground">
                 Duration: <span className="text-foreground font-semibold">12 hours</span>

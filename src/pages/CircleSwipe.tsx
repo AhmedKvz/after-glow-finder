@@ -30,6 +30,8 @@ const CircleSwipe = () => {
   const [showSpicyConfirmation, setShowSpicyConfirmation] = useState(false);
   const [showSpicyPrompt, setShowSpicyPrompt] = useState(false);
   const [purchasingSpicy, setPurchasingSpicy] = useState(false);
+  const [showSpicyOnly, setShowSpicyOnly] = useState(false);
+  const [hasActiveSpicyMode, setHasActiveSpicyMode] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -41,7 +43,7 @@ const CircleSwipe = () => {
     if (selectedSession) {
       loadSessionData();
     }
-  }, [selectedSession]);
+  }, [selectedSession, showSpicyOnly]);
 
   const loadSessions = async () => {
     if (!user) return;
@@ -66,12 +68,23 @@ const CircleSwipe = () => {
   const loadSessionData = async () => {
     if (!selectedSession || !user) return;
 
-    // Get current user's profile to filter by opposite gender
+    // Get current user's profile to filter by opposite gender and check spicy mode
     const { data: myProfile } = await supabase
       .from('profiles')
-      .select('gender')
+      .select('gender, spicy_state, spicy_state_expires_at')
       .eq('user_id', user.id)
       .maybeSingle();
+
+    // Check if user has active spicy mode purchase
+    const { data: spicyPurchase } = await supabase
+      .from('spicy_mode_purchases')
+      .select('expires_at')
+      .eq('user_id', user.id)
+      .eq('circle_session_id', selectedSession.id)
+      .gt('expires_at', new Date().toISOString())
+      .maybeSingle();
+
+    setHasActiveSpicyMode(!!spicyPurchase);
 
     // Load profiles from all users (excluding current user)
     let query = supabase
@@ -79,7 +92,7 @@ const CircleSwipe = () => {
       .select('*')
       .neq('user_id', user.id)
       .not('gender', 'is', null)
-      .limit(10);
+      .limit(20);
 
     // Filter by opposite gender if user has gender set
     if (myProfile?.gender) {
@@ -90,10 +103,45 @@ const CircleSwipe = () => {
     const { data: profilesData } = await query;
 
     if (profilesData) {
-      setProfiles(profilesData);
+      // Sort profiles by spicy priority
+      const sortedProfiles = [...profilesData].sort((a, b) => {
+        // Priority 1: Active spicy mode users (check if they have recent purchase)
+        const aSpicyMode = a.last_circle_activity && 
+          (Date.now() - new Date(a.last_circle_activity).getTime()) < 12 * 60 * 60 * 1000;
+        const bSpicyMode = b.last_circle_activity && 
+          (Date.now() - new Date(b.last_circle_activity).getTime()) < 12 * 60 * 60 * 1000;
+        
+        if (aSpicyMode && !bSpicyMode) return -1;
+        if (!aSpicyMode && bSpicyMode) return 1;
+
+        // Priority 2: Spicy state users
+        const aSpicy = a.spicy_state && a.spicy_state_expires_at && 
+          new Date(a.spicy_state_expires_at) > new Date();
+        const bSpicy = b.spicy_state && b.spicy_state_expires_at && 
+          new Date(b.spicy_state_expires_at) > new Date();
+        
+        if (aSpicy && !bSpicy) return -1;
+        if (!aSpicy && bSpicy) return 1;
+
+        // Priority 3: Spicy likelihood score
+        return (b.spicy_likelihood_score || 0) - (a.spicy_likelihood_score || 0);
+      });
+
+      // Filter to spicy users only if toggle is on
+      const filteredProfiles = showSpicyOnly
+        ? sortedProfiles.filter(p => {
+            const hasSpicyMode = p.last_circle_activity && 
+              (Date.now() - new Date(p.last_circle_activity).getTime()) < 12 * 60 * 60 * 1000;
+            const hasSpicyState = p.spicy_state && p.spicy_state_expires_at && 
+              new Date(p.spicy_state_expires_at) > new Date();
+            return hasSpicyMode || hasSpicyState;
+          })
+        : sortedProfiles;
+
+      setProfiles(filteredProfiles.slice(0, 10));
 
       // Load reviews for all profiles
-      const userIds = profilesData.map(p => p.user_id);
+      const userIds = filteredProfiles.map(p => p.user_id);
       const { data: reviewsData } = await supabase
         .from('user_reviews')
         .select('reviewed_user_id, rating')
@@ -377,7 +425,7 @@ const CircleSwipe = () => {
           {timeLeft()} hours left
         </Badge>
         
-        <div>
+        <div className="flex flex-col items-center gap-2">
           <Button
             onClick={() => setShowSpicyMode(true)}
             className="gradient-primary"
@@ -386,6 +434,37 @@ const CircleSwipe = () => {
             <Flame className="w-4 h-4 mr-2" />
             Spicy Mode €8.88
           </Button>
+          
+          {hasActiveSpicyMode && (
+            <Button
+              onClick={() => setShowSpicyOnly(!showSpicyOnly)}
+              variant={showSpicyOnly ? "default" : "outline"}
+              size="sm"
+              className={showSpicyOnly ? "gradient-primary" : ""}
+            >
+              <Flame className="w-4 h-4 mr-2" />
+              {showSpicyOnly ? "Show All Users" : "🔥 Show Spicy Users Only"}
+            </Button>
+          )}
+          
+          {!hasActiveSpicyMode && (
+            <Button
+              onClick={() => {
+                toast({
+                  title: "Unlock Spicy Mode",
+                  description: "Activate Spicy Mode to see tonight's hottest energy — €8.88",
+                  variant: "default",
+                });
+                setShowSpicyMode(true);
+              }}
+              variant="ghost"
+              size="sm"
+              className="text-muted-foreground hover:text-foreground"
+            >
+              <Flame className="w-4 h-4 mr-2" />
+              🔥 Show Spicy Users Only
+            </Button>
+          )}
         </div>
       </div>
 
@@ -400,6 +479,7 @@ const CircleSwipe = () => {
               eventName={selectedSession.events?.title}
               averageRating={profileReviews[currentProfileToShow.user_id]?.rating}
               reviewCount={profileReviews[currentProfileToShow.user_id]?.count}
+              showSpicyIndicator={hasActiveSpicyMode}
             />
           ) : (
             <Card className="glass-card p-8 text-center h-full flex flex-col items-center justify-center">
