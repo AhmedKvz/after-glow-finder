@@ -10,9 +10,10 @@ interface CircleSwipeCardProps {
   eventName?: string;
   averageRating?: number;
   reviewCount?: number;
+  showSpicyIndicator?: boolean;
 }
 
-export const CircleSwipeCard = ({ profile, onVote, eventName, averageRating, reviewCount }: CircleSwipeCardProps) => {
+export const CircleSwipeCard = ({ profile, onVote, eventName, averageRating, reviewCount, showSpicyIndicator }: CircleSwipeCardProps) => {
   const [exitX, setExitX] = useState(0);
   const x = useMotionValue(0);
   const rotate = useTransform(x, [-200, 200], [-25, 25]);
@@ -29,12 +30,15 @@ export const CircleSwipeCard = ({ profile, onVote, eventName, averageRating, rev
   };
 
   const handleButtonVote = (vote: 'yes' | 'no') => {
-    setExitX(vote === 'yes' ? 300 : -300);
-    setTimeout(() => {
-      onVote(vote);
-      setExitX(0);
-    }, 300);
+    setExitX(vote === 'yes' ? 1000 : -1000);
+    setTimeout(() => onVote(vote), 200);
   };
+
+  // Check if user is spicy
+  const isSpicy = showSpicyIndicator && (
+    (profile.spicy_state && profile.spicy_state_expires_at && new Date(profile.spicy_state_expires_at) > new Date()) ||
+    (profile.last_circle_activity && (Date.now() - new Date(profile.last_circle_activity).getTime()) < 12 * 60 * 60 * 1000)
+  );
 
   return (
     <motion.div
@@ -47,7 +51,7 @@ export const CircleSwipeCard = ({ profile, onVote, eventName, averageRating, rev
       transition={{ duration: 0.3 }}
       className="absolute w-full cursor-grab active:cursor-grabbing"
     >
-      <Card className="glass-card overflow-hidden max-w-md mx-auto">
+      <Card className={`glass-card overflow-hidden max-w-md mx-auto ${isSpicy ? 'ring-2 ring-red-500/50 shadow-[0_0_20px_rgba(239,68,68,0.3)]' : ''}`}>
         {/* Profile Image/Avatar */}
         <div className="relative h-64 sm:h-80 md:h-96 bg-gradient-to-br from-primary/20 to-accent/20">
           <div className="absolute inset-0 flex items-center justify-center">
@@ -57,6 +61,14 @@ export const CircleSwipeCard = ({ profile, onVote, eventName, averageRating, rev
               </span>
             </div>
           </div>
+          
+          {/* Spicy Indicator */}
+          {isSpicy && (
+            <div className="absolute top-4 right-4 bg-red-500/90 backdrop-blur-sm px-3 py-1.5 rounded-full flex items-center gap-1.5 animate-pulse">
+              <span className="text-xl">🔥</span>
+              <span className="text-white text-sm font-semibold">High Energy</span>
+            </div>
+          )}
 
           {/* Swipe indicators */}
           <div className="absolute inset-0 pointer-events-none">
