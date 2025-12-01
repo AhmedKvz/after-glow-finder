@@ -63,7 +63,10 @@ export const CreateEventModal = ({ open, onOpenChange, onSuccess }: CreateEventM
     secret_access_level: 0,
     secret_preview_text: '',
     secret_cover_blurred: '',
-    golden_only: false
+    golden_only: false,
+    poster_url: '',
+    ticket_link: '',
+    blog_link: ''
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -147,7 +150,10 @@ export const CreateEventModal = ({ open, onOpenChange, onSuccess }: CreateEventM
           is_secret: formData.is_secret,
           secret_access_level: formData.is_secret ? formData.secret_access_level : null,
           secret_preview_text: formData.is_secret ? formData.secret_preview_text : null,
-          secret_cover_blurred: formData.is_secret ? formData.secret_cover_blurred : null
+          secret_cover_blurred: formData.is_secret ? formData.secret_cover_blurred : null,
+          poster_url: formData.poster_url || null,
+          ticket_link: formData.ticket_link || null,
+          blog_link: formData.blog_link || null
         });
 
       if (error) throw error;
@@ -180,7 +186,10 @@ export const CreateEventModal = ({ open, onOpenChange, onSuccess }: CreateEventM
         secret_access_level: 0,
         secret_preview_text: '',
         secret_cover_blurred: '',
-        golden_only: false
+        golden_only: false,
+        poster_url: '',
+        ticket_link: '',
+        blog_link: ''
       });
 
       onOpenChange(false);
@@ -386,6 +395,41 @@ export const CreateEventModal = ({ open, onOpenChange, onSuccess }: CreateEventM
               className={errors.capacity ? 'border-destructive' : ''}
             />
             {errors.capacity && <p className="text-sm text-destructive">{errors.capacity}</p>}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="poster_url">Event Poster Image URL</Label>
+            <Input
+              id="poster_url"
+              value={formData.poster_url}
+              onChange={(e) => setFormData({ ...formData, poster_url: e.target.value })}
+              placeholder="https://example.com/poster.jpg"
+            />
+            <p className="text-xs text-muted-foreground">Add your event poster image URL</p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="ticket_link">Ticket Link (Optional)</Label>
+              <Input
+                id="ticket_link"
+                value={formData.ticket_link}
+                onChange={(e) => setFormData({ ...formData, ticket_link: e.target.value })}
+                placeholder="https://gigstix.com/event-name"
+              />
+              <p className="text-xs text-muted-foreground">Gigstix, Entrio, etc.</p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="blog_link">Blog Article Link (Optional)</Label>
+              <Input
+                id="blog_link"
+                value={formData.blog_link}
+                onChange={(e) => setFormData({ ...formData, blog_link: e.target.value })}
+                placeholder="https://yourblog.com/article"
+              />
+              <p className="text-xs text-muted-foreground">Link to related blog post</p>
+            </div>
           </div>
 
           <div className="space-y-2">
