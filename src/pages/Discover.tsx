@@ -14,6 +14,9 @@ import { SwipeStats } from '@/components/SwipeStats';
 import { SwipeXPToast } from '@/components/SwipeXPToast';
 import { SwipeRequestModal } from '@/components/SwipeRequestModal';
 import { EventDetails } from '@/components/EventDetails';
+import { MapView } from '@/components/MapView';
+import { BlogSection } from '@/components/BlogSection';
+import { YourTonightSection } from '@/components/YourTonightSection';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import eventPoster1 from '@/assets/event-poster-1.jpg';
@@ -32,7 +35,7 @@ const Discover = () => {
   const [showReviewsForEvent, setShowReviewsForEvent] = useState<any | null>(null);
   
   // Swipe mode state
-  const [viewMode, setViewMode] = useState<'list' | 'swipe'>('swipe');
+  const [viewMode, setViewMode] = useState<'list' | 'swipe' | 'map'>('swipe');
   const [swipeIndex, setSwipeIndex] = useState(0);
   const [swipeStreak, setSwipeStreak] = useState(0);
   const [xpToday, setXpToday] = useState(0);
@@ -528,15 +531,15 @@ const Discover = () => {
               className="flex-1 glass-card"
             >
               <List className="w-4 h-4 mr-2" />
-              List View
+              List
             </Button>
             <Button
               variant="outline"
-              onClick={() => {/* TODO: Open search/filters */}}
+              onClick={() => setViewMode('map')}
               className="flex-1 glass-card"
             >
-              <Search className="w-4 h-4 mr-2" />
-              Filters
+              <MapIcon className="w-4 h-4 mr-2" />
+              Map
             </Button>
           </div>
         </div>
@@ -548,6 +551,73 @@ const Discover = () => {
           event={requestModalEvent}
           onConfirm={handleConfirmRequest}
         />
+      </div>
+    );
+  }
+
+  // Map view
+  if (viewMode === 'map') {
+    return (
+      <div className="min-h-screen bg-background">
+        {/* Header */}
+        <div className="safe-top px-4 pt-6 pb-4">
+          <div className="mb-6 flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-gradient-primary">
+                Events Map
+              </h1>
+              <p className="text-muted-foreground mt-1">
+                Belgrade • {events.length} events shown
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setViewMode('swipe')}
+                className="glass-card"
+              >
+                <Layers className="w-4 h-4 mr-1" />
+                Swipe
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setViewMode('list')}
+                className="glass-card"
+              >
+                <List className="w-4 h-4 mr-1" />
+                List
+              </Button>
+            </div>
+          </div>
+
+          {/* Map */}
+          <MapView 
+            events={filteredEvents}
+            onEventClick={(event) => setSelectedEventForDetails(event)}
+          />
+
+          {/* Mode toggle at bottom */}
+          <div className="mt-6 flex gap-3">
+            <Button
+              variant="outline"
+              onClick={() => setViewMode('swipe')}
+              className="flex-1 glass-card"
+            >
+              <Layers className="w-4 h-4 mr-2" />
+              Swipe Mode
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => setViewMode('list')}
+              className="flex-1 glass-card"
+            >
+              <List className="w-4 h-4 mr-2" />
+              List View
+            </Button>
+          </div>
+        </div>
       </div>
     );
   }
@@ -568,14 +638,26 @@ const Discover = () => {
               Belgrade • {events.length} events upcoming
             </p>
           </div>
-          <Button
-            variant="outline"
-            onClick={() => setViewMode('swipe')}
-            className="glass-card"
-          >
-            <Layers className="w-4 h-4 mr-2" />
-            Swipe Mode
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setViewMode('swipe')}
+              className="glass-card"
+            >
+              <Layers className="w-4 h-4 mr-1" />
+              Swipe
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setViewMode('map')}
+              className="glass-card"
+            >
+              <MapIcon className="w-4 h-4 mr-1" />
+              Map
+            </Button>
+          </div>
         </div>
 
         {/* Search */}
@@ -587,6 +669,11 @@ const Discover = () => {
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10 glass-card"
           />
+        </div>
+
+        {/* Your Tonight Personalization */}
+        <div className="mb-8">
+          <YourTonightSection />
         </div>
 
         {/* Featured Events */}
@@ -809,6 +896,11 @@ const Discover = () => {
               ))}
             </div>
           )}
+        </div>
+
+        {/* Blog Section */}
+        <div className="mt-12 mb-8">
+          <BlogSection />
         </div>
       </div>
 

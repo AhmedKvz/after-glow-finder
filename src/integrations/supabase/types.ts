@@ -64,6 +64,47 @@ export type Database = {
           },
         ]
       }
+      blog_posts: {
+        Row: {
+          active: boolean | null
+          content_url: string
+          created_at: string | null
+          event_id: string | null
+          id: string
+          preview_text: string | null
+          thumbnail_url: string | null
+          title: string
+        }
+        Insert: {
+          active?: boolean | null
+          content_url: string
+          created_at?: string | null
+          event_id?: string | null
+          id?: string
+          preview_text?: string | null
+          thumbnail_url?: string | null
+          title: string
+        }
+        Update: {
+          active?: boolean | null
+          content_url?: string
+          created_at?: string | null
+          event_id?: string | null
+          id?: string
+          preview_text?: string | null
+          thumbnail_url?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blog_posts_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       checkins: {
         Row: {
           checked_in_at: string
@@ -559,6 +600,7 @@ export type Database = {
           allow_plus_one: boolean | null
           allow_plus_two: boolean | null
           attendee_user_ids: Json | null
+          blog_link: string | null
           bring_own_drinks: boolean | null
           capacity: number
           created_at: string
@@ -583,6 +625,7 @@ export type Database = {
           min_trust_score: number | null
           music_tags: string[] | null
           owner_club_id: string | null
+          poster_url: string | null
           preferred_levels: string[] | null
           private_request_count: number | null
           public_location_label: string | null
@@ -593,6 +636,7 @@ export type Database = {
           shares_count: number | null
           start_time: string
           swipe_count: number | null
+          ticket_link: string | null
           ticket_sales_count: number | null
           ticketing_enabled: boolean
           title: string
@@ -610,6 +654,7 @@ export type Database = {
           allow_plus_one?: boolean | null
           allow_plus_two?: boolean | null
           attendee_user_ids?: Json | null
+          blog_link?: string | null
           bring_own_drinks?: boolean | null
           capacity: number
           created_at?: string
@@ -634,6 +679,7 @@ export type Database = {
           min_trust_score?: number | null
           music_tags?: string[] | null
           owner_club_id?: string | null
+          poster_url?: string | null
           preferred_levels?: string[] | null
           private_request_count?: number | null
           public_location_label?: string | null
@@ -644,6 +690,7 @@ export type Database = {
           shares_count?: number | null
           start_time: string
           swipe_count?: number | null
+          ticket_link?: string | null
           ticket_sales_count?: number | null
           ticketing_enabled?: boolean
           title: string
@@ -661,6 +708,7 @@ export type Database = {
           allow_plus_one?: boolean | null
           allow_plus_two?: boolean | null
           attendee_user_ids?: Json | null
+          blog_link?: string | null
           bring_own_drinks?: boolean | null
           capacity?: number
           created_at?: string
@@ -685,6 +733,7 @@ export type Database = {
           min_trust_score?: number | null
           music_tags?: string[] | null
           owner_club_id?: string | null
+          poster_url?: string | null
           preferred_levels?: string[] | null
           private_request_count?: number | null
           public_location_label?: string | null
@@ -695,6 +744,7 @@ export type Database = {
           shares_count?: number | null
           start_time?: string
           swipe_count?: number | null
+          ticket_link?: string | null
           ticket_sales_count?: number | null
           ticketing_enabled?: boolean
           title?: string
