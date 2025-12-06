@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { MapPin, Clock, Users, Loader2, Music, Ticket, Map as MapIcon, Star, MessageSquare, RotateCcw, List, Layers, Heart, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -19,6 +19,7 @@ import { BlogSection } from '@/components/BlogSection';
 import { YourTonightSection } from '@/components/YourTonightSection';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { useDiscoverEvents } from '@/hooks/useDiscoverEvents';
 import eventPoster1 from '@/assets/event-poster-1.jpg';
 import eventPoster2 from '@/assets/event-poster-2.jpg';
 import eventPoster3 from '@/assets/event-poster-3.jpg';
@@ -27,17 +28,26 @@ const Discover = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   
-  const [events, setEvents] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
+  // Use the events hook
+  const {
+    loading,
+    events,
+    filteredEvents,
+    featuredEvents,
+    searchQuery,
+    setSearchQuery,
+    genreFilter,
+    setGenreFilter,
+    dateFilter,
+    setDateFilter,
+    freeOnly,
+    setFreeOnly,
+    reload: loadEvents,
+  } = useDiscoverEvents(user?.id);
+  
   const [selectedEventForTicket, setSelectedEventForTicket] = useState<any | null>(null);
   const [selectedEventForRequest, setSelectedEventForRequest] = useState<any | null>(null);
   const [showReviewsForEvent, setShowReviewsForEvent] = useState<any | null>(null);
-  
-  // Filters
-  const [genreFilter, setGenreFilter] = useState<string>('all');
-  const [dateFilter, setDateFilter] = useState<'all' | 'today' | 'tomorrow'>('all');
-  const [freeOnly, setFreeOnly] = useState(false);
   
   // Swipe mode state
   const [viewMode, setViewMode] = useState<'list' | 'swipe' | 'map'>('swipe');
@@ -55,183 +65,6 @@ const Discover = () => {
   const [requestModalEvent, setRequestModalEvent] = useState<any>(null);
   const [selectedEventForDetails, setSelectedEventForDetails] = useState<any | null>(null);
 
-  useEffect(() => {
-    loadEvents();
-  }, []);
-
-  const loadEvents = async (skipSwipedFilter: boolean = false) => {
-    setLoading(true);
-    
-    // Load user's previous swipes to filter them out (unless skipSwipedFilter is true)
-    let swipedEventIds: string[] = [];
-    if (user && !skipSwipedFilter) {
-      const { data: swipes } = await supabase
-        .from('event_swipes')
-        .select('event_id')
-        .eq('user_id', user.id);
-      
-      swipedEventIds = swipes?.map(s => s.event_id) || [];
-    }
-    
-    // 1. Load club events (MVP: show all events regardless of date)
-    const { data: clubEvents, error: clubError } = await supabase
-      .from('events')
-      .select('*')
-      .eq('event_type', 'club')
-      .order('date', { ascending: true });
-
-    if (clubError) {
-      console.error('[Discover] Error loading club events:', clubError);
-    }
-
-    // 2. Load cafe events (MVP: show all events regardless of date)
-    const { data: cafeEvents, error: cafeError } = await supabase
-      .from('events')
-      .select('*')
-      .eq('event_type', 'cafe')
-      .order('date', { ascending: true });
-
-    if (cafeError) {
-      console.error('[Discover] Error loading cafe events:', cafeError);
-    }
-
-    // 3. Load private events (MVP: show all events regardless of date)
-    const { data: privateEvents, error: privateError } = await supabase
-      .from('events')
-      .select('*')
-      .eq('event_type', 'private_host')
-      .order('date', { ascending: true });
-
-    if (privateError) {
-      console.error('[Discover] Error loading private events:', privateError);
-    }
-
-    // 4. Combine all events (clubs first, then cafes, then private) and optionally filter out swiped ones
-    const allEvents = [...(clubEvents || []), ...(cafeEvents || []), ...(privateEvents || [])]
-      .filter(event => skipSwipedFilter || !swipedEventIds.includes(event.id));
-
-    if (allEvents.length === 0) {
-      setEvents([]);
-      setLoading(false);
-      return;
-    }
-
-    // 6. Collect unique host_ids
-    const hostIds = [...new Set(allEvents.map(e => e.host_id))];
-
-    // 7. Load profiles for all hosts
-    const { data: profilesData, error: profilesError } = await supabase
-      .from('profiles')
-      .select('user_id, display_name, avatar_url')
-      .in('user_id', hostIds);
-
-    if (profilesError) {
-      console.error('[Discover] Error loading profiles:', profilesError);
-    }
-
-    // 8. Load reviews for all events (clubs & cafes)
-    const eventIds = allEvents.map(e => e.id);
-    const { data: eventReviews, error: eventReviewsError } = await supabase
-      .from('event_reviews')
-      .select('event_id, rating')
-      .in('event_id', eventIds);
-
-    if (eventReviewsError) {
-      console.error('[Discover] Error loading event reviews:', eventReviewsError);
-    }
-
-    // 9. Load host reviews for private events
-    const { data: userReviews, error: userReviewsError } = await supabase
-      .from('user_reviews')
-      .select('reviewed_user_id, rating')
-      .in('reviewed_user_id', hostIds);
-
-    if (userReviewsError) {
-      console.error('[Discover] Error loading user reviews:', userReviewsError);
-    }
-
-    // 10. Build aggregate maps
-    const eventRatingMap = new Map<string, { avgRating: number; count: number }>();
-    if (eventReviews) {
-      eventReviews.forEach((r: any) => {
-        const existing = eventRatingMap.get(r.event_id) || { avgRating: 0, count: 0 };
-        const total = existing.avgRating * existing.count + r.rating;
-        const count = existing.count + 1;
-        eventRatingMap.set(r.event_id, { avgRating: total / count, count });
-      });
-    }
-
-    const hostRatingMap = new Map<string, { avgRating: number; count: number }>();
-    if (userReviews) {
-      userReviews.forEach((r: any) => {
-        const existing = hostRatingMap.get(r.reviewed_user_id) || { avgRating: 0, count: 0 };
-        const total = existing.avgRating * existing.count + r.rating;
-        const count = existing.count + 1;
-        hostRatingMap.set(r.reviewed_user_id, { avgRating: total / count, count });
-      });
-    }
-
-    // 11. Merge data: add host object and rating info to each event
-    const eventsWithHosts = allEvents.map(event => {
-      const hostProfile = profilesData?.find(p => p.user_id === event.host_id) || {
-        user_id: event.host_id,
-        display_name: 'Unknown Host',
-        avatar_url: null,
-      };
-
-      const ratingData = event.event_type === 'private_host'
-        ? hostRatingMap.get(event.host_id)
-        : eventRatingMap.get(event.id);
-
-      return {
-        ...event,
-        host: hostProfile,
-        average_rating: ratingData?.avgRating ?? null,
-        review_count: ratingData?.count ?? 0,
-      };
-    });
-
-    // Sort by date
-    eventsWithHosts.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-
-    setEvents(eventsWithHosts);
-    setLoading(false);
-  };
-
-  // Get today and tomorrow dates
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const tomorrow = new Date(today);
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  
-  const filteredEvents = events.filter(event => {
-    // Search filter
-    const matchesSearch = event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      event.location.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    // Genre filter
-    const matchesGenre = genreFilter === 'all' || 
-      (event.music_tags && event.music_tags.some((tag: string) => 
-        tag.toLowerCase().includes(genreFilter.toLowerCase())
-      ));
-    
-    // Date filter
-    const eventDate = new Date(event.date);
-    eventDate.setHours(0, 0, 0, 0);
-    let matchesDate = true;
-    if (dateFilter === 'today') {
-      matchesDate = eventDate.getTime() === today.getTime();
-    } else if (dateFilter === 'tomorrow') {
-      matchesDate = eventDate.getTime() === tomorrow.getTime();
-    }
-    
-    // Free only filter (events without ticket link or cafe type)
-    const matchesFree = !freeOnly || event.event_type === 'cafe' || !event.ticket_link;
-    
-    return matchesSearch && matchesGenre && matchesDate && matchesFree;
-  });
-
-  const featuredEvents = filteredEvents.slice(0, 3);
   
   // Swipe handlers
   const handleSwipeRight = async (event: any) => {
