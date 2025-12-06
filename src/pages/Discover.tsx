@@ -60,10 +60,12 @@ const Discover = () => {
     loadEvents();
   }, []);
 
-  const loadEvents = async () => {
-    // Load user's previous swipes to filter them out
+  const loadEvents = async (skipSwipedFilter: boolean = false) => {
+    setLoading(true);
+    
+    // Load user's previous swipes to filter them out (unless skipSwipedFilter is true)
     let swipedEventIds: string[] = [];
-    if (user) {
+    if (user && !skipSwipedFilter) {
       const { data: swipes } = await supabase
         .from('event_swipes')
         .select('event_id')
@@ -105,9 +107,9 @@ const Discover = () => {
       console.error('[Discover] Error loading private events:', privateError);
     }
 
-    // 4. Combine all events (clubs first, then cafes, then private) and filter out swiped ones
+    // 4. Combine all events (clubs first, then cafes, then private) and optionally filter out swiped ones
     const allEvents = [...(clubEvents || []), ...(cafeEvents || []), ...(privateEvents || [])]
-      .filter(event => !swipedEventIds.includes(event.id));
+      .filter(event => skipSwipedFilter || !swipedEventIds.includes(event.id));
 
     if (allEvents.length === 0) {
       setEvents([]);
@@ -429,7 +431,7 @@ const Discover = () => {
   const handleReloadEvents = () => {
     setSwipeIndex(0);
     setSwipeStreak(0);
-    loadEvents();
+    loadEvents(true); // Skip swiped filter to show all events from scratch
   };
 
   if (loading) {
