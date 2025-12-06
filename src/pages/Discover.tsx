@@ -64,8 +64,24 @@ const Discover = () => {
   const [showRequestModal, setShowRequestModal] = useState(false);
   const [requestModalEvent, setRequestModalEvent] = useState<any>(null);
   const [selectedEventForDetails, setSelectedEventForDetails] = useState<any | null>(null);
-
   
+  // Event scope filter
+  const [eventScope, setEventScope] = useState<'all' | 'public' | 'private'>('all');
+  
+  // Derive scoped events from filtered events
+  const scopedEvents = filteredEvents.filter((event) => {
+    if (eventScope === 'public') {
+      return event.event_type === 'club' || event.event_type === 'cafe';
+    }
+    if (eventScope === 'private') {
+      return event.event_type === 'private_host';
+    }
+    return true; // 'all'
+  });
+  
+  const scopedFeaturedEvents = scopedEvents.slice(0, 3);
+
+
   // Swipe handlers
   const handleSwipeRight = async (event: any) => {
     if (!user) return;
@@ -320,7 +336,7 @@ const Discover = () => {
 
   // Swipe view
   if (viewMode === 'swipe') {
-    const currentEvents = filteredEvents.slice(swipeIndex, swipeIndex + 5);
+    const currentEvents = scopedEvents.slice(swipeIndex, swipeIndex + 5);
     
     return (
       <div className="min-h-screen bg-background relative overflow-hidden">
@@ -462,7 +478,7 @@ const Discover = () => {
 
           {/* Map */}
           <MapView 
-            events={filteredEvents}
+            events={scopedEvents}
             onEventClick={(event) => setSelectedEventForDetails(event)}
           />
 
@@ -528,6 +544,25 @@ const Discover = () => {
           </div>
         </div>
 
+        {/* Event Scope Selector */}
+        <div className="mb-4 flex gap-2">
+          {[
+            { value: 'all', label: 'All' },
+            { value: 'public', label: 'Clubs & Cafes' },
+            { value: 'private', label: 'Private After' },
+          ].map((option) => (
+            <Button
+              key={option.value}
+              variant={eventScope === option.value ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setEventScope(option.value as 'all' | 'public' | 'private')}
+              className={eventScope === option.value ? 'gradient-primary' : 'glass-card'}
+            >
+              {option.label}
+            </Button>
+          ))}
+        </div>
+
         {/* Filters */}
         <DiscoverFilters
           searchQuery={searchQuery}
@@ -546,11 +581,11 @@ const Discover = () => {
         </div>
 
         {/* Featured Events */}
-        {featuredEvents.length > 0 && (
+        {scopedFeaturedEvents.length > 0 && (
           <div className="space-y-4 mb-8">
             <h2 className="text-lg font-semibold">Featured Tonight</h2>
             <div className="flex gap-4 overflow-x-auto custom-scrollbar pb-2">
-              {featuredEvents.map((event, index) => (
+              {scopedFeaturedEvents.map((event, index) => (
                 <Card 
                   key={event.id} 
                   className="relative min-w-[300px] sm:min-w-[320px] h-[220px] overflow-hidden glass-card cursor-pointer transition-transform hover:scale-105"
@@ -634,7 +669,7 @@ const Discover = () => {
         <div className="space-y-4">
           <h2 className="text-lg font-semibold">All Events</h2>
           
-          {filteredEvents.length === 0 ? (
+          {scopedEvents.length === 0 ? (
             <Card className="glass-card p-8 text-center">
               <Music className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
               <h3 className="font-semibold mb-2">No events found</h3>
@@ -647,7 +682,7 @@ const Discover = () => {
             </Card>
           ) : (
             <div className="space-y-3">
-              {filteredEvents.map((event) => (
+              {scopedEvents.map((event) => (
                 <Card key={event.id} className="glass-card p-4 sm:p-5 min-h-fit">
                   <div className="flex gap-4">
                     <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-lg overflow-hidden bg-primary/10 flex-shrink-0">
