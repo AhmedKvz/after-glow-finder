@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { MapPin, Clock, Users, Loader2, Music, Search, Ticket, Map as MapIcon, Star, MessageSquare, RotateCcw, List, Layers } from 'lucide-react';
+import { MapPin, Clock, Users, Loader2, Music, Search, Ticket, Map as MapIcon, Star, MessageSquare, RotateCcw, List, Layers, Heart, ExternalLink, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ReviewsList } from '@/components/ReviewsList';
 import { supabase } from '@/integrations/supabase/client';
@@ -33,6 +34,11 @@ const Discover = () => {
   const [selectedEventForTicket, setSelectedEventForTicket] = useState<any | null>(null);
   const [selectedEventForRequest, setSelectedEventForRequest] = useState<any | null>(null);
   const [showReviewsForEvent, setShowReviewsForEvent] = useState<any | null>(null);
+  
+  // Filters
+  const [genreFilter, setGenreFilter] = useState<string>('all');
+  const [dateFilter, setDateFilter] = useState<'all' | 'today' | 'tomorrow'>('all');
+  const [freeOnly, setFreeOnly] = useState(false);
   
   // Swipe mode state
   const [viewMode, setViewMode] = useState<'list' | 'swipe' | 'map'>('swipe');
@@ -191,10 +197,38 @@ const Discover = () => {
     setLoading(false);
   };
 
-  const filteredEvents = events.filter(event =>
-    event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    event.location.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Get today and tomorrow dates
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  
+  const filteredEvents = events.filter(event => {
+    // Search filter
+    const matchesSearch = event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      event.location.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    // Genre filter
+    const matchesGenre = genreFilter === 'all' || 
+      (event.music_tags && event.music_tags.some((tag: string) => 
+        tag.toLowerCase().includes(genreFilter.toLowerCase())
+      ));
+    
+    // Date filter
+    const eventDate = new Date(event.date);
+    eventDate.setHours(0, 0, 0, 0);
+    let matchesDate = true;
+    if (dateFilter === 'today') {
+      matchesDate = eventDate.getTime() === today.getTime();
+    } else if (dateFilter === 'tomorrow') {
+      matchesDate = eventDate.getTime() === tomorrow.getTime();
+    }
+    
+    // Free only filter (events without ticket link or cafe type)
+    const matchesFree = !freeOnly || event.event_type === 'cafe' || !event.ticket_link;
+    
+    return matchesSearch && matchesGenre && matchesDate && matchesFree;
+  });
 
   const featuredEvents = filteredEvents.slice(0, 3);
   
@@ -661,7 +695,7 @@ const Discover = () => {
         </div>
 
         {/* Search */}
-        <div className="relative mb-6">
+        <div className="relative mb-4">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
             placeholder="Search events, genres, venues..."
@@ -669,6 +703,53 @@ const Discover = () => {
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10 glass-card"
           />
+        </div>
+
+        {/* Filters */}
+        <div className="mb-6 space-y-3">
+          {/* Genre Filters */}
+          <div className="flex gap-2 overflow-x-auto pb-2 custom-scrollbar">
+            {['all', 'Techno', 'House', 'RnB', 'Drum & Bass', 'Hip Hop'].map((genre) => (
+              <Button
+                key={genre}
+                variant={genreFilter === genre ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setGenreFilter(genre)}
+                className={`whitespace-nowrap ${genreFilter === genre ? 'gradient-primary' : 'glass-card'}`}
+              >
+                {genre === 'all' ? 'All Genres' : genre}
+              </Button>
+            ))}
+          </div>
+          
+          {/* Date Filters & Free Only */}
+          <div className="flex items-center gap-4 flex-wrap">
+            <div className="flex gap-2">
+              {[
+                { value: 'all', label: 'All Dates' },
+                { value: 'today', label: 'Today' },
+                { value: 'tomorrow', label: 'Tomorrow' },
+              ].map((option) => (
+                <Button
+                  key={option.value}
+                  variant={dateFilter === option.value ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setDateFilter(option.value as 'all' | 'today' | 'tomorrow')}
+                  className={`${dateFilter === option.value ? 'gradient-primary' : 'glass-card'}`}
+                >
+                  {option.label}
+                </Button>
+              ))}
+            </div>
+            
+            <label className="flex items-center gap-2 cursor-pointer">
+              <Checkbox
+                checked={freeOnly}
+                onCheckedChange={(checked) => setFreeOnly(checked === true)}
+              />
+              <span className="text-sm text-muted-foreground">Free events only</span>
+            </label>
+          </div>
         </div>
 
         {/* Your Tonight Personalization */}

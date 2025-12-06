@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useSpring, animated } from 'react-spring';
 import { useDrag } from '@use-gesture/react';
-import { Heart, Lock, Key, X, Check, Zap } from 'lucide-react';
+import { Heart, Lock, Key, X, Zap } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { SecretEventLockOverlay } from '@/components/SecretEventLockOverlay';
 import { HeatBadge } from '@/components/HeatBadge';
@@ -234,6 +234,14 @@ export const SwipeEventCard = ({
           <h2 className="text-2xl font-bold text-white leading-tight">
             {event.title}
           </h2>
+          
+          {/* DJ Lineup */}
+          {event.dj_name && (
+            <div className="flex items-center gap-2 text-white/90 text-sm">
+              <span>🎧</span>
+              <span className="font-medium">{event.dj_name}</span>
+            </div>
+          )}
 
           {/* Event Details */}
           <div className="flex items-center gap-4 text-white/80 text-sm">
@@ -243,6 +251,13 @@ export const SwipeEventCard = ({
 
           <div className="flex items-center gap-4 text-white/80 text-sm">
             <span>📍 {event.is_location_hidden ? 'Hidden' : event.location}</span>
+            {/* Interest Score */}
+            {event.swipe_count > 0 && (
+              <span className="flex items-center gap-1">
+                <Heart className="w-4 h-4 fill-red-400 text-red-400" />
+                {event.swipe_count} interested
+              </span>
+            )}
           </div>
 
           {/* Music Tags */}
@@ -255,6 +270,11 @@ export const SwipeEventCard = ({
               ))}
             </div>
           )}
+          
+          {/* More Info hint */}
+          <p className="text-white/60 text-xs text-center mt-2">
+            Tap for more info
+          </p>
         </div>
       </div>
     </animated.div>

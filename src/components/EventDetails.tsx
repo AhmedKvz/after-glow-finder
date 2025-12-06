@@ -737,6 +737,21 @@ export const EventDetails: React.FC<EventDetailsProps> = ({ event, onBack }) => 
           </Card>
         )}
         
+        {/* Blog Link */}
+        {event.blogLink && (
+          <Card className="glass-card p-4">
+            <a 
+              href={event.blogLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-3 text-primary hover:underline"
+            >
+              <span className="text-lg">📰</span>
+              <span className="text-sm font-medium">Read article about this event</span>
+            </a>
+          </Card>
+        )}
+        
         {/* Action Button */}
         <div className="pt-4">
           {getStatusButton()}

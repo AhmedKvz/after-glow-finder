@@ -66,6 +66,8 @@ export interface Event {
   sharesCount?: number;
   heatScore?: number;
   heatBadge?: 'Inferno' | 'Hot' | 'Warm' | 'Starting' | 'New Drop';
+  blogLink?: string;
+  ticketLink?: string;
 }
 
 export interface GoldenTicket {
