@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react';
-import { MapPin, Clock, Users, Loader2, Music, Search, Ticket, Map as MapIcon, Star, MessageSquare, RotateCcw, List, Layers, Heart, ExternalLink, Filter } from 'lucide-react';
+import { MapPin, Clock, Users, Loader2, Music, Ticket, Map as MapIcon, Star, MessageSquare, RotateCcw, List, Layers, Heart, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Checkbox } from '@/components/ui/checkbox';
+import { DiscoverFilters } from '@/components/discover/DiscoverFilters';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ReviewsList } from '@/components/ReviewsList';
 import { supabase } from '@/integrations/supabase/client';
@@ -696,63 +695,17 @@ const Discover = () => {
           </div>
         </div>
 
-        {/* Search */}
-        <div className="relative mb-4">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            placeholder="Search events, genres, venues..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 glass-card"
-          />
-        </div>
-
         {/* Filters */}
-        <div className="mb-6 space-y-3">
-          {/* Genre Filters */}
-          <div className="flex gap-2 overflow-x-auto pb-2 custom-scrollbar">
-            {['all', 'Techno', 'House', 'RnB', 'Drum & Bass', 'Hip Hop'].map((genre) => (
-              <Button
-                key={genre}
-                variant={genreFilter === genre ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setGenreFilter(genre)}
-                className={`whitespace-nowrap ${genreFilter === genre ? 'gradient-primary' : 'glass-card'}`}
-              >
-                {genre === 'all' ? 'All Genres' : genre}
-              </Button>
-            ))}
-          </div>
-          
-          {/* Date Filters & Free Only */}
-          <div className="flex items-center gap-4 flex-wrap">
-            <div className="flex gap-2">
-              {[
-                { value: 'all', label: 'All Dates' },
-                { value: 'today', label: 'Today' },
-                { value: 'tomorrow', label: 'Tomorrow' },
-              ].map((option) => (
-                <Button
-                  key={option.value}
-                  variant={dateFilter === option.value ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setDateFilter(option.value as 'all' | 'today' | 'tomorrow')}
-                  className={`${dateFilter === option.value ? 'gradient-primary' : 'glass-card'}`}
-                >
-                  {option.label}
-                </Button>
-              ))}
-            </div>
-            
-            <label className="flex items-center gap-2 cursor-pointer">
-              <Checkbox
-                checked={freeOnly}
-                onCheckedChange={(checked) => setFreeOnly(checked === true)}
-              />
-              <span className="text-sm text-muted-foreground">Free events only</span>
-            </label>
-          </div>
-        </div>
+        <DiscoverFilters
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          genreFilter={genreFilter}
+          onGenreChange={setGenreFilter}
+          dateFilter={dateFilter}
+          onDateChange={setDateFilter}
+          freeOnly={freeOnly}
+          onFreeOnlyChange={setFreeOnly}
+        />
 
         {/* Your Tonight Personalization */}
         <div className="mb-8">
