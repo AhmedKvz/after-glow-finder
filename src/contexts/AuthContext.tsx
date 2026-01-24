@@ -82,6 +82,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         // Warm demo crowd when user logs in (background, non-blocking)
         if (session?.user) {
           warmDemoCrowd();
+        } else {
+          // Reset so it can run again next time user logs in
+          demoWarmedRef.current = false;
         }
       }
     );
