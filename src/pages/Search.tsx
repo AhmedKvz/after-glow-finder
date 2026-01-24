@@ -200,7 +200,7 @@ const Search = () => {
         <h1 className="text-2xl font-bold mb-4">Search Events</h1>
         
         {/* Search bar */}
-        <div className="relative mb-4">
+        <div className="relative mb-2">
           <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={20} />
           <Input
             placeholder="Search events, venues, hosts..."
@@ -209,6 +209,9 @@ const Search = () => {
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
+        <p className="text-xs text-muted-foreground mb-4">
+          Tip: try "techno", "cocktails", "after 03:00", or a venue name
+        </p>
 
         {/* Filter chips */}
         <div className="flex gap-2 overflow-x-auto custom-scrollbar pb-2 mb-4">
