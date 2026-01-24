@@ -800,7 +800,7 @@ export const EventDetails: React.FC<EventDetailsProps> = ({ event, onBack }) => 
           {event.eventType === 'private_host' ? (
             <ReviewsList userId={event.host.id} />
           ) : (
-            <ReviewsList eventId={event.id} />
+            <ReviewsList eventId={event.id} eventType={event.eventType} />
           )}
         </div>
       </div>

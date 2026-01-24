@@ -874,6 +874,7 @@ const Discover = () => {
             <ReviewsList
               eventId={showReviewsForEvent.event_type === 'private_host' ? undefined : showReviewsForEvent.id}
               userId={showReviewsForEvent.event_type === 'private_host' ? showReviewsForEvent.host_id : undefined}
+              eventType={showReviewsForEvent.event_type}
             />
           </DialogContent>
         </Dialog>
