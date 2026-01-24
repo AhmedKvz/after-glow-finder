@@ -204,39 +204,17 @@ const CircleSwipe = () => {
     let profilesData: any[] = [];
 
     if (isEventMode && eventId && hasAccess) {
-      // Event mode: filter by event participants
-      const { data: ticketUsers } = await supabase
-        .from('tickets')
-        .select('user_id')
-        .eq('event_id', eventId)
-        .eq('status', 'valid');
+      // Event mode: use RPC to get participant profiles (bypasses RLS securely)
+      const { data, error } = await supabase.rpc('event_circle_profiles', {
+        _event_id: eventId,
+        _limit: 20,
+      });
 
-      const { data: paidUsers } = await supabase
-        .from('event_circle_access')
-        .select('user_id')
-        .eq('event_id', eventId)
-        .gt('valid_until', new Date().toISOString());
-
-      const ticketUserIds = ticketUsers?.map(t => t.user_id) || [];
-      const paidUserIds = paidUsers?.map(p => p.user_id) || [];
-      const allParticipantIds = [...new Set([...ticketUserIds, ...paidUserIds])].filter(id => id !== user.id);
-
-      if (allParticipantIds.length > 0) {
-        let query = supabase
-          .from('profiles')
-          .select('*')
-          .in('user_id', allParticipantIds)
-          .not('gender', 'is', null)
-          .limit(20);
-
-        // Filter by opposite gender if user has gender set
-        if (myProfile?.gender) {
-          const oppositeGender = myProfile.gender === 'male' ? 'female' : 'male';
-          query = query.eq('gender', oppositeGender);
-        }
-
-        const { data } = await query;
-        profilesData = data || [];
+      if (error) {
+        console.error('event_circle_profiles error:', error);
+        profilesData = [];
+      } else {
+        profilesData = (data as any[]) || [];
       }
     } else {
       // Global mode: load all profiles
