@@ -5,6 +5,8 @@ import { DemoModeProvider } from '@/contexts/DemoModeContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
+import { Lucky100WinnerModal } from './Lucky100WinnerModal';
+import { useCheckLucky100Winner } from '@/hooks/useCheckLucky100Winner';
 
 export const Layout = () => {
   const location = useLocation();
@@ -54,6 +56,9 @@ export const Layout = () => {
     );
   }
 
+  // Lucky100 winner modal
+  const { showModal: showLucky100Modal, dismissModal: dismissLucky100Modal } = useCheckLucky100Winner(user?.id);
+
   if (!user) {
     return null;
   }
@@ -70,6 +75,12 @@ export const Layout = () => {
 
         {/* Tab bar */}
         {showTabBar && <TabBar />}
+
+        {/* Lucky100 Winner Celebration Modal */}
+        <Lucky100WinnerModal 
+          open={showLucky100Modal} 
+          onOpenChange={(open) => !open && dismissLucky100Modal()}
+        />
       </div>
     </DemoModeProvider>
   );
