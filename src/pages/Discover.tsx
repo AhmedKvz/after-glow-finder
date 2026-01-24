@@ -354,9 +354,9 @@ const Discover = () => {
     const currentEvents = scopedEvents.slice(swipeIndex, swipeIndex + 5);
     
     return (
-      <div className="min-h-screen bg-background relative overflow-hidden">
-        {/* Header Section */}
-        <div className="safe-top px-4 pt-4 pb-2 relative z-10">
+      <div className="min-h-screen bg-background flex flex-col overflow-hidden">
+        {/* Header Section - scrollable area above cards */}
+        <div className="safe-top px-4 pt-4 pb-2 flex-shrink-0">
           <DiscoverPurposeHeader
             eventCount={scopedEvents.length}
             onBrowseTickets={handleBrowseTickets}
@@ -369,16 +369,16 @@ const Discover = () => {
           />
           
           <SwipeHintBar />
+          
+          {/* Stats - now inline in header flow */}
+          <SwipeStats 
+            streak={swipeStreak}
+            xpToday={xpToday}
+            totalSwipes={totalSwipes}
+          />
         </div>
-
-        {/* Stats */}
-        <SwipeStats 
-          streak={swipeStreak}
-          xpToday={xpToday}
-          totalSwipes={totalSwipes}
-        />
         
-        {/* XP Toast */}
+        {/* XP Toast - kept fixed for visibility */}
         <SwipeXPToast 
           visible={showXPToast}
           type={xpToastData.type}
@@ -386,12 +386,12 @@ const Discover = () => {
           message={xpToastData.message}
         />
         
-        {/* Swipe Cards */}
-        <div className="absolute inset-0 safe-top safe-bottom flex items-center justify-center p-4 pt-52">
+        {/* Swipe Cards - flexible area */}
+        <div className="flex-1 flex items-center justify-center px-4 pb-36 sm:pb-40 overflow-hidden">
           {currentEvents.length === 0 ? (
-            <Card className="glass-card p-8 text-center max-w-md">
-              <Music className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-              <h3 className="font-semibold text-xl mb-2">No more events!</h3>
+            <Card className="glass-card p-6 sm:p-8 text-center max-w-md">
+              <Music className="w-12 h-12 sm:w-16 sm:h-16 text-muted-foreground mx-auto mb-4" />
+              <h3 className="font-semibold text-lg sm:text-xl mb-2">No more events!</h3>
               <p className="text-sm text-muted-foreground mb-4">
                 You've swiped through all available events
               </p>
@@ -401,7 +401,7 @@ const Discover = () => {
               </Button>
             </Card>
           ) : (
-            <div className="relative w-full max-w-md h-[500px]">
+            <div className="relative w-full max-w-md h-[380px] sm:h-[450px] md:h-[500px]">
               {currentEvents.slice(0, 3).reverse().map((event, index) => (
                 <div
                   key={event.id}
@@ -429,13 +429,13 @@ const Discover = () => {
           )}
         </div>
         
-        {/* Ticket Action Bar - ONLY for club events */}
+        {/* Ticket Action Bar - ONLY for club events - above TabBar */}
         {currentEvents.length > 0 && currentEvents[0]?.event_type === 'club' && (
-          <div className="fixed bottom-24 left-0 right-0 px-4 z-20">
+          <div className="fixed bottom-32 sm:bottom-36 left-0 right-0 px-4 z-20">
             <div className="max-w-md mx-auto">
               <Button
                 onClick={() => setSelectedEventForTicket(currentEvents[0])}
-                className="w-full gradient-primary h-11"
+                className="w-full gradient-primary h-10 sm:h-11"
               >
                 <Ticket className="w-4 h-4 mr-2" />
                 Get Tickets
@@ -444,31 +444,34 @@ const Discover = () => {
           </div>
         )}
         
-        {/* Bottom Navigation */}
-        <div className="fixed bottom-0 left-0 right-0 safe-bottom p-4 bg-gradient-to-t from-background via-background to-transparent z-10">
-          <div className="flex gap-3 max-w-md mx-auto">
+        {/* Bottom Navigation - positioned above TabBar (which is ~72px) */}
+        <div className="fixed bottom-20 sm:bottom-24 left-0 right-0 px-4 z-10">
+          <div className="flex gap-2 sm:gap-3 max-w-md mx-auto">
             <Button
               variant="outline"
+              size="sm"
               onClick={handleReloadEvents}
-              className="flex-1 glass-card"
+              className="flex-1 glass-card h-9 sm:h-10 text-xs sm:text-sm"
             >
-              <RotateCcw className="w-4 h-4 mr-2" />
+              <RotateCcw className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
               Reload
             </Button>
             <Button
               variant="outline"
+              size="sm"
               onClick={() => setViewMode('list')}
-              className="flex-1 glass-card"
+              className="flex-1 glass-card h-9 sm:h-10 text-xs sm:text-sm"
             >
-              <List className="w-4 h-4 mr-2" />
+              <List className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
               List
             </Button>
             <Button
               variant="outline"
+              size="sm"
               onClick={() => setViewMode('map')}
-              className="flex-1 glass-card"
+              className="flex-1 glass-card h-9 sm:h-10 text-xs sm:text-sm"
             >
-              <MapIcon className="w-4 h-4 mr-2" />
+              <MapIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
               Map
             </Button>
           </div>
