@@ -7,6 +7,7 @@ import { DiscoverFilters } from '@/components/discover/DiscoverFilters';
 import { DiscoverPurposeHeader } from '@/components/discover/DiscoverPurposeHeader';
 import { DiscoverScopeTabs } from '@/components/discover/DiscoverScopeTabs';
 import { SwipeHintBar } from '@/components/discover/SwipeHintBar';
+import { TicketActionBar } from '@/components/discover/TicketActionBar';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ReviewsList } from '@/components/ReviewsList';
 import { supabase } from '@/integrations/supabase/client';
@@ -145,7 +146,7 @@ const Discover = () => {
     setTotalSwipes(prev => prev + 1);
     
     // Show toast
-    setXpToastData({ type: 'like', xp: 3, message: 'Added to wishlist!' });
+    setXpToastData({ type: 'like', xp: 3, message: 'Saved to your Night Plan' });
     setShowXPToast(true);
     setTimeout(() => setShowXPToast(false), 2000);
     
@@ -153,7 +154,7 @@ const Discover = () => {
     setSwipeIndex(prev => prev + 1);
     
     toast({
-      title: "Added to wishlist!",
+      title: "Saved to your Night Plan",
       description: "+3 XP earned",
     });
   };
@@ -388,7 +389,7 @@ const Discover = () => {
         />
         
         {/* Swipe Cards */}
-        <div className="absolute inset-0 safe-top safe-bottom flex items-center justify-center p-4">
+        <div className="absolute inset-0 safe-top safe-bottom flex items-center justify-center p-4 pt-52">
           {currentEvents.length === 0 ? (
             <Card className="glass-card p-8 text-center max-w-md">
               <Music className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
@@ -402,7 +403,7 @@ const Discover = () => {
               </Button>
             </Card>
           ) : (
-            <div className="relative w-full max-w-md h-[600px]">
+            <div className="relative w-full max-w-md h-[500px]">
               {currentEvents.slice(0, 3).reverse().map((event, index) => (
                 <div
                   key={event.id}
@@ -430,8 +431,33 @@ const Discover = () => {
           )}
         </div>
         
+        {/* Ticket Action Bar - positioned above bottom nav */}
+        {currentEvents.length > 0 && currentEvents[0] && (
+          <div className="fixed bottom-24 left-0 right-0 px-4 z-20">
+            <TicketActionBar
+              event={currentEvents[0]}
+              onGetTickets={() => setSelectedEventForTicket(currentEvents[0])}
+              onViewDetails={() => setSelectedEventForDetails(currentEvents[0])}
+              onAddToPlan={() => {
+                toast({
+                  title: "Added to your Night Plan!",
+                  description: `${currentEvents[0].title} saved for tonight.`,
+                });
+              }}
+              onOpenMap={() => {
+                const address = encodeURIComponent(currentEvents[0].exact_address || currentEvents[0].location);
+                window.open(`https://www.google.com/maps/search/?api=1&query=${address}`, '_blank');
+              }}
+              onRequestAccess={() => {
+                setRequestModalEvent(currentEvents[0]);
+                setShowRequestModal(true);
+              }}
+            />
+          </div>
+        )}
+        
         {/* Bottom Navigation */}
-        <div className="fixed bottom-0 left-0 right-0 safe-bottom p-4 bg-gradient-to-t from-background via-background to-transparent">
+        <div className="fixed bottom-0 left-0 right-0 safe-bottom p-4 bg-gradient-to-t from-background via-background to-transparent z-10">
           <div className="flex gap-3 max-w-md mx-auto">
             <Button
               variant="outline"
@@ -467,6 +493,15 @@ const Discover = () => {
           event={requestModalEvent}
           onConfirm={handleConfirmRequest}
         />
+        
+        {selectedEventForTicket && (
+          <BuyTicketModal
+            open={!!selectedEventForTicket}
+            onOpenChange={(open) => !open && setSelectedEventForTicket(null)}
+            event={selectedEventForTicket}
+            onSuccess={loadEvents}
+          />
+        )}
       </div>
     );
   }
