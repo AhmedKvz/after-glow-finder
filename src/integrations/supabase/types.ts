@@ -1170,6 +1170,7 @@ export type Database = {
           golden_ticket_count: number | null
           has_golden_ticket: boolean | null
           id: string
+          is_demo: boolean
           last_circle_activity: string | null
           lat: number | null
           level: string | null
@@ -1200,6 +1201,7 @@ export type Database = {
           golden_ticket_count?: number | null
           has_golden_ticket?: boolean | null
           id?: string
+          is_demo?: boolean
           last_circle_activity?: string | null
           lat?: number | null
           level?: string | null
@@ -1230,6 +1232,7 @@ export type Database = {
           golden_ticket_count?: number | null
           has_golden_ticket?: boolean | null
           id?: string
+          is_demo?: boolean
           last_circle_activity?: string | null
           lat?: number | null
           level?: string | null
@@ -1524,7 +1527,25 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      bump_demo_activity: { Args: never; Returns: undefined }
       circle_access_status: { Args: { _event_id: string }; Returns: Json }
+      ensure_event_demo_crowd: {
+        Args: {
+          _event_id: string
+          _female_count?: number
+          _male_count?: number
+          _min_total?: number
+        }
+        Returns: undefined
+      }
+      ensure_global_demo_users: {
+        Args: {
+          _female_count?: number
+          _male_count?: number
+          _min_total?: number
+        }
+        Returns: undefined
+      }
       event_circle_profiles: {
         Args: { _event_id: string; _limit?: number }
         Returns: {
@@ -1542,6 +1563,7 @@ export type Database = {
           golden_ticket_count: number | null
           has_golden_ticket: boolean | null
           id: string
+          is_demo: boolean
           last_circle_activity: string | null
           lat: number | null
           level: string | null
