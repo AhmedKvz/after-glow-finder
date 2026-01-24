@@ -1478,6 +1478,7 @@ export type Database = {
         Returns: boolean
       }
       increment_registered_users_counter: { Args: never; Returns: number }
+      is_demo_mode: { Args: never; Returns: boolean }
       issue_golden_ticket: {
         Args: {
           _expires_at?: string
