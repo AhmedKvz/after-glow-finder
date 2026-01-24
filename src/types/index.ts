@@ -46,6 +46,8 @@ export interface Event {
   distance: number;
   rating?: number;
   reviewCount?: number;
+  average_rating?: number | null;
+  review_count?: number | null;
   bringOwnDrinks: boolean;
   allowPlusOnes: boolean;
   maxPlusOnes?: number;
