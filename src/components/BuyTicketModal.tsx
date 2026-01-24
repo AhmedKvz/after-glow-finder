@@ -1,10 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
-import { CreditCard, CheckCircle, Loader2 } from 'lucide-react';
+import { CreditCard, CheckCircle, Loader2, Ticket, Sparkles } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -21,6 +21,8 @@ export const BuyTicketModal = ({ open, onOpenChange, event, onSuccess }: BuyTick
   const { toast } = useToast();
   const [step, setStep] = useState<'payment' | 'processing' | 'success'>('payment');
   const [loading, setLoading] = useState(false);
+  const [hasLucky100Credit, setHasLucky100Credit] = useState(false);
+  const [checkingCredit, setCheckingCredit] = useState(true);
   
   const [cardData, setCardData] = useState({
     number: '',
@@ -28,6 +30,77 @@ export const BuyTicketModal = ({ open, onOpenChange, event, onSuccess }: BuyTick
     expiry: '',
     cvv: ''
   });
+
+  // Check if user has an active Lucky100 credit
+  useEffect(() => {
+    const checkLucky100Credit = async () => {
+      if (!user || !open) {
+        setHasLucky100Credit(false);
+        setCheckingCredit(false);
+        return;
+      }
+
+      setCheckingCredit(true);
+      const { data, error } = await supabase
+        .from('golden_tickets')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('status', 'active')
+        .is('used_at', null)
+        .in('source', ['Lucky100', 'Lucky100Demo'])
+        .or('expires_at.is.null,expires_at.gt.now()')
+        .limit(1);
+
+      if (!error && data && data.length > 0) {
+        setHasLucky100Credit(true);
+      } else {
+        setHasLucky100Credit(false);
+      }
+      setCheckingCredit(false);
+    };
+
+    checkLucky100Credit();
+  }, [user, open]);
+
+  const handleUseLucky100Credit = async () => {
+    if (!user) {
+      toast({
+        variant: "destructive",
+        title: "Not logged in",
+        description: "Please log in to use your credit"
+      });
+      return;
+    }
+
+    setLoading(true);
+    setStep('processing');
+
+    const { data, error } = await supabase.rpc('redeem_lucky100_event_credit', {
+      _event_id: event.id
+    });
+
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Could not redeem credit",
+        description: error.message
+      });
+      setStep('payment');
+      setLoading(false);
+      return;
+    }
+
+    setStep('success');
+    setLoading(false);
+    setHasLucky100Credit(false);
+
+    toast({
+      title: "🎉 Lucky 100 Credit Used!",
+      description: "Your free ticket has been added to your profile"
+    });
+
+    onSuccess?.();
+  };
 
   const handleOpenChange = (nextOpen: boolean) => {
     if (!nextOpen) {
@@ -196,7 +269,7 @@ export const BuyTicketModal = ({ open, onOpenChange, event, onSuccess }: BuyTick
         </DialogHeader>
 
         {step === 'payment' && (
-          <form onSubmit={handlePurchase} className="space-y-4">
+          <div className="space-y-4">
             <Card className="p-4 bg-gradient-to-br from-primary/10 to-accent/10">
               <h3 className="font-semibold mb-1">{event.title}</h3>
               <p className="text-sm text-muted-foreground">{event.location}</p>
@@ -214,83 +287,126 @@ export const BuyTicketModal = ({ open, onOpenChange, event, onSuccess }: BuyTick
               </div>
             </Card>
 
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="card-number">Card Number</Label>
-                <div className="relative">
-                  <CreditCard className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    id="card-number"
-                    placeholder="1234 5678 9012 3456"
-                    value={cardData.number}
-                    onChange={(e) => setCardData({ ...cardData, number: formatCardNumber(e.target.value) })}
-                    maxLength={19}
-                    className="pl-10"
-                    required
-                  />
+            {/* Lucky 100 Credit Option */}
+            {!checkingCredit && hasLucky100Credit && (
+              <Card className="p-4 bg-gradient-to-br from-amber-500/20 to-orange-500/20 border-amber-500/30">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center">
+                    <Sparkles className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-amber-200">Lucky 100 Credit Available!</h4>
+                    <p className="text-xs text-amber-300/70">Use your free event credit</p>
+                  </div>
                 </div>
-              </div>
+                <Button
+                  onClick={handleUseLucky100Credit}
+                  disabled={loading}
+                  className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-semibold"
+                >
+                  <Ticket className="w-4 h-4 mr-2" />
+                  Use Lucky 100 Credit
+                </Button>
+              </Card>
+            )}
 
-              <div className="space-y-2">
-                <Label htmlFor="card-name">Cardholder Name</Label>
-                <Input
-                  id="card-name"
-                  placeholder="JOHN DOE"
-                  value={cardData.name}
-                  onChange={(e) => setCardData({ ...cardData, name: e.target.value.toUpperCase() })}
-                  required
-                />
+            {checkingCredit && (
+              <div className="flex items-center justify-center py-2 text-sm text-muted-foreground">
+                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                Checking for credits...
               </div>
+            )}
 
-              <div className="grid grid-cols-2 gap-4">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t border-border/30" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">
+                  {hasLucky100Credit ? 'Or pay with card' : 'Pay with card'}
+                </span>
+              </div>
+            </div>
+
+            <form onSubmit={handlePurchase} className="space-y-4">
+              <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="expiry">Expiry</Label>
+                  <Label htmlFor="card-number">Card Number</Label>
+                  <div className="relative">
+                    <CreditCard className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      id="card-number"
+                      placeholder="1234 5678 9012 3456"
+                      value={cardData.number}
+                      onChange={(e) => setCardData({ ...cardData, number: formatCardNumber(e.target.value) })}
+                      maxLength={19}
+                      className="pl-10"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="card-name">Cardholder Name</Label>
                   <Input
-                    id="expiry"
-                    placeholder="MM/YY"
-                    value={cardData.expiry}
-                    onChange={(e) => setCardData({ ...cardData, expiry: formatExpiry(e.target.value) })}
-                    maxLength={5}
+                    id="card-name"
+                    placeholder="JOHN DOE"
+                    value={cardData.name}
+                    onChange={(e) => setCardData({ ...cardData, name: e.target.value.toUpperCase() })}
                     required
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="cvv">CVV</Label>
-                  <Input
-                    id="cvv"
-                    type="password"
-                    placeholder="123"
-                    value={cardData.cvv}
-                    onChange={(e) => setCardData({ ...cardData, cvv: e.target.value.replace(/\D/g, '').substr(0, 3) })}
-                    maxLength={3}
-                    required
-                  />
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="expiry">Expiry</Label>
+                    <Input
+                      id="expiry"
+                      placeholder="MM/YY"
+                      value={cardData.expiry}
+                      onChange={(e) => setCardData({ ...cardData, expiry: formatExpiry(e.target.value) })}
+                      maxLength={5}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="cvv">CVV</Label>
+                    <Input
+                      id="cvv"
+                      type="password"
+                      placeholder="123"
+                      value={cardData.cvv}
+                      onChange={(e) => setCardData({ ...cardData, cvv: e.target.value.replace(/\D/g, '').substr(0, 3) })}
+                      maxLength={3}
+                      required
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div className="bg-accent/10 rounded-lg p-3 text-sm text-accent-foreground">
-              💡 This is a mock payment. No real charges will be made.
-            </div>
+              <div className="bg-accent/10 rounded-lg p-3 text-sm text-accent-foreground">
+                💡 This is a mock payment. No real charges will be made.
+              </div>
 
-            <div className="flex gap-3 pt-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => onOpenChange(false)}
-                className="flex-1"
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                className="flex-1 gradient-primary"
-                disabled={loading}
-              >
-                Purchase Ticket
-              </Button>
-            </div>
-          </form>
+              <div className="flex gap-3 pt-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => onOpenChange(false)}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  className="flex-1 gradient-primary"
+                  disabled={loading}
+                >
+                  Purchase Ticket
+                </Button>
+              </div>
+            </form>
+          </div>
         )}
 
         {step === 'processing' && (
