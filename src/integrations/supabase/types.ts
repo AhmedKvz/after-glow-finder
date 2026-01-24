@@ -62,6 +62,13 @@ export type Database = {
             referencedRelation: "events"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "after_access_requests_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "public_events_discovery"
+            referencedColumns: ["id"]
+          },
         ]
       }
       app_settings: {
@@ -121,6 +128,13 @@ export type Database = {
             referencedRelation: "events"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "blog_posts_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "public_events_discovery"
+            referencedColumns: ["id"]
+          },
         ]
       }
       checkins: {
@@ -151,6 +165,13 @@ export type Database = {
             columns: ["event_id"]
             isOneToOne: false
             referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checkins_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "public_events_discovery"
             referencedColumns: ["id"]
           },
         ]
@@ -259,6 +280,13 @@ export type Database = {
             columns: ["event_id"]
             isOneToOne: false
             referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "circle_swipe_sessions_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "public_events_discovery"
             referencedColumns: ["id"]
           },
         ]
@@ -412,6 +440,13 @@ export type Database = {
             referencedRelation: "events"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "event_access_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "public_events_discovery"
+            referencedColumns: ["id"]
+          },
         ]
       }
       event_chat_members: {
@@ -499,6 +534,13 @@ export type Database = {
             referencedRelation: "events"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "event_chats_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: true
+            referencedRelation: "public_events_discovery"
+            referencedColumns: ["id"]
+          },
         ]
       }
       event_circle_access: {
@@ -540,6 +582,13 @@ export type Database = {
             referencedRelation: "events"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "event_circle_access_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "public_events_discovery"
+            referencedColumns: ["id"]
+          },
         ]
       }
       event_orders: {
@@ -576,6 +625,13 @@ export type Database = {
             columns: ["event_id"]
             isOneToOne: false
             referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_orders_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "public_events_discovery"
             referencedColumns: ["id"]
           },
         ]
@@ -619,6 +675,13 @@ export type Database = {
             referencedRelation: "events"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "event_reviews_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "public_events_discovery"
+            referencedColumns: ["id"]
+          },
         ]
       }
       event_swipes: {
@@ -649,6 +712,13 @@ export type Database = {
             columns: ["event_id"]
             isOneToOne: false
             referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_swipes_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "public_events_discovery"
             referencedColumns: ["id"]
           },
         ]
@@ -703,6 +773,7 @@ export type Database = {
           updated_at: string
           venue_id: string | null
           vibe_tags: string[] | null
+          visibility: string | null
           watchlist_count: number | null
           wishlist_user_ids: Json | null
           xp_interest_sum: number | null
@@ -757,6 +828,7 @@ export type Database = {
           updated_at?: string
           venue_id?: string | null
           vibe_tags?: string[] | null
+          visibility?: string | null
           watchlist_count?: number | null
           wishlist_user_ids?: Json | null
           xp_interest_sum?: number | null
@@ -811,6 +883,7 @@ export type Database = {
           updated_at?: string
           venue_id?: string | null
           vibe_tags?: string[] | null
+          visibility?: string | null
           watchlist_count?: number | null
           wishlist_user_ids?: Json | null
           xp_interest_sum?: number | null
@@ -897,6 +970,13 @@ export type Database = {
             columns: ["used_event_id"]
             isOneToOne: false
             referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_golden_tickets_used_event"
+            columns: ["used_event_id"]
+            isOneToOne: false
+            referencedRelation: "public_events_discovery"
             referencedColumns: ["id"]
           },
         ]
@@ -1425,6 +1505,13 @@ export type Database = {
             referencedRelation: "events"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "tickets_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "public_events_discovery"
+            referencedColumns: ["id"]
+          },
         ]
       }
       user_reviews: {
@@ -1464,6 +1551,13 @@ export type Database = {
             columns: ["event_id"]
             isOneToOne: false
             referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_reviews_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "public_events_discovery"
             referencedColumns: ["id"]
           },
         ]
@@ -1524,7 +1618,105 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      public_events_discovery: {
+        Row: {
+          allow_plus_one: boolean | null
+          attendee_user_ids: Json | null
+          blog_link: string | null
+          bring_own_drinks: boolean | null
+          capacity: number | null
+          created_at: string | null
+          date: string | null
+          description: string | null
+          dj_name: string | null
+          end_time: string | null
+          event_type: Database["public"]["Enums"]["event_type"] | null
+          heat_badge: string | null
+          heat_score: number | null
+          host_id: string | null
+          id: string | null
+          is_location_hidden: boolean | null
+          is_private: boolean | null
+          is_secret: boolean | null
+          location: string | null
+          music_tags: string[] | null
+          poster_url: string | null
+          public_location_label: string | null
+          start_time: string | null
+          swipe_count: number | null
+          ticket_link: string | null
+          ticketing_enabled: boolean | null
+          title: string | null
+          updated_at: string | null
+          vibe_tags: string[] | null
+          wishlist_user_ids: Json | null
+        }
+        Insert: {
+          allow_plus_one?: boolean | null
+          attendee_user_ids?: Json | null
+          blog_link?: string | null
+          bring_own_drinks?: boolean | null
+          capacity?: number | null
+          created_at?: string | null
+          date?: string | null
+          description?: string | null
+          dj_name?: string | null
+          end_time?: string | null
+          event_type?: Database["public"]["Enums"]["event_type"] | null
+          heat_badge?: string | null
+          heat_score?: number | null
+          host_id?: string | null
+          id?: string | null
+          is_location_hidden?: boolean | null
+          is_private?: boolean | null
+          is_secret?: boolean | null
+          location?: string | null
+          music_tags?: string[] | null
+          poster_url?: string | null
+          public_location_label?: string | null
+          start_time?: string | null
+          swipe_count?: number | null
+          ticket_link?: string | null
+          ticketing_enabled?: boolean | null
+          title?: string | null
+          updated_at?: string | null
+          vibe_tags?: string[] | null
+          wishlist_user_ids?: Json | null
+        }
+        Update: {
+          allow_plus_one?: boolean | null
+          attendee_user_ids?: Json | null
+          blog_link?: string | null
+          bring_own_drinks?: boolean | null
+          capacity?: number | null
+          created_at?: string | null
+          date?: string | null
+          description?: string | null
+          dj_name?: string | null
+          end_time?: string | null
+          event_type?: Database["public"]["Enums"]["event_type"] | null
+          heat_badge?: string | null
+          heat_score?: number | null
+          host_id?: string | null
+          id?: string | null
+          is_location_hidden?: boolean | null
+          is_private?: boolean | null
+          is_secret?: boolean | null
+          location?: string | null
+          music_tags?: string[] | null
+          poster_url?: string | null
+          public_location_label?: string | null
+          start_time?: string | null
+          swipe_count?: number | null
+          ticket_link?: string | null
+          ticketing_enabled?: boolean | null
+          title?: string | null
+          updated_at?: string | null
+          vibe_tags?: string[] | null
+          wishlist_user_ids?: Json | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       bump_demo_activity: { Args: never; Returns: undefined }
