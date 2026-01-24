@@ -96,13 +96,22 @@ export function useDiscoverEvents(userId?: string) {
         ? userRatingMap.get(event.host_id)
         : eventRatingMap.get(event.id);
 
-      const avg = rating ? rating.sum / rating.count : null;
+      let avg = rating ? rating.sum / rating.count : null;
+      let count = rating?.count || 0;
+
+      // Add demo reviews for club and cafe events without real reviews
+      if ((event.event_type === 'club' || event.event_type === 'cafe') && !avg) {
+        // Generate consistent demo rating based on event id
+        const seed = event.id.charCodeAt(0) + event.id.charCodeAt(1);
+        avg = 3.5 + (seed % 15) / 10; // Range: 3.5 - 4.9
+        count = 2 + (seed % 5); // Range: 2 - 6 reviews
+      }
 
       return {
         ...event,
         host: p || { display_name: 'Unknown', avatar_url: null },
         average_rating: avg,
-        review_count: rating?.count || 0,
+        review_count: count,
       };
     });
 
