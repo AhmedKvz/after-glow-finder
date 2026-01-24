@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { MapPin, Clock, Users, Loader2, Music, Ticket, Map as MapIcon, Star, MessageSquare, RotateCcw, List, Layers, Heart, ExternalLink, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -16,7 +17,7 @@ import { SwipeEventCard } from '@/components/SwipeEventCard';
 import { SwipeStats } from '@/components/SwipeStats';
 import { SwipeXPToast } from '@/components/SwipeXPToast';
 import { SwipeRequestModal } from '@/components/SwipeRequestModal';
-import { EventDetails } from '@/components/EventDetails';
+
 import { MapView } from '@/components/MapView';
 import { BlogSection } from '@/components/BlogSection';
 import { YourTonightSection } from '@/components/YourTonightSection';
@@ -28,6 +29,7 @@ import eventPoster2 from '@/assets/event-poster-2.jpg';
 import eventPoster3 from '@/assets/event-poster-3.jpg';
 
 const Discover = () => {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
   
@@ -66,7 +68,7 @@ const Discover = () => {
   });
   const [showRequestModal, setShowRequestModal] = useState(false);
   const [requestModalEvent, setRequestModalEvent] = useState<any>(null);
-  const [selectedEventForDetails, setSelectedEventForDetails] = useState<any | null>(null);
+  
   
   // Event scope filter - default to 'public' (Tickets)
   const [eventScope, setEventScope] = useState<'all' | 'public' | 'private'>('public');
@@ -288,7 +290,7 @@ const Discover = () => {
   };
   
   const handleTapCard = (event: any) => {
-    setSelectedEventForDetails(event);
+    navigate(`/event/${event.id}`);
   };
   
   const handleReloadEvents = () => {
@@ -305,49 +307,6 @@ const Discover = () => {
     );
   }
 
-  // Show event details if selected
-  if (selectedEventForDetails) {
-    return (
-      <EventDetails
-        event={{
-          id: selectedEventForDetails.id,
-          title: selectedEventForDetails.title,
-          description: selectedEventForDetails.description,
-          host: {
-            id: selectedEventForDetails.host_id,
-            name: selectedEventForDetails.host?.display_name || 'Unknown Host',
-            avatar: selectedEventForDetails.host?.avatar_url,
-            rating: selectedEventForDetails.average_rating || 4.5,
-            verifiedHost: true,
-          },
-          djName: selectedEventForDetails.dj_name,
-          startTime: `${selectedEventForDetails.date}T${selectedEventForDetails.start_time}`,
-          endTime: `${selectedEventForDetails.date}T${selectedEventForDetails.end_time}`,
-          location: {
-            name: selectedEventForDetails.location,
-            address: selectedEventForDetails.exact_address || selectedEventForDetails.location,
-          },
-          capacity: selectedEventForDetails.capacity,
-          attendees: 0,
-          price: 0,
-          genres: selectedEventForDetails.music_tags || [],
-          tags: [],
-          images: [],
-          isPrivate: selectedEventForDetails.event_type === 'private_host',
-          isPromoted: false,
-          distance: 0,
-          rating: selectedEventForDetails.average_rating,
-          reviewCount: selectedEventForDetails.review_count,
-          bringOwnDrinks: selectedEventForDetails.bring_own_drinks || false,
-          allowPlusOnes: selectedEventForDetails.allow_plus_one || false,
-          maxPlusOnes: selectedEventForDetails.allow_plus_two ? 2 : 1,
-          eventType: selectedEventForDetails.event_type,
-          isLocationHidden: selectedEventForDetails.is_location_hidden,
-        }}
-        onBack={() => setSelectedEventForDetails(null)}
-      />
-    );
-  }
 
   // Swipe view
   if (viewMode === 'swipe') {
@@ -539,7 +498,7 @@ const Discover = () => {
           {/* Map */}
           <MapView 
             events={scopedEvents}
-            onEventClick={(event) => setSelectedEventForDetails(event)}
+            onEventClick={(event) => navigate(`/event/${event.id}`)}
           />
 
           {/* Mode toggle at bottom */}
@@ -635,6 +594,7 @@ const Discover = () => {
                 <Card 
                   key={event.id} 
                   className="relative min-w-[300px] sm:min-w-[320px] h-[220px] overflow-hidden glass-card cursor-pointer transition-transform hover:scale-105"
+                  onClick={() => navigate(`/event/${event.id}`)}
                 >
                   <img
                     src={[eventPoster1, eventPoster2, eventPoster3][index % 3]}
@@ -729,11 +689,15 @@ const Discover = () => {
           ) : (
             <div className="space-y-3">
               {scopedEvents.map((event) => (
-                <Card key={event.id} className="glass-card p-4 sm:p-5 min-h-fit">
+                <Card 
+                  key={event.id} 
+                  className="glass-card p-4 sm:p-5 min-h-fit cursor-pointer hover:bg-surface-hover transition-colors"
+                  onClick={() => navigate(`/event/${event.id}`)}
+                >
                   <div className="flex gap-4">
                     <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-lg overflow-hidden bg-primary/10 flex-shrink-0">
                       <img
-                        src={[eventPoster1, eventPoster2, eventPoster3][Math.floor(Math.random() * 3)]}
+                        src={[eventPoster1, eventPoster2, eventPoster3][event.id.charCodeAt(0) % 3]}
                         alt={event.title}
                         className="w-full h-full object-cover"
                       />
