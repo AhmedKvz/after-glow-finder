@@ -380,6 +380,7 @@ const Discover = () => {
                       onSwipeLeft={handleSwipeLeft}
                       onSwipeUp={handleSwipeUp}
                       onTap={handleTapCard}
+                      onReviewClick={setShowReviewsForEvent}
                     />
                   )}
                 </div>

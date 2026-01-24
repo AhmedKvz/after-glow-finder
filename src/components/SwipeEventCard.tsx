@@ -15,6 +15,7 @@ interface SwipeEventCardProps {
   onSwipeLeft: (event: any) => void;
   onSwipeUp: (event: any) => void;
   onTap: (event: any) => void;
+  onReviewClick?: (event: any) => void;
 }
 
 const posterImages = [eventPoster1, eventPoster2, eventPoster3];
@@ -24,7 +25,8 @@ export const SwipeEventCard = ({
   onSwipeRight,
   onSwipeLeft,
   onSwipeUp,
-  onTap
+  onTap,
+  onReviewClick
 }: SwipeEventCardProps) => {
   const [direction, setDirection] = useState<'left' | 'right' | 'up' | null>(null);
   const [gone, setGone] = useState(false);
@@ -243,13 +245,20 @@ export const SwipeEventCard = ({
             </div>
           )}
 
-          {/* Rating Badge */}
+          {/* Rating Badge - Clickable to open reviews modal */}
           {event.average_rating && event.review_count > 0 && (
-            <div className="flex items-center gap-2 text-white/90 text-sm">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onReviewClick?.(event);
+              }}
+              className="flex items-center gap-2 text-white/90 text-sm cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/70 rounded-full px-3 py-1.5 bg-black/30 backdrop-blur-sm hover:bg-black/40 transition-colors w-fit"
+            >
               <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
               <span className="font-semibold">{event.average_rating.toFixed(1)}</span>
               <span className="text-white/60">({event.review_count} reviews)</span>
-            </div>
+            </button>
           )}
 
           {/* Event Details */}
