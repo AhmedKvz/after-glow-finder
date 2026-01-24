@@ -323,13 +323,13 @@ const CircleSwipe = () => {
     setPurchasingAccess(true);
 
     try {
-      // Insert into event_circle_access - the trigger will set valid_until and paid_amount_rsd
+      // Insert into event_circle_access - trigger enforces valid_until (5h), paid_amount_rsd (200), access_type
       const { error } = await supabase
         .from('event_circle_access')
-        .insert({
-          user_id: user.id,
+        .insert({ 
+          user_id: user.id, 
           event_id: eventId,
-          valid_until: new Date(Date.now() + 5 * 60 * 60 * 1000).toISOString() // This will be overwritten by trigger
+          valid_until: new Date().toISOString() // Placeholder - trigger overwrites to now() + 5h
         });
 
       if (error) {
