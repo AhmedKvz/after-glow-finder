@@ -27,14 +27,30 @@ export function useDiscoverEvents(userId?: string) {
       swipedEventIds = swipes?.map(s => s.event_id) || [];
     }
 
-    const loadType = async (type: 'club' | 'cafe' | 'private_host') => {
-      const { data } = await supabase
-        .from('events')
-        .select('*')
-        .eq('event_type', type)
-        .order('date', { ascending: true });
-      return data || [];
-    };
+  // Explicit field selection - NEVER select sensitive fields like exact_address, full_address
+  const safeEventFields = `
+    id, title, description, date, start_time, end_time, location, public_location_label,
+    poster_url, ticket_link, blog_link, dj_name, event_type, is_private, is_secret,
+    visibility, capacity, music_tags, vibe_tags, heat_score, heat_badge, host_id,
+    bring_own_drinks, allow_plus_one, ticketing_enabled, swipe_count, wishlist_user_ids,
+    attendee_user_ids, is_location_hidden, join_request_required, is_private_after
+  `;
+
+  const loadType = async (type: 'club' | 'cafe' | 'private_host') => {
+    let query = supabase
+      .from('events')
+      .select(safeEventFields)
+      .eq('event_type', type)
+      .order('date', { ascending: true });
+    
+    // For private_host events, filter out secret visibility
+    if (type === 'private_host') {
+      query = query.neq('visibility', 'secret');
+    }
+    
+    const { data } = await query;
+    return data || [];
+  };
 
     const club = await loadType('club');
     const cafe = await loadType('cafe');

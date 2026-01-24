@@ -136,13 +136,18 @@ export const EventCard: React.FC<EventCardProps> = ({ event, compact = false }) 
               <Users size={14} className="sm:w-4 sm:h-4" />
               <span className="whitespace-nowrap">{event.attendees}/{event.capacity}</span>
             </div>
-            {!event.isLocationHidden && (
+            {/* Location - conditional display based on event type */}
+            {event.eventType === 'private_host' ? (
+              <div className="flex items-center gap-1 flex-shrink-0 text-muted-foreground/60">
+                <MapPin size={14} className="sm:w-4 sm:h-4" />
+                <span className="whitespace-nowrap italic text-xs">Private location</span>
+              </div>
+            ) : !event.isLocationHidden ? (
               <div className="flex items-center gap-1 flex-shrink-0">
                 <MapPin size={14} className="sm:w-4 sm:h-4" />
                 <span className="break-words whitespace-normal">{event.location.name}</span>
               </div>
-            )}
-            {event.isLocationHidden && (
+            ) : (
               <div className="flex items-center gap-1 flex-shrink-0 text-muted-foreground/60">
                 <MapPin size={14} className="sm:w-4 sm:h-4" />
                 <span className="whitespace-nowrap">Hidden</span>

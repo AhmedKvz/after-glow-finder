@@ -1649,6 +1649,7 @@ export type Database = {
           title: string | null
           updated_at: string | null
           vibe_tags: string[] | null
+          visibility: string | null
           wishlist_user_ids: Json | null
         }
         Insert: {
@@ -1681,6 +1682,7 @@ export type Database = {
           title?: string | null
           updated_at?: string | null
           vibe_tags?: string[] | null
+          visibility?: string | null
           wishlist_user_ids?: Json | null
         }
         Update: {
@@ -1713,6 +1715,7 @@ export type Database = {
           title?: string | null
           updated_at?: string | null
           vibe_tags?: string[] | null
+          visibility?: string | null
           wishlist_user_ids?: Json | null
         }
         Relationships: []

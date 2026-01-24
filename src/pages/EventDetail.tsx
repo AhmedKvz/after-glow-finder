@@ -27,14 +27,18 @@ interface EventData {
   start_time: string;
   end_time: string;
   location: string;
+  public_location_label: string | null;
   exact_address: string | null;
   full_address: string | null;
+  after_instructions: string | null;
   poster_url: string | null;
   ticket_link: string | null;
   dj_name: string | null;
-  event_type: string;
+  event_type: 'club' | 'cafe' | 'private_host' | 'secret' | 'after';
   is_private: boolean | null;
   is_secret: boolean | null;
+  is_private_after: boolean | null;
+  visibility: 'public' | 'private' | 'secret' | null;
   capacity: number;
   music_tags: string[] | null;
   vibe_tags: string[] | null;
@@ -66,6 +70,11 @@ const EventDetail = () => {
   const [selectedImage, setSelectedImage] = useState(0);
   const [demoUsers, setDemoUsers] = useState<DemoUser[]>([]);
   const [seriesEvents, setSeriesEvents] = useState<EventData[]>([]);
+  
+  // Request status for private events
+  const [requestStatus, setRequestStatus] = useState<'none' | 'pending' | 'approved' | 'rejected'>('none');
+  const isHost = event?.host_id === user?.id;
+  const isApprovedOrHost = requestStatus === 'approved' || isHost;
 
   // Demo activity numbers (MVP)
   const demoActivityLevel = Math.floor(Math.random() * 30) + 15; // 15-45 active
@@ -81,9 +90,17 @@ const EventDetail = () => {
     
     setLoading(true);
     
+    // Load basic event data - NO sensitive address fields initially
+    const safeFields = `
+      id, title, description, date, start_time, end_time, location, public_location_label,
+      poster_url, ticket_link, dj_name, event_type, is_private, is_secret, is_private_after,
+      visibility, capacity, music_tags, vibe_tags, heat_score, heat_badge, host_id,
+      bring_own_drinks, allow_plus_one, ticketing_enabled
+    `;
+    
     const { data, error } = await supabase
       .from('events')
-      .select('*')
+      .select(safeFields)
       .eq('id', eventId)
       .single();
 
@@ -98,9 +115,59 @@ const EventDetail = () => {
       return;
     }
 
-    setEvent(data);
+    setEvent(data as EventData);
     setLoading(false);
   };
+
+  // Check request status and load sensitive data if approved
+  const checkAccessAndLoadAddress = async () => {
+    if (!eventId || !user || !event) return;
+    
+    // For private_host events, check after_access_requests
+    if (event.event_type === 'private_host' || event.is_private_after) {
+      const { data: accessData } = await supabase
+        .from('after_access_requests')
+        .select('status')
+        .eq('event_id', eventId)
+        .eq('requester_user_id', user.id)
+        .single();
+      
+      if (accessData) {
+        setRequestStatus(accessData.status as 'pending' | 'approved' | 'rejected');
+      }
+      
+      // If approved OR is host, load sensitive address data
+      if (accessData?.status === 'approved' || event.host_id === user.id) {
+        const { data: sensitiveData } = await supabase
+          .from('events')
+          .select('exact_address, full_address, after_instructions')
+          .eq('id', eventId)
+          .single();
+        
+        if (sensitiveData) {
+          setEvent(prev => prev ? { ...prev, ...sensitiveData } : prev);
+        }
+      }
+    } else {
+      // For regular events (club/cafe), check event_access table
+      const { data: accessData } = await supabase
+        .from('event_access')
+        .select('status')
+        .eq('event_id', eventId)
+        .eq('user_id', user.id)
+        .single();
+      
+      if (accessData) {
+        setRequestStatus(accessData.status as 'pending' | 'approved' | 'rejected');
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (event && user) {
+      checkAccessAndLoadAddress();
+    }
+  }, [event?.id, user?.id]);
 
   const loadDemoUsers = async () => {
     // Load demo profiles for crowd preview
@@ -118,6 +185,47 @@ const EventDetail = () => {
         level: p.level || 'L1'
       })));
     }
+  };
+
+  const handleRequestToJoin = async () => {
+    if (!user || !event) {
+      toast({
+        variant: 'destructive',
+        title: 'Login required',
+        description: 'Please login to request access.',
+      });
+      return;
+    }
+
+    const { error } = await supabase
+      .from('after_access_requests')
+      .insert({
+        event_id: event.id,
+        requester_user_id: user.id,
+        status: 'pending'
+      });
+
+    if (error) {
+      if (error.code === '23505') {
+        toast({
+          title: 'Already requested',
+          description: 'Your request is pending review.',
+        });
+      } else {
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Could not send request. Try again.',
+        });
+      }
+      return;
+    }
+
+    setRequestStatus('pending');
+    toast({
+      title: 'Request sent! 🎉',
+      description: 'Host will review your profile.',
+    });
   };
 
   const handleSaveToNightPlan = async () => {
@@ -304,7 +412,11 @@ const EventDetail = () => {
           <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1">{event.title}</h1>
           <div className="flex items-center gap-2 text-white/90">
             <MapPin size={14} />
-            <span className="text-sm">{event.location}</span>
+            <span className="text-sm">
+              {event.event_type === 'private_host' || event.is_private_after
+                ? (event.public_location_label || 'Private location')
+                : event.location}
+            </span>
           </div>
           <div className="flex items-center gap-2 text-white/80 mt-1">
             <Calendar size={14} />
@@ -397,14 +509,37 @@ const EventDetail = () => {
             Venue
           </h2>
           <div className="space-y-2">
-            <div className="font-semibold">{event.location}</div>
-            {event.exact_address && !event.is_private && (
-              <div className="text-sm text-muted-foreground">{event.exact_address}</div>
-            )}
-            {event.is_private && (
-              <div className="text-sm text-muted-foreground italic">
-                Address revealed after approval
-              </div>
+            {/* Location display logic based on event type and access */}
+            {event.event_type === 'private_host' || event.is_private_after ? (
+              <>
+                <div className="font-semibold">
+                  {event.public_location_label || 'Private After Location'}
+                </div>
+                {isApprovedOrHost ? (
+                  <>
+                    <div className="text-sm text-muted-foreground">
+                      {event.exact_address || event.full_address || event.location}
+                    </div>
+                    {event.after_instructions && (
+                      <div className="text-sm mt-3 p-3 bg-muted/50 rounded-lg border border-border/20">
+                        <div className="text-xs text-muted-foreground mb-1">Instructions from host</div>
+                        <div>{event.after_instructions}</div>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="text-sm text-muted-foreground italic flex items-center gap-2">
+                    🔒 Exact location revealed after approval
+                  </div>
+                )}
+              </>
+            ) : (
+              <>
+                <div className="font-semibold">{event.location}</div>
+                {event.exact_address && (
+                  <div className="text-sm text-muted-foreground">{event.exact_address}</div>
+                )}
+              </>
             )}
           </div>
 
@@ -520,21 +655,49 @@ const EventDetail = () => {
       <div className="fixed bottom-20 left-0 right-0 px-4 z-30">
         <div className="max-w-lg mx-auto glass-card p-3 rounded-xl border border-border/20">
           <div className="flex gap-2">
-            <Button
-              onClick={handleEnterCircle}
-              className="flex-1 gradient-primary h-12 font-semibold"
-            >
-              <Users className="w-4 h-4 mr-2" />
-              Enter Circle
-            </Button>
+            {/* Main action based on event type and request status */}
+            {(event.event_type === 'private_host' || event.is_private_after) && !isHost ? (
+              <Button
+                onClick={handleRequestToJoin}
+                disabled={requestStatus !== 'none'}
+                className={`flex-1 h-12 font-semibold ${
+                  requestStatus === 'approved' 
+                    ? 'bg-emerald-600 hover:bg-emerald-700' 
+                    : requestStatus === 'pending'
+                    ? 'bg-amber-600 hover:bg-amber-700'
+                    : 'gradient-primary'
+                }`}
+              >
+                {requestStatus === 'none' && (
+                  <>
+                    <Users className="w-4 h-4 mr-2" />
+                    Request to Join
+                  </>
+                )}
+                {requestStatus === 'pending' && '⏳ Pending Approval'}
+                {requestStatus === 'approved' && "✅ You're In!"}
+                {requestStatus === 'rejected' && '❌ Not Approved'}
+              </Button>
+            ) : (
+              <Button
+                onClick={handleEnterCircle}
+                className="flex-1 gradient-primary h-12 font-semibold"
+              >
+                <Users className="w-4 h-4 mr-2" />
+                Enter Circle
+              </Button>
+            )}
             
-            <Button
-              onClick={handleBuyTickets}
-              variant="outline"
-              className="h-12"
-            >
-              <Ticket className="w-4 h-4" />
-            </Button>
+            {/* Show ticket button only for non-private events */}
+            {event.event_type !== 'private_host' && !event.is_private_after && (
+              <Button
+                onClick={handleBuyTickets}
+                variant="outline"
+                className="h-12"
+              >
+                <Ticket className="w-4 h-4" />
+              </Button>
+            )}
             
             <Button
               onClick={handleOpenInstagram}
