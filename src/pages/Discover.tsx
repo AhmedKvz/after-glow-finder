@@ -7,7 +7,6 @@ import { DiscoverFilters } from '@/components/discover/DiscoverFilters';
 import { DiscoverPurposeHeader } from '@/components/discover/DiscoverPurposeHeader';
 import { DiscoverScopeTabs } from '@/components/discover/DiscoverScopeTabs';
 import { SwipeHintBar } from '@/components/discover/SwipeHintBar';
-import { TicketActionBar } from '@/components/discover/TicketActionBar';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ReviewsList } from '@/components/ReviewsList';
 import { supabase } from '@/integrations/supabase/client';
@@ -146,7 +145,7 @@ const Discover = () => {
     setTotalSwipes(prev => prev + 1);
     
     // Show toast
-    setXpToastData({ type: 'like', xp: 3, message: 'Saved to your Night Plan' });
+    setXpToastData({ type: 'like', xp: 3, message: 'Saved to your Night Plan • +3 XP' });
     setShowXPToast(true);
     setTimeout(() => setShowXPToast(false), 2000);
     
@@ -154,8 +153,7 @@ const Discover = () => {
     setSwipeIndex(prev => prev + 1);
     
     toast({
-      title: "Saved to your Night Plan",
-      description: "+3 XP earned",
+      title: "Saved to your Night Plan • +3 XP",
     });
   };
   
@@ -431,28 +429,18 @@ const Discover = () => {
           )}
         </div>
         
-        {/* Ticket Action Bar - positioned above bottom nav */}
-        {currentEvents.length > 0 && currentEvents[0] && (
+        {/* Ticket Action Bar - ONLY for club events */}
+        {currentEvents.length > 0 && currentEvents[0]?.event_type === 'club' && (
           <div className="fixed bottom-24 left-0 right-0 px-4 z-20">
-            <TicketActionBar
-              event={currentEvents[0]}
-              onGetTickets={() => setSelectedEventForTicket(currentEvents[0])}
-              onViewDetails={() => setSelectedEventForDetails(currentEvents[0])}
-              onAddToPlan={() => {
-                toast({
-                  title: "Added to your Night Plan!",
-                  description: `${currentEvents[0].title} saved for tonight.`,
-                });
-              }}
-              onOpenMap={() => {
-                const address = encodeURIComponent(currentEvents[0].exact_address || currentEvents[0].location);
-                window.open(`https://www.google.com/maps/search/?api=1&query=${address}`, '_blank');
-              }}
-              onRequestAccess={() => {
-                setRequestModalEvent(currentEvents[0]);
-                setShowRequestModal(true);
-              }}
-            />
+            <div className="max-w-md mx-auto">
+              <Button
+                onClick={() => setSelectedEventForTicket(currentEvents[0])}
+                className="w-full gradient-primary h-11"
+              >
+                <Ticket className="w-4 h-4 mr-2" />
+                Get Tickets
+              </Button>
+            </div>
           </div>
         )}
         
