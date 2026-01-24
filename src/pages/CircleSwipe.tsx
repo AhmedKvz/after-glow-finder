@@ -67,17 +67,31 @@ const CircleSwipe = () => {
 
   const isEventMode = !!eventId;
 
-  // Load available events for picker
+  // Load available events for picker (upcoming first, then recent as fallback)
   const loadAvailableEvents = async () => {
     setEventsLoading(true);
     try {
+      // First try upcoming events
       const today = new Date().toISOString().slice(0, 10);
-      const { data, error } = await supabase
+      let { data, error } = await supabase
         .from('events')
         .select('id, title, date, start_time, end_time')
         .gte('date', today)
         .order('date', { ascending: true })
         .limit(15);
+
+      // If no upcoming events, show recent events
+      if (!error && (!data || data.length === 0)) {
+        const fallback = await supabase
+          .from('events')
+          .select('id, title, date, start_time, end_time')
+          .order('date', { ascending: false })
+          .limit(15);
+        
+        if (!fallback.error && fallback.data) {
+          data = fallback.data;
+        }
+      }
 
       if (!error && data) {
         setAvailableEvents(data);
