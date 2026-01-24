@@ -774,6 +774,24 @@ export type Database = {
           },
         ]
       }
+      global_counters: {
+        Row: {
+          key: string
+          updated_at: string
+          value: number
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          value?: number
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          value?: number
+        }
+        Relationships: []
+      }
       golden_tickets: {
         Row: {
           created_at: string
