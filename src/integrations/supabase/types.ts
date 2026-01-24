@@ -501,6 +501,47 @@ export type Database = {
           },
         ]
       }
+      event_circle_access: {
+        Row: {
+          access_type: string
+          created_at: string
+          event_id: string
+          id: string
+          paid_amount_rsd: number
+          user_id: string
+          valid_from: string
+          valid_until: string
+        }
+        Insert: {
+          access_type?: string
+          created_at?: string
+          event_id: string
+          id?: string
+          paid_amount_rsd?: number
+          user_id: string
+          valid_from?: string
+          valid_until: string
+        }
+        Update: {
+          access_type?: string
+          created_at?: string
+          event_id?: string
+          id?: string
+          paid_amount_rsd?: number
+          user_id?: string
+          valid_from?: string
+          valid_until?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_circle_access_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_orders: {
         Row: {
           created_at: string
