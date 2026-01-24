@@ -1502,6 +1502,10 @@ export type Database = {
         }
         Returns: string
       }
+      redeem_lucky100_event_credit: {
+        Args: { _event_id: string }
+        Returns: string
+      }
     }
     Enums: {
       app_role: "admin" | "user" | "club"
