@@ -1525,6 +1525,45 @@ export type Database = {
     }
     Functions: {
       circle_access_status: { Args: { _event_id: string }; Returns: Json }
+      event_circle_profiles: {
+        Args: { _event_id: string; _limit?: number }
+        Returns: {
+          afters_hosted: number | null
+          avatar_url: string | null
+          badges: Json | null
+          bio: string | null
+          birthdate: string | null
+          circle_swipe_velocity: number | null
+          city: string | null
+          created_at: string
+          display_name: string | null
+          events_attended: number | null
+          gender: Database["public"]["Enums"]["gender_type"] | null
+          golden_ticket_count: number | null
+          has_golden_ticket: boolean | null
+          id: string
+          last_circle_activity: string | null
+          lat: number | null
+          level: string | null
+          lng: number | null
+          lucky100_wins: number | null
+          music_tags: string[] | null
+          spicy_likelihood_score: number | null
+          spicy_state: boolean | null
+          spicy_state_expires_at: string | null
+          trust_score: number | null
+          updated_at: string
+          user_id: string
+          vip_status: boolean | null
+          xp: number | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "profiles"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       generate_ticket_code: { Args: never; Returns: string }
       has_role: {
         Args: {
