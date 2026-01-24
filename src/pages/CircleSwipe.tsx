@@ -216,6 +216,13 @@ const CircleSwipe = () => {
       } else {
         profilesData = (data as any[]) || [];
       }
+
+      // Filter by opposite gender (RPC returns all participants)
+      if (myProfile?.gender) {
+        const oppositeGender = myProfile.gender === 'male' ? 'female' : 'male';
+        profilesData = profilesData.filter(p => p.gender === oppositeGender);
+      }
+      profilesData = profilesData.filter(p => p.gender != null);
     } else {
       // Global mode: load all profiles
       let query = supabase
