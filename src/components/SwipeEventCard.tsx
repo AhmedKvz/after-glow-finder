@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useSpring, animated } from 'react-spring';
 import { useDrag } from '@use-gesture/react';
-import { Heart, Lock, Key, X, Zap } from 'lucide-react';
+import { Heart, Lock, Key, X, Zap, Star } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { SecretEventLockOverlay } from '@/components/SecretEventLockOverlay';
 import { HeatBadge } from '@/components/HeatBadge';
@@ -240,6 +240,15 @@ export const SwipeEventCard = ({
             <div className="flex items-center gap-2 text-white/90 text-sm">
               <span>🎧</span>
               <span className="font-medium">{event.dj_name}</span>
+            </div>
+          )}
+
+          {/* Rating Badge */}
+          {event.average_rating && event.review_count > 0 && (
+            <div className="flex items-center gap-2 text-white/90 text-sm">
+              <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+              <span className="font-semibold">{event.average_rating.toFixed(1)}</span>
+              <span className="text-white/60">({event.review_count} reviews)</span>
             </div>
           )}
 

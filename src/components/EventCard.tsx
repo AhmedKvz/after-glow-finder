@@ -1,10 +1,8 @@
-import { useEffect, useState } from 'react';
 import { MapPin, Users, Clock, Star, MessageSquare } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Event } from '@/types';
-import { supabase } from '@/integrations/supabase/client';
 import { HeatBadge } from '@/components/HeatBadge';
 import eventPoster1 from '@/assets/event-poster-1.jpg';
 import eventPoster2 from '@/assets/event-poster-2.jpg';
@@ -19,37 +17,10 @@ const posterImages = [eventPoster1, eventPoster2, eventPoster3];
 
 export const EventCard: React.FC<EventCardProps> = ({ event, compact = false }) => {
   const posterImage = posterImages[event.id.charCodeAt(0) % posterImages.length];
-  const [reviewData, setReviewData] = useState<{ avgRating: number; count: number } | null>(null);
-
-  useEffect(() => {
-    const fetchReviews = async () => {
-      if (event.eventType === 'private_host') {
-        // Fetch host reviews from user_reviews
-        const { data, error } = await supabase
-          .from('user_reviews')
-          .select('rating')
-          .eq('reviewed_user_id', event.host.id);
-
-        if (data && data.length > 0) {
-          const avgRating = data.reduce((sum, r) => sum + r.rating, 0) / data.length;
-          setReviewData({ avgRating, count: data.length });
-        }
-      } else {
-        // Fetch event reviews from event_reviews
-        const { data, error } = await supabase
-          .from('event_reviews')
-          .select('rating')
-          .eq('event_id', event.id);
-
-        if (data && data.length > 0) {
-          const avgRating = data.reduce((sum, r) => sum + r.rating, 0) / data.length;
-          setReviewData({ avgRating, count: data.length });
-        }
-      }
-    };
-
-    fetchReviews();
-  }, [event.id, event.eventType, event.host.id]);
+  
+  // Use pre-loaded review data from props (snake_case from Supabase, with camelCase fallback)
+  const avgRating = event.average_rating ?? event.rating;
+  const reviewCount = event.review_count ?? event.reviewCount;
   
   return (
     <Card className="glass-card interactive overflow-hidden cursor-pointer transition-transform hover:scale-[1.02] min-h-fit">
@@ -110,13 +81,13 @@ export const EventCard: React.FC<EventCardProps> = ({ event, compact = false }) 
               </span>
             </div>
             
-            {/* Review Rating Badge */}
-            {reviewData && (
+            {/* Review Rating Badge - use pre-loaded data from props */}
+            {avgRating && reviewCount && reviewCount > 0 && (
               <Badge variant="secondary" className="flex items-center gap-1 px-2 py-0.5 h-auto">
                 <Star className="w-3 h-3 fill-yellow-500 text-yellow-500" />
-                <span className="text-[13px] font-semibold">{reviewData.avgRating.toFixed(1)}</span>
+                <span className="text-[13px] font-semibold">{avgRating.toFixed(1)}</span>
                 <MessageSquare className="w-3 h-3 ml-0.5" />
-                <span className="text-[13px]">{reviewData.count}</span>
+                <span className="text-[13px]">{reviewCount}</span>
               </Badge>
             )}
           </div>
