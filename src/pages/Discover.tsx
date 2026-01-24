@@ -631,7 +631,10 @@ const Discover = () => {
                     {event.average_rating && event.review_count > 0 && (
                       <button
                         type="button"
-                        onClick={() => setShowReviewsForEvent(event)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowReviewsForEvent(event);
+                        }}
                         className="flex items-center gap-2 text-xs sm:text-[13px] text-white/90 mb-2 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/70 rounded-full px-2 py-1 bg-black/30 backdrop-blur-sm"
                       >
                         <div className="flex items-center gap-1">
@@ -732,7 +735,10 @@ const Discover = () => {
                       {event.average_rating && event.review_count > 0 && (
                         <button
                           type="button"
-                          onClick={() => setShowReviewsForEvent(event)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setShowReviewsForEvent(event);
+                          }}
                           className="flex items-center gap-2 text-[12px] sm:text-[13px] text-muted-foreground mb-1 flex-wrap cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/40 rounded-full px-2 py-1 bg-background/60"
                         >
                           <div className="flex items-center gap-1">
