@@ -148,6 +148,10 @@ const CircleSwipe = () => {
         setAccessType(null);
         setPaidValidUntil(null);
         setShowPaywall(true);
+        // Clear profiles when showing paywall (prevent leftover from global mode)
+        setProfiles([]);
+        setMatches([]);
+        setMyVotes({});
       }
     } catch (error) {
       console.error('Error loading event:', error);
