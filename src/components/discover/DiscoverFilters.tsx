@@ -30,7 +30,7 @@ export function DiscoverFilters({
       <div className="relative mb-4">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
         <Input
-          placeholder="Search events, genres, venues..."
+          placeholder="Search tickets, venues, or vibes..."
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
           className="pl-10 glass-card"
@@ -41,7 +41,7 @@ export function DiscoverFilters({
       <div className="mb-6 space-y-3">
         {/* Genre Filters */}
         <div className="flex gap-2 overflow-x-auto pb-2 custom-scrollbar">
-          {['all', 'Techno', 'House', 'RnB', 'Drum & Bass', 'Hip Hop'].map((genre) => (
+          {['all', 'Techno', 'House', 'R&B', 'Drum & Bass', 'Hip Hop'].map((genre) => (
             <Button
               key={genre}
               variant={genreFilter === genre ? 'default' : 'outline'}
@@ -49,7 +49,7 @@ export function DiscoverFilters({
               onClick={() => onGenreChange(genre)}
               className={`whitespace-nowrap ${genreFilter === genre ? 'gradient-primary' : 'glass-card'}`}
             >
-              {genre === 'all' ? 'All Genres' : genre}
+              {genre === 'all' ? 'Any music' : genre}
             </Button>
           ))}
         </div>
@@ -58,7 +58,7 @@ export function DiscoverFilters({
         <div className="flex items-center gap-4 flex-wrap">
           <div className="flex gap-2">
             {[
-              { value: 'all', label: 'All Dates' },
+              { value: 'all', label: 'Any time' },
               { value: 'today', label: 'Today' },
               { value: 'tomorrow', label: 'Tomorrow' },
             ].map((option) => (
@@ -79,7 +79,7 @@ export function DiscoverFilters({
               checked={freeOnly}
               onCheckedChange={(checked) => onFreeOnlyChange(checked === true)}
             />
-            <span className="text-sm text-muted-foreground">Free events only</span>
+            <span className="text-sm text-muted-foreground">Free entry only</span>
           </label>
         </div>
       </div>
