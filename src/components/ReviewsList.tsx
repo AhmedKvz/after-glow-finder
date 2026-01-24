@@ -7,12 +7,22 @@ import { Loader2, MessageSquare } from 'lucide-react';
 interface ReviewsListProps {
   eventId?: string;
   userId?: string;
+  eventType?: string;
 }
 
-export const ReviewsList = ({ eventId, userId }: ReviewsListProps) => {
+const DEMO_REVIEWS = [
+  { id: 'demo-1', rating: 5, comment: 'Odlična atmosfera! Definitivno se vraćam.', display_name: 'Marko S.', created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString() },
+  { id: 'demo-2', rating: 4, comment: 'Super muzika i prijatno osoblje. Preporuka!', display_name: 'Ana M.', created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString() },
+  { id: 'demo-3', rating: 5, comment: 'Najbolji provod u gradu, obavezno probajte!', display_name: 'Stefan K.', created_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString() },
+  { id: 'demo-4', rating: 4, comment: 'Lokacija je fenomenalna, cene korektne.', display_name: 'Jelena P.', created_at: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString() },
+  { id: 'demo-5', rating: 5, comment: 'Prelepo uređen prostor, staff je super!', display_name: 'Nikola D.', created_at: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString() },
+];
+
+export const ReviewsList = ({ eventId, userId, eventType }: ReviewsListProps) => {
   const [reviews, setReviews] = useState<any[]>([]);
   const [profiles, setProfiles] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState(true);
+  const [isDemo, setIsDemo] = useState(false);
 
   useEffect(() => {
     loadReviews();
@@ -20,6 +30,7 @@ export const ReviewsList = ({ eventId, userId }: ReviewsListProps) => {
 
   const loadReviews = async () => {
     setLoading(true);
+    setIsDemo(false);
 
     if (eventId) {
       // Load event reviews
@@ -29,7 +40,7 @@ export const ReviewsList = ({ eventId, userId }: ReviewsListProps) => {
         .eq('event_id', eventId)
         .order('created_at', { ascending: false });
 
-      if (data) {
+      if (data && data.length > 0) {
         setReviews(data);
         
         // Load profiles for reviewers
@@ -46,6 +57,12 @@ export const ReviewsList = ({ eventId, userId }: ReviewsListProps) => {
           }, {} as Record<string, any>);
           setProfiles(profileMap);
         }
+      } else if (eventType === 'club' || eventType === 'cafe') {
+        // Use demo reviews for clubs/cafes without real reviews
+        const seed = eventId.charCodeAt(0) + eventId.charCodeAt(1);
+        const demoCount = 3 + (seed % 3); // 3-5 demo reviews
+        setReviews(DEMO_REVIEWS.slice(0, demoCount));
+        setIsDemo(true);
       }
     } else if (userId) {
       // Load user reviews
@@ -55,7 +72,7 @@ export const ReviewsList = ({ eventId, userId }: ReviewsListProps) => {
         .eq('reviewed_user_id', userId)
         .order('created_at', { ascending: false });
 
-      if (data) {
+      if (data && data.length > 0) {
         setReviews(data);
         
         // Load profiles for reviewers
@@ -96,7 +113,7 @@ export const ReviewsList = ({ eventId, userId }: ReviewsListProps) => {
     return (
       <Card className="glass-card p-8 text-center">
         <MessageSquare className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-        <p className="text-muted-foreground">No reviews yet</p>
+        <p className="text-muted-foreground">Još nema recenzija</p>
       </Card>
     );
   }
@@ -107,14 +124,16 @@ export const ReviewsList = ({ eventId, userId }: ReviewsListProps) => {
       <Card className="glass-card p-4">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm text-muted-foreground">Average Rating</p>
+            <p className="text-sm text-muted-foreground">
+              Prosečna ocena {isDemo && <span className="text-xs opacity-60">(demo)</span>}
+            </p>
             <div className="flex items-center gap-2 mt-1">
               <span className="text-2xl font-bold">{calculateAverageRating().toFixed(1)}</span>
               <StarRating rating={calculateAverageRating()} size="md" />
             </div>
           </div>
           <div className="text-right">
-            <p className="text-sm text-muted-foreground">Total Reviews</p>
+            <p className="text-sm text-muted-foreground">Ukupno recenzija</p>
             <p className="text-2xl font-bold">{reviews.length}</p>
           </div>
         </div>
@@ -123,18 +142,21 @@ export const ReviewsList = ({ eventId, userId }: ReviewsListProps) => {
       {/* Individual reviews */}
       <div className="space-y-3">
         {reviews.map((review) => {
-          const profile = profiles[eventId ? review.user_id : review.reviewer_id];
+          // For demo reviews, use display_name directly from review
+          const displayName = isDemo 
+            ? review.display_name 
+            : profiles[eventId ? review.user_id : review.reviewer_id]?.display_name || 'Anonymous';
           
           return (
             <Card key={review.id} className="glass-card p-4">
               <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                  {profile?.display_name?.[0]?.toUpperCase() || '?'}
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 text-sm font-medium">
+                  {displayName?.[0]?.toUpperCase() || '?'}
                 </div>
                 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between mb-2">
-                    <p className="font-semibold">{profile?.display_name || 'Anonymous'}</p>
+                    <p className="font-semibold">{displayName}</p>
                     <StarRating rating={review.rating} size="sm" />
                   </div>
                   
@@ -143,7 +165,7 @@ export const ReviewsList = ({ eventId, userId }: ReviewsListProps) => {
                   )}
                   
                   <p className="text-xs text-muted-foreground mt-2">
-                    {new Date(review.created_at).toLocaleDateString()}
+                    {new Date(review.created_at).toLocaleDateString('sr-RS')}
                   </p>
                 </div>
               </div>
