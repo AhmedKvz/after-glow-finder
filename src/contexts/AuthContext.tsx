@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
@@ -40,6 +40,36 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const demoWarmedRef = useRef(false);
+
+  // Warm demo crowd in background (investor MVP - never empty screens)
+  const warmDemoCrowd = async () => {
+    if (demoWarmedRef.current) return;
+    demoWarmedRef.current = true;
+
+    try {
+      // Ensure global demo users exist
+      await supabase.rpc('ensure_global_demo_users');
+      
+      // Bump demo activity to make them appear "online"
+      await supabase.rpc('bump_demo_activity');
+
+      // Ensure demo crowd for upcoming events
+      const today = new Date().toISOString().slice(0, 10);
+      const { data: events } = await supabase
+        .from('events')
+        .select('id, date')
+        .gte('date', today)
+        .order('date', { ascending: true })
+        .limit(10);
+
+      for (const e of events ?? []) {
+        await supabase.rpc('ensure_event_demo_crowd', { _event_id: e.id });
+      }
+    } catch (e) {
+      console.warn('Demo crowd warmup failed', e);
+    }
+  };
 
   useEffect(() => {
     // Set up auth state listener
@@ -48,6 +78,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
+        
+        // Warm demo crowd when user logs in (background, non-blocking)
+        if (session?.user) {
+          warmDemoCrowd();
+        }
       }
     );
 
@@ -56,6 +91,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
+      
+      // Warm demo crowd for existing session
+      if (session?.user) {
+        warmDemoCrowd();
+      }
     });
 
     return () => subscription.unsubscribe();
