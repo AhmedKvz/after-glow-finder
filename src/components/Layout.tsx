@@ -13,6 +13,9 @@ export const Layout = () => {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
   const [showTabBar, setShowTabBar] = useState(true);
+  
+  // Lucky100 winner modal - MUST be called before any early returns
+  const { showModal: showLucky100Modal, dismissModal: dismissLucky100Modal } = useCheckLucky100Winner(user?.id);
 
   // Hide tab bar on onboarding screens
   useEffect(() => {
@@ -55,9 +58,6 @@ export const Layout = () => {
       </div>
     );
   }
-
-  // Lucky100 winner modal
-  const { showModal: showLucky100Modal, dismissModal: dismissLucky100Modal } = useCheckLucky100Winner(user?.id);
 
   if (!user) {
     return null;
