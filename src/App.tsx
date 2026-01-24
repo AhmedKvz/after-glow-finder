@@ -44,6 +44,7 @@ const App = () => (
                 <Route path="search" element={<Search />} />
                 <Route path="host" element={<Host />} />
                 <Route path="circle-swipe" element={<CircleSwipe />} />
+                <Route path="circle-swipe/:eventId" element={<CircleSwipe />} />
                 <Route path="helpers" element={<Helpers />} />
                 <Route path="helpers/:helperId" element={<HelperProfile />} />
                 <Route path="helper-onboarding" element={<HelperOnboarding />} />

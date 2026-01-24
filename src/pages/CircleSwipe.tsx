@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Heart, X, Sparkles, Users, Loader2, PartyPopper, Clock, Flame } from 'lucide-react';
+import { useParams } from 'react-router-dom';
+import { Heart, X, Sparkles, Users, Loader2, PartyPopper, Clock, Flame, Lock, Globe, Ticket } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -12,8 +13,16 @@ import { SpicyPromptModal } from '@/components/SpicyPromptModal';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { format } from 'date-fns';
+
+interface AccessStatus {
+  has_access: boolean;
+  access_type: 'ticket' | 'paid' | null;
+  paid_valid_until: string | null;
+}
 
 const CircleSwipe = () => {
+  const { eventId } = useParams<{ eventId?: string }>();
   const { user } = useAuth();
   const { toast } = useToast();
   const [sessions, setSessions] = useState<any[]>([]);
@@ -33,17 +42,119 @@ const CircleSwipe = () => {
   const [showSpicyOnly, setShowSpicyOnly] = useState(false);
   const [hasActiveSpicyMode, setHasActiveSpicyMode] = useState(false);
 
-  useEffect(() => {
-    if (user) {
-      loadSessions();
-    }
-  }, [user]);
+  // Event mode state
+  const [hasAccess, setHasAccess] = useState<boolean>(true);
+  const [accessType, setAccessType] = useState<'ticket' | 'paid' | null>(null);
+  const [paidValidUntil, setPaidValidUntil] = useState<string | null>(null);
+  const [showPaywall, setShowPaywall] = useState<boolean>(false);
+  const [eventTitle, setEventTitle] = useState<string | null>(null);
+  const [isEventLive, setIsEventLive] = useState<boolean | null>(null);
+  const [purchasingAccess, setPurchasingAccess] = useState(false);
+
+  const isEventMode = !!eventId;
 
   useEffect(() => {
-    if (selectedSession) {
+    if (user) {
+      if (isEventMode) {
+        loadEventAndCheckAccess();
+      } else {
+        loadSessions();
+      }
+    }
+  }, [user, eventId]);
+
+  useEffect(() => {
+    if (selectedSession && hasAccess) {
       loadSessionData();
     }
-  }, [selectedSession, showSpicyOnly]);
+  }, [selectedSession, showSpicyOnly, hasAccess]);
+
+  const loadEventAndCheckAccess = async () => {
+    if (!user || !eventId) return;
+    setLoading(true);
+
+    try {
+      // Fetch event details
+      const { data: eventData, error: eventError } = await supabase
+        .from('events')
+        .select('id, title, date, start_time, end_time')
+        .eq('id', eventId)
+        .single();
+
+      if (eventError || !eventData) {
+        toast({
+          title: 'Event not found',
+          description: 'The event you are looking for does not exist.',
+          variant: 'destructive',
+        });
+        setLoading(false);
+        return;
+      }
+
+      setEventTitle(eventData.title);
+
+      // Check if event is currently live
+      const now = new Date();
+      const eventDate = new Date(eventData.date);
+      const [startH, startM] = eventData.start_time.split(':').map(Number);
+      const [endH, endM] = eventData.end_time.split(':').map(Number);
+      
+      const eventStart = new Date(eventDate);
+      eventStart.setHours(startH, startM, 0);
+      
+      const eventEnd = new Date(eventDate);
+      eventEnd.setHours(endH, endM, 0);
+      // Handle overnight events
+      if (endH < startH) {
+        eventEnd.setDate(eventEnd.getDate() + 1);
+      }
+      
+      setIsEventLive(now >= eventStart && now <= eventEnd);
+
+      // Check access via RPC
+      const { data: accessData, error: accessError } = await supabase.rpc('circle_access_status', {
+        _event_id: eventId
+      }) as { data: AccessStatus | null; error: any };
+
+      if (accessError) {
+        console.error('Error checking access:', accessError);
+        setHasAccess(false);
+        setShowPaywall(true);
+        setLoading(false);
+        return;
+      }
+
+      if (accessData?.has_access) {
+        setHasAccess(true);
+        setAccessType(accessData.access_type);
+        setPaidValidUntil(accessData.paid_valid_until);
+        setShowPaywall(false);
+
+        // Create event session
+        const eventSession = {
+          id: `event-${eventId}`,
+          event_id: eventId,
+          starts_at: new Date().toISOString(),
+          ends_at: new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString(),
+          participant_ids: [],
+          events: {
+            title: eventData.title
+          }
+        };
+        setSessions([eventSession]);
+        setSelectedSession(eventSession);
+      } else {
+        setHasAccess(false);
+        setAccessType(null);
+        setPaidValidUntil(null);
+        setShowPaywall(true);
+      }
+    } catch (error) {
+      console.error('Error loading event:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const loadSessions = async () => {
     if (!user) return;
@@ -86,23 +197,63 @@ const CircleSwipe = () => {
 
     setHasActiveSpicyMode(!!spicyPurchase);
 
-    // Load profiles from all users (excluding current user)
-    let query = supabase
-      .from('profiles')
-      .select('*')
-      .neq('user_id', user.id)
-      .not('gender', 'is', null)
-      .limit(20);
+    let profilesData: any[] = [];
 
-    // Filter by opposite gender if user has gender set
-    if (myProfile?.gender) {
-      const oppositeGender = myProfile.gender === 'male' ? 'female' : 'male';
-      query = query.eq('gender', oppositeGender);
+    if (isEventMode && eventId && hasAccess) {
+      // Event mode: filter by event participants
+      const { data: ticketUsers } = await supabase
+        .from('tickets')
+        .select('user_id')
+        .eq('event_id', eventId)
+        .eq('status', 'valid');
+
+      const { data: paidUsers } = await supabase
+        .from('event_circle_access')
+        .select('user_id')
+        .eq('event_id', eventId)
+        .gt('valid_until', new Date().toISOString());
+
+      const ticketUserIds = ticketUsers?.map(t => t.user_id) || [];
+      const paidUserIds = paidUsers?.map(p => p.user_id) || [];
+      const allParticipantIds = [...new Set([...ticketUserIds, ...paidUserIds])].filter(id => id !== user.id);
+
+      if (allParticipantIds.length > 0) {
+        let query = supabase
+          .from('profiles')
+          .select('*')
+          .in('user_id', allParticipantIds)
+          .not('gender', 'is', null)
+          .limit(20);
+
+        // Filter by opposite gender if user has gender set
+        if (myProfile?.gender) {
+          const oppositeGender = myProfile.gender === 'male' ? 'female' : 'male';
+          query = query.eq('gender', oppositeGender);
+        }
+
+        const { data } = await query;
+        profilesData = data || [];
+      }
+    } else {
+      // Global mode: load all profiles
+      let query = supabase
+        .from('profiles')
+        .select('*')
+        .neq('user_id', user.id)
+        .not('gender', 'is', null)
+        .limit(20);
+
+      // Filter by opposite gender if user has gender set
+      if (myProfile?.gender) {
+        const oppositeGender = myProfile.gender === 'male' ? 'female' : 'male';
+        query = query.eq('gender', oppositeGender);
+      }
+
+      const { data } = await query;
+      profilesData = data || [];
     }
 
-    const { data: profilesData } = await query;
-
-    if (profilesData) {
+    if (profilesData.length > 0) {
       // Sort profiles by spicy priority
       const sortedProfiles = [...profilesData].sort((a, b) => {
         // Priority 1: Active spicy mode users (check if they have recent purchase)
@@ -164,17 +315,59 @@ const CircleSwipe = () => {
 
         setProfileReviews(reviewsMap);
       }
+
+      // Auto-create matches for demo mode
+      if (filteredProfiles.length >= 4) {
+        setMatches(filteredProfiles.slice(0, 4));
+      } else {
+        setMatches(filteredProfiles);
+      }
     }
 
     // Reset votes for demo mode - start fresh each time
     setMyVotes({});
+  };
 
-    // Auto-create 4 matches for demo mode
-    if (profilesData && profilesData.length >= 4) {
-      const demoMatches = profilesData.slice(0, 4);
-      setMatches(demoMatches);
-    } else if (profilesData) {
-      setMatches(profilesData);
+  const handlePurchaseAccess = async () => {
+    if (!user || !eventId) return;
+
+    setPurchasingAccess(true);
+
+    try {
+      // Insert into event_circle_access - the trigger will set valid_until and paid_amount_rsd
+      const { error } = await supabase
+        .from('event_circle_access')
+        .insert({
+          user_id: user.id,
+          event_id: eventId,
+          valid_until: new Date(Date.now() + 5 * 60 * 60 * 1000).toISOString() // This will be overwritten by trigger
+        });
+
+      if (error) {
+        if (error.code === '23505') {
+          // Duplicate entry - user already has access, refresh status
+          await loadEventAndCheckAccess();
+        } else {
+          throw error;
+        }
+      } else {
+        toast({
+          title: '🎉 Access Unlocked!',
+          description: 'You have 5 hours to swipe in this event circle.',
+        });
+
+        // Refresh access status
+        await loadEventAndCheckAccess();
+      }
+    } catch (error) {
+      console.error('Error purchasing access:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to unlock access. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setPurchasingAccess(false);
     }
   };
 
@@ -365,10 +558,89 @@ const CircleSwipe = () => {
     return Math.max(0, hours);
   };
 
+  const formatPaidValidUntil = () => {
+    if (!paidValidUntil) return '';
+    try {
+      return format(new Date(paidValidUntil), 'HH:mm');
+    } catch {
+      return '';
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background safe-top flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  // Paywall UI for event mode
+  if (showPaywall && isEventMode) {
+    return (
+      <div className="min-h-screen bg-background safe-top pb-28">
+        <div className="px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 pb-3 sm:pb-4 max-w-2xl mx-auto">
+          {/* Event Header */}
+          <div className="flex items-center gap-2 mb-2">
+            <h1 className="text-2xl sm:text-2xl md:text-3xl font-bold text-gradient-primary">
+              {eventTitle} Circle
+            </h1>
+            {isEventLive !== null && (
+              <Badge variant={isEventLive ? "default" : "secondary"} className={isEventLive ? "bg-green-500 text-white animate-pulse" : ""}>
+                {isEventLive ? "LIVE" : "AFTER"}
+              </Badge>
+            )}
+          </div>
+          <p className="text-sm sm:text-base text-muted-foreground mb-6">
+            Swipe people who are at this event
+          </p>
+        </div>
+
+        <div className="px-4 sm:px-6 lg:px-8 max-w-2xl mx-auto">
+          <Card className="glass-card p-8 text-center">
+            <div className="w-20 h-20 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-6">
+              <Lock className="w-10 h-10 text-primary" />
+            </div>
+            
+            <h2 className="text-2xl font-bold mb-2">Unlock Circle Swipe</h2>
+            <p className="text-muted-foreground mb-6">
+              Get access to swipe and match with people at this event
+            </p>
+
+            <div className="glass-card p-4 rounded-lg mb-6">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-muted-foreground">Price</span>
+                <span className="text-2xl font-bold">200 RSD</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">Duration</span>
+                <span className="font-semibold">5 hours</span>
+              </div>
+            </div>
+
+            <Button
+              onClick={handlePurchaseAccess}
+              disabled={purchasingAccess}
+              className="w-full gradient-primary text-lg py-6"
+            >
+              {purchasingAccess ? (
+                <>
+                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                <>
+                  <Lock className="w-5 h-5 mr-2" />
+                  Pay Now - 200 RSD
+                </>
+              )}
+            </Button>
+
+            <p className="text-xs text-muted-foreground mt-4">
+              Or buy a ticket to get permanent access to this event's Circle
+            </p>
+          </Card>
+        </div>
       </div>
     );
   }
@@ -399,9 +671,18 @@ const CircleSwipe = () => {
       {/* Header */}
       <div className="px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 pb-3 sm:pb-4 flex items-center justify-between max-w-2xl mx-auto">
         <div>
-          <h1 className="text-2xl sm:text-2xl md:text-3xl font-bold text-gradient-primary">Circle Swipe</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl sm:text-2xl md:text-3xl font-bold text-gradient-primary">
+              {isEventMode ? `${eventTitle} Circle` : 'Global Circle'}
+            </h1>
+            {isEventMode && isEventLive !== null && (
+              <Badge variant={isEventLive ? "default" : "secondary"} className={isEventLive ? "bg-green-500 text-white animate-pulse" : ""}>
+                {isEventLive ? "LIVE" : "AFTER"}
+              </Badge>
+            )}
+          </div>
           <p className="text-sm sm:text-base text-muted-foreground">
-            {selectedSession.events?.title}
+            {isEventMode ? 'Swipe people at this event' : 'Swipe people outside events'}
           </p>
         </div>
         <Button
@@ -418,6 +699,34 @@ const CircleSwipe = () => {
           )}
         </Button>
       </div>
+
+      {/* Access Info Banner */}
+      {isEventMode && hasAccess && (
+        <div className="px-4 sm:px-6 lg:px-8 max-w-2xl mx-auto mb-2">
+          <div className="glass-card px-3 py-2 rounded-lg flex items-center justify-center gap-2 text-sm">
+            {accessType === 'ticket' ? (
+              <>
+                <Ticket className="w-4 h-4 text-primary" />
+                <span className="font-medium">Access: Ticket</span>
+              </>
+            ) : accessType === 'paid' ? (
+              <>
+                <Clock className="w-4 h-4 text-primary" />
+                <span className="font-medium">Access: Paid — expires at {formatPaidValidUntil()}</span>
+              </>
+            ) : null}
+          </div>
+        </div>
+      )}
+
+      {!isEventMode && (
+        <div className="px-4 sm:px-6 lg:px-8 max-w-2xl mx-auto mb-2">
+          <div className="glass-card px-3 py-2 rounded-lg flex items-center justify-center gap-2 text-sm">
+            <Globe className="w-4 h-4 text-primary" />
+            <span className="font-medium">Global Mode — No event required</span>
+          </div>
+        </div>
+      )}
 
       <div className="text-center mb-4 space-y-2">
         <Badge variant="secondary" className="glass-card text-sm sm:text-base">
