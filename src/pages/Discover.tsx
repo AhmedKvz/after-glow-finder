@@ -1,9 +1,12 @@
 import { useState } from 'react';
-import { MapPin, Clock, Users, Loader2, Music, Ticket, Map as MapIcon, Star, MessageSquare, RotateCcw, List, Layers, Heart, ExternalLink } from 'lucide-react';
+import { MapPin, Clock, Users, Loader2, Music, Ticket, Map as MapIcon, Star, MessageSquare, RotateCcw, List, Layers, Heart, ExternalLink, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { DiscoverFilters } from '@/components/discover/DiscoverFilters';
+import { DiscoverPurposeHeader } from '@/components/discover/DiscoverPurposeHeader';
+import { DiscoverScopeTabs } from '@/components/discover/DiscoverScopeTabs';
+import { SwipeHintBar } from '@/components/discover/SwipeHintBar';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ReviewsList } from '@/components/ReviewsList';
 import { supabase } from '@/integrations/supabase/client';
@@ -65,8 +68,8 @@ const Discover = () => {
   const [requestModalEvent, setRequestModalEvent] = useState<any>(null);
   const [selectedEventForDetails, setSelectedEventForDetails] = useState<any | null>(null);
   
-  // Event scope filter
-  const [eventScope, setEventScope] = useState<'all' | 'public' | 'private'>('all');
+  // Event scope filter - default to 'public' (Tickets)
+  const [eventScope, setEventScope] = useState<'all' | 'public' | 'private'>('public');
   
   // Derive scoped events from filtered events
   const scopedEvents = filteredEvents.filter((event) => {
@@ -80,6 +83,19 @@ const Discover = () => {
   });
   
   const scopedFeaturedEvents = scopedEvents.slice(0, 3);
+
+  // Header action handlers
+  const handleBrowseTickets = () => {
+    setEventScope('public');
+    setViewMode('list');
+  };
+
+  const handleBuildNightPlan = () => {
+    toast({
+      title: "Coming soon!",
+      description: "Night planning preferences will be available soon.",
+    });
+  };
 
 
   // Swipe handlers
@@ -340,6 +356,22 @@ const Discover = () => {
     
     return (
       <div className="min-h-screen bg-background relative overflow-hidden">
+        {/* Header Section */}
+        <div className="safe-top px-4 pt-4 pb-2 relative z-10">
+          <DiscoverPurposeHeader
+            eventCount={scopedEvents.length}
+            onBrowseTickets={handleBrowseTickets}
+            onBuildNightPlan={handleBuildNightPlan}
+          />
+          
+          <DiscoverScopeTabs
+            eventScope={eventScope}
+            onScopeChange={setEventScope}
+          />
+          
+          <SwipeHintBar />
+        </div>
+
         {/* Stats */}
         <SwipeStats 
           streak={swipeStreak}
@@ -445,35 +477,37 @@ const Discover = () => {
       <div className="min-h-screen bg-background">
         {/* Header */}
         <div className="safe-top px-4 pt-6 pb-4">
-          <div className="mb-6 flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gradient-primary">
-                Events Map
-              </h1>
-              <p className="text-muted-foreground mt-1">
-                Belgrade • {events.length} events shown
-              </p>
-            </div>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setViewMode('swipe')}
-                className="glass-card"
-              >
-                <Layers className="w-4 h-4 mr-1" />
-                Swipe
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setViewMode('list')}
-                className="glass-card"
-              >
-                <List className="w-4 h-4 mr-1" />
-                List
-              </Button>
-            </div>
+          <DiscoverPurposeHeader
+            eventCount={scopedEvents.length}
+            onBrowseTickets={handleBrowseTickets}
+            onBuildNightPlan={handleBuildNightPlan}
+          />
+          
+          <DiscoverScopeTabs
+            eventScope={eventScope}
+            onScopeChange={setEventScope}
+          />
+
+          {/* View mode toggle */}
+          <div className="flex gap-2 mb-4">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setViewMode('swipe')}
+              className="glass-card"
+            >
+              <Layers className="w-4 h-4 mr-1" />
+              Swipe
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setViewMode('list')}
+              className="glass-card"
+            >
+              <List className="w-4 h-4 mr-1" />
+              List
+            </Button>
           </div>
 
           {/* Map */}
@@ -513,16 +547,15 @@ const Discover = () => {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <div className="safe-top px-4 pt-6 pb-4">
-        <div className="mb-6 flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gradient-primary">
-              Discover Events
-            </h1>
-            <p className="text-muted-foreground mt-1">
-              Belgrade • {events.length} events upcoming
-            </p>
+        <div className="flex items-start justify-between mb-4">
+          <div className="flex-1">
+            <DiscoverPurposeHeader
+              eventCount={scopedEvents.length}
+              onBrowseTickets={handleBrowseTickets}
+              onBuildNightPlan={handleBuildNightPlan}
+            />
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 ml-4 mt-1">
             <Button
               variant="outline"
               size="sm"
@@ -545,23 +578,10 @@ const Discover = () => {
         </div>
 
         {/* Event Scope Selector */}
-        <div className="mb-4 flex gap-2">
-          {[
-            { value: 'all', label: 'All' },
-            { value: 'public', label: 'Clubs & Cafes' },
-            { value: 'private', label: 'Private After' },
-          ].map((option) => (
-            <Button
-              key={option.value}
-              variant={eventScope === option.value ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setEventScope(option.value as 'all' | 'public' | 'private')}
-              className={eventScope === option.value ? 'gradient-primary' : 'glass-card'}
-            >
-              {option.label}
-            </Button>
-          ))}
-        </div>
+        <DiscoverScopeTabs
+          eventScope={eventScope}
+          onScopeChange={setEventScope}
+        />
 
         {/* Filters */}
         <DiscoverFilters
@@ -765,24 +785,41 @@ const Discover = () => {
                         {event.capacity} cap
                       </Badge>
                       {event.event_type === 'cafe' ? (
-                        <Button
-                          size="sm"
-                          className="bg-blue-600/20 text-blue-400 border border-blue-600/30 whitespace-nowrap text-[13px] sm:text-sm h-9"
-                          onClick={() => {
-                            const address = encodeURIComponent(event.exact_address || event.location);
-                            window.open(`https://www.google.com/maps/search/?api=1&query=${address}`, '_blank');
-                          }}
-                        >
-                          <MapIcon className="w-3 h-3 mr-1" />
-                          See on Map
-                        </Button>
+                        <div className="flex flex-col gap-1">
+                          <Button
+                            size="sm"
+                            className="gradient-primary whitespace-nowrap text-[13px] sm:text-sm h-9"
+                            onClick={() => {
+                              // Add to plan placeholder
+                              toast({
+                                title: "Added to your plan!",
+                                description: `${event.title} saved for tonight.`,
+                              });
+                            }}
+                          >
+                            <Plus className="w-3 h-3 mr-1" />
+                            Add to plan
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="text-blue-400 whitespace-nowrap text-[11px] h-7"
+                            onClick={() => {
+                              const address = encodeURIComponent(event.exact_address || event.location);
+                              window.open(`https://www.google.com/maps/search/?api=1&query=${address}`, '_blank');
+                            }}
+                          >
+                            <MapIcon className="w-3 h-3 mr-1" />
+                            Open map
+                          </Button>
+                        </div>
                       ) : event.event_type === 'private_host' ? (
                         <Button
                           size="sm"
                           className="bg-yellow-600/20 text-yellow-400 border border-yellow-600/30 whitespace-nowrap text-[13px] sm:text-sm h-9"
                           onClick={() => setSelectedEventForRequest(event)}
                         >
-                          Request to Join
+                          {event.is_private || event.is_secret ? 'Request access' : 'Request to join'}
                         </Button>
                       ) : (
                         <Button
@@ -791,7 +828,7 @@ const Discover = () => {
                           onClick={() => setSelectedEventForTicket(event)}
                         >
                           <Ticket className="w-3 h-3 mr-1" />
-                          Get Ticket
+                          Get Tickets
                         </Button>
                       )}
                     </div>
