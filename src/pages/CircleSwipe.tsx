@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
-import { Heart, X, Sparkles, Users, Loader2, PartyPopper, Clock, Flame, Lock, Globe, Ticket } from 'lucide-react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Heart, X, Sparkles, Users, Loader2, PartyPopper, Clock, Flame, Lock, Globe, Ticket, Calendar, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -21,8 +21,17 @@ interface AccessStatus {
   paid_valid_until: string | null;
 }
 
+interface EventItem {
+  id: string;
+  title: string;
+  date: string;
+  start_time: string;
+  end_time: string;
+}
+
 const CircleSwipe = () => {
   const { eventId } = useParams<{ eventId?: string }>();
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
   const [sessions, setSessions] = useState<any[]>([]);
@@ -51,7 +60,53 @@ const CircleSwipe = () => {
   const [isEventLive, setIsEventLive] = useState<boolean | null>(null);
   const [purchasingAccess, setPurchasingAccess] = useState(false);
 
+  // Mode switcher state
+  const [showEventPicker, setShowEventPicker] = useState(false);
+  const [availableEvents, setAvailableEvents] = useState<EventItem[]>([]);
+  const [eventsLoading, setEventsLoading] = useState(false);
+
   const isEventMode = !!eventId;
+
+  // Load available events for picker
+  const loadAvailableEvents = async () => {
+    setEventsLoading(true);
+    try {
+      const today = new Date().toISOString().slice(0, 10);
+      const { data, error } = await supabase
+        .from('events')
+        .select('id, title, date, start_time, end_time')
+        .gte('date', today)
+        .order('date', { ascending: true })
+        .limit(15);
+
+      if (!error && data) {
+        setAvailableEvents(data);
+      }
+    } catch (e) {
+      console.error('Failed to load events:', e);
+    } finally {
+      setEventsLoading(false);
+    }
+  };
+
+  // Handle mode switch
+  const handleModeSwitch = (mode: 'global' | 'event') => {
+    if (mode === 'global') {
+      navigate('/circle-swipe');
+      setShowEventPicker(false);
+    } else {
+      // Show event picker
+      setShowEventPicker(true);
+      if (availableEvents.length === 0) {
+        loadAvailableEvents();
+      }
+    }
+  };
+
+  const handleEventSelect = (selectedEventId: string) => {
+    navigate(`/circle-swipe/${selectedEventId}`);
+    setShowEventPicker(false);
+  };
 
   useEffect(() => {
     if (user) {
@@ -657,8 +712,115 @@ const CircleSwipe = () => {
 
   return (
     <div className="min-h-screen bg-background safe-top pb-28">
+      {/* Mode Switcher */}
+      <div className="px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 max-w-2xl mx-auto">
+        <div className="flex gap-2 p-1 glass-card rounded-lg mb-4">
+          <Button
+            variant={!isEventMode ? "default" : "ghost"}
+            size="sm"
+            className={`flex-1 ${!isEventMode ? 'gradient-primary' : ''}`}
+            onClick={() => handleModeSwitch('global')}
+          >
+            <Globe className="w-4 h-4 mr-2" />
+            Global
+          </Button>
+          <Button
+            variant={isEventMode ? "default" : "ghost"}
+            size="sm"
+            className={`flex-1 ${isEventMode ? 'gradient-primary' : ''}`}
+            onClick={() => handleModeSwitch('event')}
+          >
+            <Calendar className="w-4 h-4 mr-2" />
+            Event
+          </Button>
+        </div>
+
+        {/* Event Picker */}
+        {showEventPicker && !isEventMode && (
+          <div className="mb-4 space-y-2">
+            <p className="text-sm text-muted-foreground font-medium">Select an event:</p>
+            {eventsLoading ? (
+              <div className="flex justify-center py-4">
+                <Loader2 className="w-6 h-6 animate-spin text-primary" />
+              </div>
+            ) : availableEvents.length === 0 ? (
+              <Card className="glass-card p-4 text-center">
+                <p className="text-muted-foreground text-sm">No upcoming events found</p>
+              </Card>
+            ) : (
+              <div className="space-y-2 max-h-64 overflow-y-auto">
+                {availableEvents.map((event) => (
+                  <Card
+                    key={event.id}
+                    className="glass-card p-3 cursor-pointer hover:bg-primary/10 transition-colors"
+                    onClick={() => handleEventSelect(event.id)}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h4 className="font-semibold text-sm">{event.title}</h4>
+                        <p className="text-xs text-muted-foreground">
+                          {format(new Date(event.date), 'MMM d')} • {event.start_time.slice(0, 5)}
+                        </p>
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Change Event Button (when in event mode) */}
+        {isEventMode && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full mb-4"
+            onClick={() => {
+              setShowEventPicker(!showEventPicker);
+              if (availableEvents.length === 0) loadAvailableEvents();
+            }}
+          >
+            <Calendar className="w-4 h-4 mr-2" />
+            {showEventPicker ? 'Hide Events' : 'Change Event'}
+          </Button>
+        )}
+
+        {/* Event Picker for event mode */}
+        {showEventPicker && isEventMode && (
+          <div className="mb-4 space-y-2">
+            {eventsLoading ? (
+              <div className="flex justify-center py-4">
+                <Loader2 className="w-6 h-6 animate-spin text-primary" />
+              </div>
+            ) : (
+              <div className="space-y-2 max-h-64 overflow-y-auto">
+                {availableEvents.map((event) => (
+                  <Card
+                    key={event.id}
+                    className={`glass-card p-3 cursor-pointer hover:bg-primary/10 transition-colors ${event.id === eventId ? 'ring-2 ring-primary' : ''}`}
+                    onClick={() => handleEventSelect(event.id)}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h4 className="font-semibold text-sm">{event.title}</h4>
+                        <p className="text-xs text-muted-foreground">
+                          {format(new Date(event.date), 'MMM d')} • {event.start_time.slice(0, 5)}
+                        </p>
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
       {/* Header */}
-      <div className="px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 pb-3 sm:pb-4 flex items-center justify-between max-w-2xl mx-auto">
+      <div className="px-4 sm:px-6 lg:px-8 pb-3 sm:pb-4 flex items-center justify-between max-w-2xl mx-auto">
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-2xl sm:text-2xl md:text-3xl font-bold text-gradient-primary">
