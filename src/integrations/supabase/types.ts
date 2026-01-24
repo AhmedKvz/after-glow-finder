@@ -820,6 +820,8 @@ export type Database = {
           source: string
           status: string
           updated_at: string
+          used_at: string | null
+          used_event_id: string | null
           user_id: string
         }
         Insert: {
@@ -831,6 +833,8 @@ export type Database = {
           source?: string
           status?: string
           updated_at?: string
+          used_at?: string | null
+          used_event_id?: string | null
           user_id: string
         }
         Update: {
@@ -842,9 +846,19 @@ export type Database = {
           source?: string
           status?: string
           updated_at?: string
+          used_at?: string | null
+          used_event_id?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_golden_tickets_used_event"
+            columns: ["used_event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       guide_bookings: {
         Row: {
