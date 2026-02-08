@@ -115,17 +115,23 @@ const Discover = () => {
         onConflict: 'user_id,event_id'
       });
     
-    // Add to wishlist_user_ids
-    const currentWishlist = event.wishlist_user_ids || [];
-    if (!currentWishlist.includes(user.id)) {
-      await supabase
-        .from('events')
-        .update({ 
-          wishlist_user_ids: [...currentWishlist, user.id],
-          swipe_count: (event.swipe_count || 0) + 1
-        })
-        .eq('id', event.id);
-    }
+    // Add to Night Plan (event_wishlists table)
+    await supabase
+      .from('event_wishlists')
+      .upsert({
+        user_id: user.id,
+        event_id: event.id,
+      }, {
+        onConflict: 'user_id,event_id'
+      });
+    
+    // Update event swipe count only (no wishlist_user_ids update - that's deprecated)
+    await supabase
+      .from('events')
+      .update({ 
+        swipe_count: (event.swipe_count || 0) + 1
+      })
+      .eq('id', event.id);
     
     // Award XP
     const { data: profileData } = await supabase
