@@ -22,6 +22,7 @@ export default {
     },
     extend: {
       fontFamily: {
+        'poppins': ['Poppins', 'sans-serif'],
         'inter': ['Inter', 'sans-serif'],
       },
       colors: {
@@ -44,14 +45,12 @@ export default {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
           hover: "hsl(var(--primary-hover))",
-          light: "hsl(var(--primary-light))",
           glow: "hsl(var(--primary-glow))",
         },
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
           foreground: "hsl(var(--secondary-foreground))",
           hover: "hsl(var(--secondary-hover))",
-          glow: "hsl(var(--secondary-glow))",
         },
         destructive: {
           DEFAULT: "hsl(var(--destructive))",
@@ -74,10 +73,6 @@ export default {
         warning: {
           DEFAULT: "hsl(var(--warning))",
           foreground: "hsl(var(--warning-foreground))",
-        },
-        info: {
-          DEFAULT: "hsl(var(--info))",
-          foreground: "hsl(var(--info-foreground))",
         },
         popover: {
           DEFAULT: "hsl(var(--popover))",
@@ -106,16 +101,14 @@ export default {
         xl: "var(--radius-xl)",
       },
       backdropBlur: {
-        'glass': '10px',
+        'glass': '16px',
         'backdrop': '20px',
       },
       boxShadow: {
         'primary': 'var(--shadow-primary)',
-        'secondary': 'var(--shadow-secondary)',
         'accent': 'var(--shadow-accent)',
         'glass': 'var(--shadow-glass)',
         'card': 'var(--shadow-card)',
-        'glow-purple': 'var(--shadow-glow-purple)',
       },
       keyframes: {
         "accordion-down": {
