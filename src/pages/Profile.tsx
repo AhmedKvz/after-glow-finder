@@ -31,6 +31,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { EditProfileModal } from '@/components/EditProfileModal';
 import { MyTickets } from '@/components/MyTickets';
 import { ReviewsList } from '@/components/ReviewsList';
+import { NightPlanList } from '@/components/NightPlanList';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2, MessageSquare } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -200,8 +201,9 @@ const Profile = () => {
         </h1>
 
         <Tabs defaultValue="profile" className="w-full">
-          <TabsList className="grid w-full grid-cols-4 mb-6 text-xs">
+          <TabsList className="grid w-full grid-cols-5 mb-6 text-xs">
             <TabsTrigger value="profile">Profile</TabsTrigger>
+            <TabsTrigger value="plan">Plan</TabsTrigger>
             <TabsTrigger value="stats">Stats</TabsTrigger>
             <TabsTrigger value="tickets">Tickets</TabsTrigger>
             <TabsTrigger value="reviews">Reviews</TabsTrigger>
@@ -316,6 +318,19 @@ const Profile = () => {
             </div>
           ))}
         </div>
+          </TabsContent>
+
+          <TabsContent value="plan" className="space-y-4">
+            <Card className="glass-card p-4">
+              <h3 className="font-semibold mb-2 flex items-center gap-2">
+                <Calendar className="w-5 h-5 text-primary" />
+                My Night Plan
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                Tvoji sačuvani eventi za večeras i naredne dane
+              </p>
+            </Card>
+            <NightPlanList />
           </TabsContent>
 
           <TabsContent value="stats" className="space-y-4">
