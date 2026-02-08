@@ -389,20 +389,6 @@ const Discover = () => {
           )}
         </div>
         
-        {/* Ticket Action Bar - ONLY for club events - above TabBar */}
-        {currentEvents.length > 0 && currentEvents[0]?.event_type === 'club' && (
-          <div className="fixed bottom-32 sm:bottom-36 left-0 right-0 px-4 z-20">
-            <div className="max-w-md mx-auto">
-              <Button
-                onClick={() => setSelectedEventForTicket(currentEvents[0])}
-                className="w-full gradient-primary h-10 sm:h-11"
-              >
-                <Ticket className="w-4 h-4 mr-2" />
-                Get Tickets
-              </Button>
-            </div>
-          </div>
-        )}
         
         {/* Bottom Navigation - positioned above TabBar (which is ~72px) */}
         <div className="fixed bottom-20 sm:bottom-24 left-0 right-0 px-4 z-10">
