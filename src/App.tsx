@@ -59,6 +59,7 @@ const App = () => (
                 <Route path="lucky100" element={<Lucky100 />} />
                 <Route path="leaderboard" element={<Leaderboard />} />
                 <Route path="heat-leaderboard" element={<HeatLeaderboard />} />
+                <Route path="raver/:userId" element={<PublicRaverProfile />} />
                 <Route path="admin/golden-tickets" element={<GoldenTicketAdmin />} />
                 <Route path="*" element={<NotFound />} />
               </Route>
