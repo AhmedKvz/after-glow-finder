@@ -25,6 +25,7 @@ import Lucky100 from "./pages/Lucky100";
 import Leaderboard from "./pages/Leaderboard";
 import GoldenTicketAdmin from "./pages/GoldenTicketAdmin";
 import HeatLeaderboard from "./pages/HeatLeaderboard";
+import PublicRaverProfile from "./pages/PublicRaverProfile";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
