@@ -1436,6 +1436,8 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          is_winner: boolean | null
+          rank: number | null
           season_events: number
           season_name: string
           season_quests: number
@@ -1446,6 +1448,8 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          is_winner?: boolean | null
+          rank?: number | null
           season_events?: number
           season_name?: string
           season_quests?: number
@@ -1456,6 +1460,8 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          is_winner?: boolean | null
+          rank?: number | null
           season_events?: number
           season_name?: string
           season_quests?: number
