@@ -1438,6 +1438,7 @@ export type Database = {
           id: string
           is_winner: boolean | null
           period: string
+          period_label: string
           rank: number | null
           season_events: number
           season_name: string
@@ -1451,6 +1452,7 @@ export type Database = {
           id?: string
           is_winner?: boolean | null
           period?: string
+          period_label?: string
           rank?: number | null
           season_events?: number
           season_name?: string
@@ -1464,6 +1466,7 @@ export type Database = {
           id?: string
           is_winner?: boolean | null
           period?: string
+          period_label?: string
           rank?: number | null
           season_events?: number
           season_name?: string

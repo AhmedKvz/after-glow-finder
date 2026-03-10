@@ -320,6 +320,24 @@ const Raverboard = () => {
       </div>
 
       <div className="max-w-4xl mx-auto px-4 -mt-2 pb-24">
+        {/* Season Board CTA */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          onClick={() => navigate('/season')}
+          className="mb-4 cursor-pointer rounded-2xl border border-amber-400/25 bg-gradient-to-r from-amber-500/10 to-orange-500/8 p-4 flex items-center justify-between active:scale-[0.98] transition-all"
+        >
+          <div className="flex items-center gap-3">
+            <span className="text-xl">🏆</span>
+            <div>
+              <h3 className="text-sm font-bold">Season Board — Winter 2025</h3>
+              <p className="text-[11px] text-muted-foreground">Top 3 osvajaju putovanje · Glasaj za destinaciju</p>
+            </div>
+          </div>
+          <ArrowRight className="w-4 h-4 text-amber-400" />
+        </motion.div>
+
         <Tabs defaultValue="xp" className="space-y-4">
           <TabsList className="grid w-full grid-cols-3 bg-muted/50 backdrop-blur-sm">
             <TabsTrigger value="xp" className="data-[state=active]:bg-background/80 text-xs gap-1.5">

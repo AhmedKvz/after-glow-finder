@@ -267,6 +267,14 @@ const Gamification = () => {
           </Button>
 
           <Button
+            onClick={() => navigate('/season')}
+            className="bg-gradient-to-r from-amber-600 to-yellow-500 h-20 flex-col gap-2"
+          >
+            <Award className="w-6 h-6" />
+            <span>Season Board</span>
+          </Button>
+
+          <Button
             onClick={() => navigate('/heat-leaderboard')}
             className="bg-gradient-to-r from-red-600 to-orange-500 h-20 flex-col gap-2"
           >
