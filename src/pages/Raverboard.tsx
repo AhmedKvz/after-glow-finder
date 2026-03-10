@@ -3,7 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
-  ArrowLeft, Trophy, Zap, Star, Crown,
+  ArrowLeft, ArrowRight, Trophy, Zap, Star, Crown,
   Award, TrendingUp, Flame, Users, Music,
   Shield, MapPin
 } from 'lucide-react';
