@@ -72,6 +72,7 @@ const App = () => (
                 <Route path="venue/:venueId" element={<PublicVenueProfile />} />
                 <Route path="venue" element={<PublicVenueProfile />} />
 
+                <Route path="season" element={<SeasonLeaderboard />} />
                 <Route path="heat-leaderboard" element={<HeatLeaderboard />} />
                 <Route path="admin/golden-tickets" element={<GoldenTicketAdmin />} />
                 <Route path="*" element={<NotFound />} />
