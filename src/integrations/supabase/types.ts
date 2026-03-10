@@ -1408,6 +1408,63 @@ export type Database = {
         }
         Relationships: []
       }
+      season_destination_votes: {
+        Row: {
+          created_at: string
+          destination: string
+          id: string
+          season_name: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          destination: string
+          id?: string
+          season_name?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          destination?: string
+          id?: string
+          season_name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      season_leaderboard: {
+        Row: {
+          created_at: string
+          id: string
+          season_events: number
+          season_name: string
+          season_quests: number
+          season_xp: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          season_events?: number
+          season_name?: string
+          season_quests?: number
+          season_xp?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          season_events?: number
+          season_name?: string
+          season_quests?: number
+          season_xp?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       spicy_mode_purchases: {
         Row: {
           amount_paid: number
