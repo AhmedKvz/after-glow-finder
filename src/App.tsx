@@ -25,6 +25,7 @@ import Lucky100 from "./pages/Lucky100";
 import Leaderboard from "./pages/Leaderboard";
 import GoldenTicketAdmin from "./pages/GoldenTicketAdmin";
 import HeatLeaderboard from "./pages/HeatLeaderboard";
+import SeasonLeaderboard from "./pages/SeasonLeaderboard";
 import NotFound from "./pages/NotFound";
 
 // New profile & raverboard pages
